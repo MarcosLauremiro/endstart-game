@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/inventory/item_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"berries"
+display_name = "Frutas silvestres"
+category = 1
+weight_kg = 0.5
+stack_size = 20
+value = 1.0
+nutrition = 20.0
+tags = Array[StringName]([&"raw_food"])
+icon = "items/berries"

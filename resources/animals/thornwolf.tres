@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AnimalDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/animals/animal_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"thornwolf"
+display_name = "Lobo-espinho"
+max_health = 80.0
+move_tiles_per_second = 4.2
+flee_radius = 0.0
+flee_distance = 0
+wander_radius = 10
+carcass_item = &""
+is_predator = true
+prey = Array[StringName]([&"hare", &"deer"])
+hunt_interval_hours = 36
+population = 2
+asset = "characters/animals/predator"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/inventory/item_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"scrap"
+display_name = "Sucata"
+category = 0
+weight_kg = 0.8
+stack_size = 50
+value = 2.0
+nutrition = 0.0
+tags = Array[StringName]([])
+icon = "items/scrap"

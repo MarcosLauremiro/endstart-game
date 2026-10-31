@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/production/recipe_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"butcher_small"
+display_name = "Abater animal pequeno"
+workbenches = Array[StringName]([&"cooking_bench"])
+ingredients = Array[Dictionary]([{"item": &"small_game_carcass", "count": 1}])
+products = {
+&"raw_meat": 6,
+&"hide": 1
+}
+work_hours = 0.5
+default_target = 60

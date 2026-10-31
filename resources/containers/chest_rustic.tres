@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ContainerDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/inventory/container_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"chest_rustic"
+display_name = "Baú rústico"
+slot_count = 10
+footprint = Vector2i(1, 1)
+large_slots = false
+accepted_categories = Array[int]([])
+asset = "containers/chest_rustic"

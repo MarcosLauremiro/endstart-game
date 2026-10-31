@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="StructureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/construction/structure_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"floor_wood"
+display_name = "Piso de madeira"
+layer = 1
+placement = 1
+footprint = Vector2i(1, 1)
+costs = {
+&"wood": 1
+}
+work_hours = 0.2
+max_workers = 1
+blocks_movement = false
+move_factor = 1.1
+hit_points = 0
+is_bed = false
+container_def = &""
+asset = "tiles/floors/wood_floor"

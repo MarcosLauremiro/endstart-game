@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/production/recipe_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"stone_knife"
+display_name = "Faca de pedra"
+workbenches = Array[StringName]([&"crafting_bench"])
+ingredients = Array[Dictionary]([{"item": &"stone_raw", "count": 1}, {"item": &"wood", "count": 1}])
+products = {
+&"stone_knife": 1
+}
+work_hours = 0.5

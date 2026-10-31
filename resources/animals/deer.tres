@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AnimalDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/animals/animal_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"deer"
+display_name = "Cervo"
+max_health = 60.0
+move_tiles_per_second = 3.3
+flee_radius = 5.0
+flee_distance = 10
+wander_radius = 8
+carcass_item = &"large_game_carcass"
+is_predator = false
+prey = Array[StringName]([])
+hunt_interval_hours = 36
+population = 5
+asset = "characters/animals/large_game"

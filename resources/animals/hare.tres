@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AnimalDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/animals/animal_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"hare"
+display_name = "Lebre"
+max_health = 20.0
+move_tiles_per_second = 3.6
+flee_radius = 4.0
+flee_distance = 8
+wander_radius = 6
+carcass_item = &"small_game_carcass"
+is_predator = false
+prey = Array[StringName]([])
+hunt_interval_hours = 36
+population = 10
+asset = "characters/animals/small_game"

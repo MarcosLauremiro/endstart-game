@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ContainerDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/inventory/container_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"material_yard"
+display_name = "Pátio de materiais"
+slot_count = 4
+footprint = Vector2i(2, 2)
+large_slots = true
+accepted_categories = Array[int]([0])
+asset = "containers/material_yard"
