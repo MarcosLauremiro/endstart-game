@@ -20,12 +20,22 @@ const NAMES := {
 ## Chave usada nos recursos (.tres) para não depender do número do enum.
 const KEYS := {
 	&"cook": Id.COOK,
+	&"hunt": Id.HUNT,
+	&"construct": Id.CONSTRUCT,
+	&"grow": Id.GROW,
+	&"mine": Id.MINE,
+	&"cut": Id.CUT,
 	&"craft": Id.CRAFT,
+	&"haul": Id.HAUL,
 }
 
 
 static func name_of(work_type: int) -> String:
 	return NAMES.get(work_type, "?")
+
+
+static func key_of(work_type: int) -> StringName:
+	return KEYS.find_key(work_type)
 
 
 static func from_key(key: StringName) -> int:

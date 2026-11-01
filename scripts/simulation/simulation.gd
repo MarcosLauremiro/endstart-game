@@ -22,6 +22,7 @@ func _init(new_world_seed: int, colonist_count: int = Balance.STARTING_COLONISTS
 	state = WorldState.new(WorldGenerator.generate(world_seed, Balance.MAP_SIZE), world_seed)
 	world = state.world
 	clock = state.clock
+	clock.tick = Balance.START_HOUR * Balance.TICKS_PER_HOUR
 	# Conexão direta ao sinal, sem lambda: uma lambda guardaria a Simulation dentro do estado (ciclo).
 	state.message_posted.connect(message_posted.emit)
 	WorldPopulator.place_berry_bushes(state)
@@ -52,12 +53,20 @@ func step() -> void:
 	if tick % Balance.TICKS_PER_HOUR == 0:
 		state.grow_plants_hour()
 		Farming.grow_hour(state)
+		for colonist in state.colonists:
+			colonist.mood.hour_passed()
+	if tick % Balance.TICKS_PER_DAY == 0:
+		_end_day()
 	if tick % Balance.THINK_INTERVAL_TICKS == 0:
 		_expire_stale_reservations()
 		_release_orphan_reservations()
 	for colonist in state.colonists:
-		colonist.needs.tick(colonist.is_sleeping(), colonist.is_sleeping_in_bed())
-		if colonist.force_think or (tick + colonist.think_offset) % Balance.THINK_INTERVAL_TICKS == 0:
+		colonist.needs.tick(colonist.is_sleeping(), colonist.is_sleeping_in_bed(), colonist.hunger_factor())
+		colonist.mood.tick()
+		var thinking_turn := (tick + colonist.think_offset) % Balance.THINK_INTERVAL_TICKS == 0
+		if thinking_turn:
+			colonist.mood.refresh(colonist, tick)
+		if colonist.force_think or thinking_turn:
 			_think(colonist)
 		_runner.step(colonist, state)
 	Wildlife.tick(state)
@@ -124,6 +133,16 @@ func order_sleep(colonist_id: int) -> String:
 	var order := _brain.sleep_action(colonist, state, record, Action.Layer.ORDER, "Ordem do jogador: dormir agora")
 	_give_order(colonist, order)
 	return "%s vai dormir" % colonist.display_name
+
+
+## Larga no chão o que o colono tem na mão (ferramenta ou arma).
+func drop_hand(colonist_id: int) -> String:
+	var colonist := state.colonist_by_id(colonist_id)
+	if colonist == null or colonist.equipment.hand() == &"":
+		return ""
+	var item := colonist.equipment.clear(Equipment.Slot.HAND)
+	state.drop_items(colonist.cell, item, 1)
+	return "%s largou %s" % [colonist.display_name, Defs.item(item).display_name.to_lower()]
 
 
 ## Esquece a ordem direta; se ele a estava cumprindo, para e volta a decidir sozinho.
@@ -273,6 +292,15 @@ func set_auto_hunt(species: StringName, enabled: bool) -> void:
 	Wildlife.set_auto_hunt(state, species, enabled)
 
 
+func set_schedule_block(colonist_id: int, hour: int, block: Schedule.Block) -> void:
+	var colonist := state.colonist_by_id(colonist_id)
+	if colonist == null or hour < 0 or hour >= Balance.HOURS_PER_DAY:
+		push_error("Agenda inválida: colono %d, hora %d" % [colonist_id, hour])
+		return
+	colonist.schedule.set_block(hour, block)
+	colonist.force_think = true
+
+
 func set_work_priority(colonist_id: int, work_type: int, priority: int) -> void:
 	var colonist := state.colonist_by_id(colonist_id)
 	if colonist == null or priority < 0 or priority > Balance.MAX_WORK_PRIORITY:
@@ -300,6 +328,15 @@ func _think(colonist: Colonist) -> void:
 	candidate.record = record
 	colonist.remember(record)
 	_runner.start(colonist, candidate, state)
+
+
+## Virada do dia: limite diário de XP zerado e esquecimento acima do nível 12 (GDD).
+func _end_day() -> void:
+	for colonist in state.colonists:
+		for skill_id in Skills.ALL:
+			if colonist.skills[skill_id].end_day():
+				state.post_message("%s esqueceu um pouco de %s (nível %d)" % [
+					colonist.display_name, Skills.name_of(skill_id), colonist.skills[skill_id].level])
 
 
 ## GDD: reservas expiram se o colono ficar 30 s de jogo sem avançar.

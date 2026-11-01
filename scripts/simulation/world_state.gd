@@ -360,7 +360,7 @@ func find_storage_for(item: StringName, from: Vector2i) -> StorageContainer:
 	return best
 
 
-## Total real do item: contêineres + chão + mãos dos colonos.
+## Total real do item: contêineres + chão + mãos e equipamento dos colonos.
 func total_count(item: StringName) -> int:
 	var total := 0
 	for container in containers.values():
@@ -371,6 +371,7 @@ func total_count(item: StringName) -> int:
 	for colonist in colonists:
 		if colonist.carrying_item == item:
 			total += colonist.carrying_count
+		total += colonist.equipment.count_of(item)
 	return total
 
 

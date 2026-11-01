@@ -14,7 +14,7 @@ Documento vivo. Atualizar sempre que uma decisão arquitetural mudar.
 A simulação roda em ticks fixos e guarda todo o estado da partida. A apresentação só lê esse estado e desenha.
 Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, tarefas, itens ou terreno.
 
-## Estado atual (M0 a M4 — Produção e comida)
+## Estado atual (M0 a M5 — Colonos completos)
 
 ### Simulação
 
@@ -40,10 +40,14 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Designações | `scripts/jobs/designations.gd` | Cortar, minerar, colher, caçar, plantação e cancelar por área; cada célula (ou animal) vira uma tarefa. |
 | Efeitos | `scripts/jobs/task_effects.gd` | Validade das tarefas e resultado no mundo (itens reais no chão, rocha vira solo). |
 | Reservas | `scripts/jobs/reservations.gd` | Dono único de tarefas e arbustos, com o último tick de avanço para a expiração. |
-| Colono | `scripts/colonists/colonist.gd` | Identidade, Força, traços, prioridades, célula, caminho, necessidades, estado, ação, ordem, carga, histórico, opções avaliadas. |
-| Traços | `scripts/colonists/traits.gd` | Esforçado e Preguiçoso (os outros seis entram no M5). |
-| Fábrica | `scripts/colonists/colonist_factory.gd` | Nome, idade, Força (curva normal), um traço de trabalho, prioridades padrão. Substituída pelo gerador completo no M5. |
-| Necessidades | `scripts/needs/needs.gd` | Fome e sono, 0–100. Só mudam com o tempo ou com uma ação válida. |
+| Colono | `scripts/colonists/colonist.gd` | Identidade, histórias, Força, traços, habilidades, prioridades, agenda, equipamento, célula, caminho, necessidades, humor, estado, ação, ordem, carga, histórico, opções avaliadas. Velocidade de trabalho (habilidade × traços × Força × ferramenta), XP, carga e movimento. |
+| Traços | `scripts/colonists/traits.gd` | Os 8 do MVP com efeito, raridade (comum 10, incomum 4) e espectro (Esforçado/Preguiçoso, Otimista/Pessimista); sorteio de 1 a 3. |
+| Habilidades | `scripts/colonists/skills.gd`, `skill_state.gd` | As 6 do MVP, afinidades, velocidade por nível (GDD), XP para subir, título; por colono: nível, XP, afinidade, limite diário e esquecimento. |
+| Histórias | `scripts/colonists/backstory_def.gd` + `resources/backstories/*.tres` | Infâncias e vidas adultas do GDD com os bônus nas habilidades do MVP e na Força. |
+| Agenda | `scripts/colonists/schedule.gd` | Bloco por hora: Dormir, Trabalhar, Livre. |
+| Equipamento | `scripts/colonists/equipment.gd` | Espaços Camisa, Calça e Mão; peso; o item equipado conta nos totais. |
+| Fábrica | `scripts/colonists/colonist_factory.gd` | Gerador do GDD no escopo do MVP: idade 16–70, histórias, Força, habilidades 0–3 + bônus + 1 a cada 10 anos, afinidades, traços, teto de 70, túnica e calça. |
+| Necessidades | `scripts/needs/needs.gd`, `mood.gd` | Fome e sono, 0–100 (Glutão perde fome 1,3× mais rápido). Humor 0–100 indo ~12 por dia ao alvo (50 + pensamentos − expectativa), com estados do GDD e o efeito no XP. |
 | Ação | `scripts/ai/action.gd` | O que o colono vai fazer, camada de decisão, alvo, tarefa, fonte de comida, etapa e progresso. |
 | Cérebro | `scripts/ai/colonist_brain.gd` | Camadas de decisão do GDD, avaliando só as mais altas que a atual. Escreve os motivos reais. |
 | Seletor | `scripts/ai/task_selector.gd` | Prioridade → coluna → pontuação do GDD. Validação com motivo (reservada, bloqueada, sem caminho, sem espaço, prioridade desligada) e as 5 melhores opções. |
@@ -84,9 +88,10 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Tema | `scripts/ui/ui_theme.gd` | Paleta "rust punk" do GDD, molduras 9-slice, barras, fonte pixel Determination sem suavização, no tamanho nítido para a escala da janela. |
 | Recursos | `scripts/ui/resource_bar.gd` | Topo esquerdo: comida em dias, madeira, pedra, carne crua, vegetais, frutas — somados dos itens reais. |
 | Tempo | `scripts/ui/time_panel.gd` | Topo direito: dia, hora, pausa e velocidades. |
-| Inspeção | `scripts/ui/inspect_panel.gd` | Canto inferior esquerdo: colono, Força, traços, carga, necessidades, o que faz, por quê, melhores tarefas avaliadas, decisões recentes. |
+| Ficha | `scripts/ui/inspect_panel.gd` | Canto inferior esquerdo, em abas. Geral: histórias, Força, agenda agora, traços (efeitos na dica), o que faz, fome, sono, humor e pensamentos. Habilidades: nível, afinidade, título, % para o próximo nível e velocidade. Equipamento: Camisa, Calça, Mão (com bônus) e carga. Por quê: motivo real, melhores tarefas, decisões recentes. |
 | Ordens | `scripts/ui/bottom_bar.gd` | Base: construir, cortar (C), minerar (M), colher (H), caçar (K), plantação (P), desmontar (D), cancelar (X), Trabalho e Armazém. |
-| Trabalho | `scripts/ui/work_priority_window.gd` | Grade de prioridades 1–4/desligado por colono e tipo; caça automática por espécie. |
+| Trabalho | `scripts/ui/work_priority_window.gd` | Grade de prioridades 1–4/desligado por colono e tipo (dica com a habilidade, nível e afinidade); caça automática por espécie. |
+| Agenda | `scripts/ui/schedule_window.gd` | Uma linha por colono e uma coluna por hora; escolha Dormir, Trabalhar ou Livre e clique ou arraste (A). |
 | Bancada | `scripts/ui/workbench_panel.gd` | Ao selecionar uma bancada (canto superior direito): pedido em andamento com ingredientes, por que está parada, motivo de cada colono, fila com modo, meta (±1, botão direito ±10), pausa, subir e apagar, e botões de novo pedido. |
 | Tile | `scripts/ui/tile_info.gd`, `scripts/ui/tile_panel.gd` | Clique num tile sem colono: terreno (movimento, fertilidade, construção do GDD), plantas, toco, caixote com conteúdo e reservas, pilha, tarefa com progresso/reserva/bloqueio e o motivo de cada colono fazer ou não (mesmo seletor da IA, em modo consulta). Atualiza 4× por segundo. |
 | Construir | `scripts/ui/build_menu.gd` | Menu com custo e tempo de cada estrutura (B). Prévia verde/vermelha na colocação; plantas aparecem em azul translúcido. |
@@ -121,7 +126,7 @@ Simulation.step()
 | 1. Reação | Desmaio: sono em 0% → dorme onde está, sem poder ser interrompido. |
 | 2. Necessidade crítica | Fome < 15% → comer; sono < 8% → dormir no chão. Interrompe o trabalho. |
 | 3. Ordem direta | Mover ou priorizar uma tarefa. Interrompida por 1 e 2, fica guardada e é retomada. |
-| 4. Agenda | Ainda não (M5). |
+| 4. Agenda | Bloco Dormir com sono < 90% → dorme; fim do bloco Trabalhar interrompe o trabalho (Esforçado termina a tarefa). Trabalho só no bloco Trabalhar. |
 | 5. Trabalho | Quadro de tarefas. Preguiçoso pausa 15 min a cada 2 h de trabalho. |
 | 6. Tempo livre | Sem tarefa possível: fome < 30% → comer; sono < 20% → dormir; senão vagar ou ficar ocioso. |
 
@@ -146,7 +151,7 @@ Simulation.step()
 - **Reservas em duas formas:** chave exclusiva (tarefa, arbusto) em `Reservations`, com expiração; quantidades (itens a retirar, espaço a ocupar) nas pilhas e contêineres. Toda saída de ação solta as duas e larga o que estiver nas mãos, então nenhum item some nem fica preso.
 - **Carregar em duas etapas:** ao pegar os itens, o colono solta a tarefa da pilha (outro pode levar o resto) e mantém só a reserva de espaço no destino.
 - **Tarefa bloqueada** (sem caminho, sem espaço) volta a ser tentada depois de 1 h de jogo; minerar uma rocha desbloqueia as vizinhas na hora.
-- **Pontuação do GDD implementada inteira**, mas habilidade (nível 0 → 0,5), afinidade (1,0) e traços (1,0) ainda são neutros até o M5 criar habilidades e afinidades.
+- **Pontuação do GDD implementada inteira:** habilidade (0,5 + nível ÷ 20) e afinidade (paixão 1,3, interesse 1,1, aversão 0,7) já valem; o fator de traços fica neutro no MVP (Curioso com artefatos e Nômade chegam com seus sistemas).
 - **Força** já é sorteada (curva normal, média 5, desvio 1,5) e afeta carga (15 kg + 5 kg × Força) e velocidade de mineração (6% por ponto).
 - **Regiões de navegação mantidas aos poucos:** célula que abre se junta à região vizinha; célula que fecha só força recálculo se um teste local (anel de vizinhos) indicar que pode ter dividido a região. Isso tirou um pico de 39 ms por tick para 1 ms.
 - **Cérebro avalia só camadas acima da atual:** quem está trabalhando não reavalia o quadro inteiro a cada meio segundo.
@@ -170,13 +175,21 @@ Simulation.step()
 - **Quem opera a bancada busca os ingredientes:** o GDD prevê uma tarefa de Carregar e o artesão buscando depois de 10 s; no MVP o operador já busca, um ingrediente por vez, como na obra. Ingredientes separados não entram nos totais até virarem produto ou voltarem ao chão.
 - **Fila:** o primeiro pedido possível da fila é feito; o pedido em andamento tem preferência para não desperdiçar ingredientes. Meta inicial: 10 do produto (60 de carne nos abates). Bancada sem ingrediente não fica bloqueada: a falta é conferida a cada pensamento.
 - **Escolha da comida:** pontuação = nutrição ÷ (1 + custo ÷ 30), entre as 6 mais perto e a mais perto de cada tipo de comida. Refeição (50) vence frutas (20) mesmo um pouco mais longe. Carne crua não se come crua.
-- **Caça sem combate (até o M7):** o caçador chega a 7 tiles e atira a cada 1,5 s (85% de acerto, −5% por tile, mínimo 30%, 10 de dano × velocidade de trabalho). A presa ferida foge; o caçador persegue. Morta, vira carcaça no chão (lebre 3 kg; cervo 40 kg, carregado um por vez mesmo acima da capacidade). Arco e lança mudam isso com o equipamento (M5) e o combate (M7).
+- **Caça sem combate (até o M7):** o caçador chega ao alcance da arma e atira a cada 1,5 s (85% de acerto, −5% por tile, mínimo 30%, dano × velocidade de trabalho). Sem arma: improvisada, alcance 6, dano 8; lança: 6 e 14; arco: 12 e 12 (provisório). A presa ferida foge; o caçador persegue. Morta, vira carcaça no chão (lebre 3 kg; cervo 40 kg, carregado um por vez mesmo acima da capacidade).
 - **Predador não ataca colonos nem pode ser caçado** até o M7 (sem combate seria injusto). Ele caça lebres e cervos a cada 36 h; presas fogem dele.
 - **Animais (provisório):** lebre 20 de vida, 3,6 tiles/s, 10 no mapa; cervo 60, 3,3 tiles/s, 5; lobo-espinho 80, 4,2 tiles/s, 2. Abaixo da população, um animal por espécie migra pela borda a cada dia. **Caça automática** por espécie (janela de Trabalho) marca os que estão no mapa e os que chegarem.
 - **Cultivos (provisório; o GDD não define):** cenoura 5 dias, rende 5 (nutrição 20 crua); trigo 8 dias, rende 10 (não se come cru, nutrição 0, mas serve de porção crua na refeição simples); cogumelo 3 dias, rende 3 (nutrição 15). Os três contam como "porção crua". Semear 0,25 h e colher 0,3 h. A arte tem uma coluna por fase (`stages` no `.tres`) e a última é a madura. Planta silvestre ou itens no tile impedem semear, com motivo. Apagar a zona ou trocar o cultivo não destrói o que já foi semeado.
 - **Cenoura e cogumelo substituem o "vegetal" genérico** do GDD (o item `vegetable` saiu): são os vegetais do MVP. Zona nova planta cenoura; o cultivo é trocado pelas opções do tile.
 - **Fonte Determination no tamanho da escala:** os contornos ficam numa grade de 12 px por em; com o oversampling do Godot ela fica nítida quando tamanho × escala da janela é múltiplo de 12. O HUD escolhe o tamanho pela escala inteira atual (×2 → 6 px = 12 px na tela; ×3 → 8 px = 24 px), perto de 8 px, e recalcula quando a janela muda. Sem suavização, sem hinting, sem posição subpixel. O menu de construção usa 3 colunas, o painel do tile rola acima de 150 px e o painel da bancada não repete os motivos dos colonos (estão no painel do tile).
 - **Opções do clique são atalhos para as mesmas ordens:** cortar, minerar, colher, desmontar, caçar e plantação usam as designações; "Comer agora" e "Dormir agora" são ordens diretas (camada 3), com a mesma escolha de comida e cama da IA.
+- **Velocidade por nível (GDD):** curva contínua passando pelas pontas das faixas: 0 → 40%, 3 → 70%, 7 → 100%, 11 → 125%, 15 → 150%, 19 → 175%, 20 → 180%. Carregar não usa habilidade (100%). Cortar plantas usa Cultivo; a caça usa Corpo a corpo (Pontaria está fora do MVP).
+- **XP (GDD):** 150 XP por hora × afinidade (0,2 / 0,35 / 1,0 / 1,5) × idade (até 17 ×1,3; 60+ ×0,7) × humor (contente ×1,1; instável ou pior ×0,8). Para subir do nível n: 1.000 + 75n². Acima de 4.000 XP no dia, ×0,2. Acima do nível 12 sem praticar, −40 XP por dia (−80 acima do 16). Ensino e cultura ficam fora do MVP.
+- **Histórias:** 6 infâncias e 7 vidas adultas do GDD, só com os bônus nas 6 habilidades do MVP e na Força. Incapacidades, fobias e cultura de origem ficam fora do MVP. Interesses puxam (50%) para as habilidades das histórias; aversões, para as outras.
+- **Traços (efeitos no MVP):** Esforçado +15% e termina a tarefa depois do fim do bloco Trabalhar; Preguiçoso −20% e pausa 15 min a cada 2 h; Otimista +6 e Pessimista −6 no humor; Forte +2 de Força; Glutão perde fome 1,3× mais rápido; Covarde recusa tarefas a até 10 tiles de um predador, com o motivo; Curioso (o efeito do GDD é sobre conhecimento e artefatos, M6) por enquanto vaga mais longe no tempo livre. Chance de ter 1, 2 ou 3 traços: 50%, 35%, 15% (provisório).
+- **Humor (pensamentos do MVP, provisórios):** com fome −6 (faminto −12), cansado −5 (exausto −10), Otimista +6, Pessimista −6, dormiu no chão −4 por 12 h, sentimento pelo trabalho (interesse +1/h até +6, paixão +2/h até +10, aversão −2/h até −10; some 0,25 por hora sem trabalhar). Expectativa de assentamento: 0. Crises e inspirações ficam para depois do MVP (Fase 1 do GDD).
+- **Agenda padrão:** dormir das 22 às 6, livre das 20 às 22, trabalhar das 6 às 20. A partida começa às 6 h do dia 1.
+- **Equipamento (MVP: Camisa, Calça, Mão):** todos começam de túnica e calça de pano (sem efeito enquanto a temperatura é fixa). Antes de trabalhar, o colono pega no contêiner ou no chão (até 40 tiles) a ferramenta melhor para aquele trabalho e deixa no lugar a que tinha. Faca de pedra: Cozinhar e Caçar ×1,1 (faca do GDD); machado de pedra: Cortar plantas ×1,25 (provisório, o GDD só cita picareta e martelo); lança e arco: armas de caça. O item na mão pesa na carga e conta nos totais.
+- **Carga:** acima de 100% da capacidade, movimento −20%; acima de 125%, −50%. O GDD trava o colono acima de 150%, mas no MVP isso só ocorre arrastando uma carcaça grande, então ele segue a −50%.
 - **Crescimento provisório** (o GDD não define): árvore leva 15 dias para ficar adulta e, jovem, rende 5 de madeira em metade do tempo de corte; toco some em 10 dias; arbusto muda leva 5 dias; planta de fibra leva 3 dias e rende 5 fibras. No início, 25% das árvores e 20% dos arbustos são jovens.
 
 ## Plano de testes
@@ -199,6 +212,7 @@ godot --headless --path . -s res://tests/test_runner.gd
 | `test_production.gd` | Fogueira cozinha até a meta e para (2 porções cruas por refeição, exato), "fazer N" e pausa, receita com dois ingredientes de lugares diferentes, falta de ingrediente explicada, apagar o pedido devolve os ingredientes, desmontar a bancada devolve os ingredientes, cozinha abate (6 carne e 1 pele), fogueira não abate, Cozinhar desligado, refeição preferida a frutas mais perto. |
 | `test_food_sources.gd` | **Aceite do M4** (sem comida guardada nem frutas silvestres, 3 colonos vivem 4 dias de caça automática, abate, cozinha e plantação, sem ordem nova), espécies do MVP no mapa, caça deixa carcaça, presa ferida e colono perto fazem fugir, predador não é marcado, predador caça presa, migração, caça automática marca quem chega, plantação semeia, cresce, colhe e semeia de novo, água não vira plantação, cancelar apaga zona e caça. |
 | `test_context_actions.gd` | Opções do clique: árvore cortar e cancelar, cama desmontar (qualquer tile dela), obra cancelada devolve o material, caçar animais mas não o predador, plantação criar, trocar o cultivo (tarefa refeita) e remover, colono dormir, cancelar ordem e comer; cada cultivo com uma coluna de arte por fase. |
+| `test_colonists.gd` | **Aceite do M5** (Esforçada e Otimista × Preguiçoso, Pessimista e Glutão, com os mesmos níveis: trabalho, pausas, comida e humor diferentes), regras do gerador, curva de velocidade e tabela de XP, trabalho ensina e afinidade muda o humor, limite diário e esquecimento, nível muda a velocidade, humor anda até o alvo, dormir no chão é lembrado, agenda (para no Livre, dorme no Dormir), Esforçado termina a tarefa, Glutão, Covarde, pegar ferramenta melhor e largar, carga pesada. |
 | `test_ui_theme.gd` | Tamanho da fonte sempre na grade de pixels da fonte para cada escala, escala inteira da janela. |
 | `test_plants.gd` | Calendário das estações, uma linha de arte por estação, árvore jovem cresce, corte deixa toco que some, muda não dá frutas, colheita de fibra rende e volta a crescer, mapa com plantas jovens e adultas. |
 | `test_navigation.gd` | Desvio de obstáculo, destino bloqueado, custo da água rasa, mapa conectado pelos vaus, corredor bloqueado divide regiões, regiões incrementais iguais a um recálculo completo. |
@@ -214,14 +228,13 @@ godot --headless --path . -s res://tools/generate_placeholder_assets.gd
 
 ## Ordem de implementação (próximos marcos)
 
-1. **M5 — Colonos completos** (os 8 traços, 6 habilidades, afinidades, XP, humor, agenda).
-2. **M6 — Pesquisa e ruína.**
-3. **M7 — Ameaça e combate.**
-4. **M8 — Salvar/carregar, painéis, balanceamento, testes de partida completa.**
+1. **M6 — Pesquisa e ruína.**
+2. **M7 — Ameaça e combate.**
+3. **M8 — Salvar/carregar, painéis, balanceamento, testes de partida completa.**
 
 ## Limitações conhecidas
 
-- Fome em 0% ainda não tem consequência além do registro: saúde entra no M7 e humor no M5.
+- Fome em 0% derruba o humor, mas ainda não fere: saúde entra no M7.
 - Estruturas não giram: a cama é sempre vertical (1×2) e a mesa horizontal (2×1).
 - Pesquisas que liberam construções (Alvenaria de pedra, Armazenamento) entram no M6; por enquanto tudo do MVP está liberado.
 - Não há detecção de cômodos nem teto: qualidade de sala e beleza ficam para depois do MVP.
@@ -230,7 +243,9 @@ godot --headless --path . -s res://tools/generate_placeholder_assets.gd
 - O painel do tile ainda não mostra temperatura nem beleza: esses sistemas não existem no MVP atual.
 - A grade de Trabalho ainda não tem a coluna Pesquisar (M6).
 - Comida não estraga e o abate não suja a cozinha: deterioração, limpeza e intoxicação ficam para depois do MVP.
-- Ferramentas e armas feitas na bancada ainda só ficam guardadas: equipar e usar entra no M5 (equipamento) e no M7 (combate).
+- Qualidade dos itens (ruim a obra-prima) ainda não existe: a habilidade só muda a velocidade.
+- Sem crises nem inspirações de humor (Fase 1 do GDD); sem lazer, convívio, Estudo e Ritual na agenda.
+- Sem escolha de colonos no início da partida (2 a 5 com sorteio): entra com a criação de partida.
 - A caça não testa linha de visão; o caçador atira através de árvores.
 - Bancadas não têm níveis, anexos, ligação com contêineres nem ambiente (luz, limpeza, temperatura): fora do MVP pelo GDD.
 - Uma só cultura (hortaliças) e sem estações no crescimento, conforme o escopo do MVP.

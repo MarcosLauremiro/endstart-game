@@ -19,6 +19,7 @@ const _SUITES := [
 	"res://tests/test_food_sources.gd",
 	"res://tests/test_context_actions.gd",
 	"res://tests/test_ui_theme.gd",
+	"res://tests/test_colonists.gd",
 ]
 
 

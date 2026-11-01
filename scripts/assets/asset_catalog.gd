@@ -88,6 +88,8 @@ const ENTRIES := {
 	"items/fat": {"size": Vector2i(16, 16), "color": "e8d8a0", "use": "Gordura"},
 	"items/small_game_carcass": {"size": Vector2i(16, 16), "color": "8a6a4a", "use": "Carcaça de lebre (caça pequena)"},
 	"items/large_game_carcass": {"size": Vector2i(16, 16), "color": "6a4a3a", "use": "Carcaça de cervo (caça grande)"},
+	"items/tunic": {"size": Vector2i(16, 16), "color": "a89a7a", "use": "Túnica simples (roupa inicial, espaço Camisa)"},
+	"items/trousers": {"size": Vector2i(16, 16), "color": "6a5a48", "use": "Calça de pano (roupa inicial, espaço Calça)"},
 	"items/artifact": {"size": Vector2i(16, 16), "color": "3fe0d0", "use": "Artefato da ruína"},
 	# --- Personagens ---
 	"characters/colonists/colonist": {"size": Vector2i(16, 24), "color": "d0a070", "use": "Colono (corpo; a cabeça passa do tile)"},

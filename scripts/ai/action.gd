@@ -3,10 +3,10 @@ extends RefCounted
 ## Uma atividade que o colono decidiu fazer, com a camada de decisão que a originou.
 ## A camada define quem interrompe quem (GDD: Camadas de decisão).
 
-enum Kind { MOVE, EAT, SLEEP, WANDER, IDLE, WORK, HAUL, BREAK, DELIVER, HUNT }
+enum Kind { MOVE, EAT, SLEEP, WANDER, IDLE, WORK, HAUL, BREAK, DELIVER, HUNT, EQUIP }
 ## Ordem do GDD: número menor vence.
 enum Layer { REACTION = 1, CRITICAL_NEED = 2, ORDER = 3, SCHEDULE = 4, WORK = 5, FREE_TIME = 6 }
-## De onde vem o item de uma ação (comida para EAT, material para DELIVER).
+## De onde vem o item de uma ação (comida para EAT, material para DELIVER, ferramenta para EQUIP).
 enum ItemSource { NONE, CONTAINER, STACK, BUSH }
 
 const LAYER_NAMES := {

@@ -88,6 +88,16 @@ func _reserve(colonist: Colonist, action: Action, state: WorldState) -> String:
 				task.work_required = bench.job.recipe.work_ticks()
 		Action.Kind.DELIVER:
 			return _reserve_delivery(colonist, action, state)
+		Action.Kind.EQUIP:
+			var granted := 0
+			if action.item_source == Action.ItemSource.CONTAINER:
+				var container: StorageContainer = state.containers.get(action.target_id)
+				granted = container.reserve_take(colonist.id, action.item_id, 1) if container else 0
+			else:
+				var stack: ItemStack = state.stacks.get(action.target_id)
+				granted = stack.reserve_take(colonist.id, 1) if stack else 0
+			if granted <= 0:
+				return "a ferramenta já foi reservada por outro"
 		Action.Kind.HAUL:
 			var task := state.task_board.get_task(action.task_id)
 			var stack: ItemStack = state.stacks.get(action.target_id)
@@ -174,7 +184,7 @@ func _move(colonist: Colonist, state: WorldState) -> void:
 	var step := next - colonist.cell
 	var length := _DIAGONAL_LENGTH if step.x != 0 and step.y != 0 else 1.0
 	var factor := state.navigation.speed_factor(next)
-	colonist.move_progress += Balance.MOVE_TILES_PER_TICK * factor / length
+	colonist.move_progress += Balance.MOVE_TILES_PER_TICK * factor * colonist.load_move_factor() / length
 	_touch(colonist, state)
 	if colonist.move_progress < 1.0:
 		return
@@ -191,7 +201,7 @@ func _move(colonist: Colonist, state: WorldState) -> void:
 ## A cada tile andado na caça: com o animal no alcance, para e mira; se ele se afastou do destino, refaz o caminho.
 func _hunter_step(colonist: Colonist, state: WorldState) -> void:
 	var animal: Animal = state.animals.get(colonist.action.target_id)
-	if animal == null or _in_hunting_range(colonist.cell, animal.cell):
+	if animal == null or _in_hunting_range(colonist, animal.cell):
 		colonist.path.clear()
 		colonist.state = Colonist.State.EXECUTING
 		return
@@ -223,6 +233,8 @@ func _execute(colonist: Colonist, state: WorldState) -> void:
 			_deliver(colonist, state)
 		Action.Kind.HUNT:
 			_hunt(colonist, state)
+		Action.Kind.EQUIP:
+			_equip(colonist, state)
 
 
 func _wait(colonist: Colonist, duration: int) -> void:
@@ -299,10 +311,20 @@ func _work(colonist: Colonist, state: WorldState) -> void:
 		place_speed = bench.def().bench_speed
 	task.progress += colonist.work_speed(task.work_type) * place_speed * _team_share(task, state)
 	colonist.work_ticks_since_break += 1
+	_learn(colonist, task.work_type, 1, state)
 	_touch(colonist, state)
 	if task.progress >= task.work_required:
 		TaskEffects.complete(task, state)
 		colonist.state = Colonist.State.FINISHING
+
+
+## XP do trabalho; ao subir de nível, avisa no registro.
+func _learn(colonist: Colonist, work_type: int, ticks: int, state: WorldState) -> void:
+	var raised := colonist.learn(work_type, ticks)
+	if raised >= 0:
+		var level := colonist.skill(raised).level
+		state.post_message("%s subiu para o nível %d em %s (%s)" % [
+			colonist.display_name, level, Skills.name_of(raised), Skills.title_of(level)])
 
 
 ## Parte de cada colono na velocidade da equipe (GDD: ×1, ×1,8 e ×2,4 com 1, 2 e 3 colonos).
@@ -318,6 +340,32 @@ func _team_share(task: Task, state: WorldState) -> float:
 	return Balance.TEAM_WORK_TOTALS[workers - 1] / workers
 
 
+## Pega a ferramenta e deixa no lugar dela o que tinha na mão (ou no chão, se não couber).
+func _equip(colonist: Colonist, state: WorldState) -> void:
+	var action := colonist.action
+	var taken := 0
+	var container: StorageContainer = null
+	if action.item_source == Action.ItemSource.CONTAINER:
+		container = state.containers.get(action.target_id)
+		taken = container.take(colonist.id) if container else 0
+	else:
+		var stack: ItemStack = state.stacks.get(action.target_id)
+		if stack:
+			taken = stack.take(colonist.id)
+			state.remove_stack_if_empty(stack)
+	if taken <= 0:
+		_fail(colonist, state, "a ferramenta não estava mais lá")
+		return
+	var previous := colonist.equipment.equip(action.item_id)
+	if previous != &"":
+		var stored := 0
+		if container and container.reserve_space(colonist.id, previous, 1) > 0:
+			stored = container.deposit(colonist.id, previous, 1)
+		if stored <= 0:
+			state.drop_items(colonist.cell, previous, 1)
+	colonist.state = Colonist.State.FINISHING
+
+
 ## Caçar: chega perto o bastante e atira de longe, de tempos em tempos (GDD: caça com arma simples).
 ## O animal ferido foge; o caçador vai atrás. Morto, vira carcaça no chão, para Carregar.
 func _hunt(colonist: Colonist, state: WorldState) -> void:
@@ -327,11 +375,12 @@ func _hunt(colonist: Colonist, state: WorldState) -> void:
 	if task == null or animal == null:
 		_fail(colonist, state, "o animal sumiu")
 		return
-	if not _in_hunting_range(colonist.cell, animal.cell):
+	if not _in_hunting_range(colonist, animal.cell):
 		_chase(colonist, state, animal)
 		return
 	_touch(colonist, state)
 	action.progress_ticks += 1
+	_learn(colonist, task.work_type, 1, state)
 	if action.progress_ticks < Balance.HUNT_AIM_TICKS:
 		return
 	action.progress_ticks = 0
@@ -340,7 +389,7 @@ func _hunt(colonist: Colonist, state: WorldState) -> void:
 	var chance := clampf(Balance.HUNT_HIT_CHANCE - Balance.HUNT_HIT_FALLOFF_PER_TILE * distance, Balance.HUNT_MIN_HIT_CHANCE, 1.0)
 	if state.rng.randf() >= chance:
 		return
-	var damage := Balance.HUNT_DAMAGE * colonist.work_speed(task.work_type)
+	var damage := colonist.hunt_damage() * colonist.work_speed(task.work_type)
 	task.progress = minf(task.progress + damage, task.work_required)
 	if Wildlife.hurt(state, animal, damage, colonist.cell):
 		TaskEffects.complete(task, state)
@@ -362,8 +411,10 @@ func _chase(colonist: Colonist, state: WorldState, animal: Animal) -> void:
 	colonist.state = Colonist.State.MOVING
 
 
-static func _in_hunting_range(from: Vector2i, to: Vector2i) -> bool:
-	return from.distance_squared_to(to) <= Balance.HUNT_RANGE_TILES * Balance.HUNT_RANGE_TILES
+## Alcance da arma na mão (ou da improvisada).
+static func _in_hunting_range(colonist: Colonist, to: Vector2i) -> bool:
+	var reach := colonist.hunt_range()
+	return colonist.cell.distance_squared_to(to) <= reach * reach
 
 
 ## Levar material: pega na origem (etapa 0) e entrega na obra ou bancada (etapa 1).
@@ -466,6 +517,15 @@ func _close(colonist: Colonist, state: WorldState, outcome: String) -> void:
 	var action := colonist.action
 	if action and action.record and action.record.outcome.is_empty():
 		action.record.outcome = outcome
+	# Dormiu de verdade (estava deitado), não só a caminho da cama.
+	var slept := action != null and action.kind == Action.Kind.SLEEP \
+		and (colonist.state == Colonist.State.EXECUTING or colonist.state == Colonist.State.FINISHING)
+	if slept:
+		if action.target_id != 0:
+			colonist.mood.forget(&"slept_on_ground")
+		else:
+			colonist.mood.remember(&"slept_on_ground", "Dormiu no chão", Balance.SLEPT_ON_GROUND_MOOD,
+				Balance.SLEPT_ON_GROUND_HOURS, state.clock.tick)
 	if colonist.carrying_count > 0:
 		state.drop_items(colonist.cell, colonist.carrying_item, colonist.carrying_count)
 		colonist.clear_carry()

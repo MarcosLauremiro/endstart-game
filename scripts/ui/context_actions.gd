@@ -96,6 +96,10 @@ static func for_colonist(simulation: Simulation, colonist: Colonist) -> Array[Di
 		sleep["enabled"] = false
 		sleep["tooltip"] = "Está descansado (sono acima de %d%%)" % Balance.SLEEP_ORDER_MAX_REST
 	options.append(sleep)
+	var hand := colonist.equipment.hand()
+	if hand != &"":
+		options.append(_option("Largar %s" % Defs.item(hand).display_name.to_lower(),
+			"Larga no chão o que tem na mão", func() -> String: return simulation.drop_hand(id)))
 	if colonist.direct_order:
 		options.append(_option("Cancelar ordem", "Esquece a ordem direta: %s" % colonist.direct_order.label().to_lower(),
 			func() -> String: return simulation.cancel_order(id)))

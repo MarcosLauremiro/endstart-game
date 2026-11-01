@@ -8,6 +8,7 @@ const STRUCTURES_DIR := "res://resources/structures/"
 const RECIPES_DIR := "res://resources/recipes/"
 const ANIMALS_DIR := "res://resources/animals/"
 const CROPS_DIR := "res://resources/crops/"
+const BACKSTORIES_DIR := "res://resources/backstories/"
 
 static var _items := {}
 static var _containers := {}
@@ -15,6 +16,7 @@ static var _structures := {}
 static var _recipes := {}
 static var _animals := {}
 static var _crops := {}
+static var _backstories := {}
 
 
 static func item(id: StringName) -> ItemDef:
@@ -84,6 +86,16 @@ static func crops() -> Array:
 	return _crops.values()
 
 
+## Histórias de uma fase (infância ou vida adulta), na ordem dos arquivos.
+static func backstories(stage: BackstoryDef.Stage) -> Array[BackstoryDef]:
+	_ensure_loaded()
+	var result: Array[BackstoryDef] = []
+	for definition in _backstories.values():
+		if definition.stage == stage:
+			result.append(definition)
+	return result
+
+
 static func _ensure_loaded() -> void:
 	if not _items.is_empty():
 		return
@@ -93,6 +105,7 @@ static func _ensure_loaded() -> void:
 	_recipes = _load_folder(RECIPES_DIR)
 	_animals = _load_folder(ANIMALS_DIR)
 	_crops = _load_folder(CROPS_DIR)
+	_backstories = _load_folder(BACKSTORIES_DIR)
 
 
 static func _load_folder(directory: String) -> Dictionary:

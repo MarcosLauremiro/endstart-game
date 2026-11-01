@@ -1,7 +1,7 @@
 class_name ColonistBrain
 extends RefCounted
 ## Escolhe a próxima ação seguindo as camadas do GDD, em ordem:
-## 1 reações, 2 necessidades críticas, 3 ordens diretas, 4 agenda (M5), 5 trabalho, 6 tempo livre.
+## 1 reações, 2 necessidades críticas, 3 ordens diretas, 4 agenda, 5 trabalho, 6 tempo livre.
 ## Só avalia camadas mais altas que a da ação atual: quem está trabalhando não reavalia o quadro
 ## de tarefas a cada meio segundo, só verifica se algo mais urgente apareceu.
 ## Não reserva nem move nada. Cada motivo escrito no registro é o motivo real usado.
@@ -41,11 +41,30 @@ func decide(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Ac
 	if colonist.direct_order:
 		return colonist.direct_order
 
-	# 4. Agenda: entra no M5.
+	# 4. Agenda (GDD: Dormir, Trabalhar, Livre)
+	if limit <= Action.Layer.SCHEDULE:
+		return null
+	var block := colonist.block_at(state.clock.tick)
+	var hour := (state.clock.tick / Balance.TICKS_PER_HOUR) % Balance.HOURS_PER_DAY
+	var working_now := colonist.action != null and colonist.action.layer == Action.Layer.WORK
+	if block != Schedule.Block.WORK and working_now:
+		if colonist.has_trait(Traits.HARDWORKING):
+			# Esforçado termina a tarefa mesmo fora do bloco de Trabalho.
+			return null
+		var stop := Action.make(Action.Kind.IDLE, Action.Layer.SCHEDULE, colonist.cell,
+			"Agenda: às %02d:00 começa o bloco %s; para de trabalhar" % [hour, Schedule.name_of(block)])
+		stop.title = "Fim do trabalho"
+		return stop
+	if block == Schedule.Block.SLEEP and needs.rest < Balance.SCHEDULE_SLEEP_BELOW:
+		return _sleep(colonist, state, record, Action.Layer.SCHEDULE,
+			"Agenda: bloco Dormir (%02d:00) e sono em %d%%" % [hour, needs.rest])
 
-	# 5. Trabalho
+	# 5. Trabalho (só no bloco Trabalhar)
 	if limit <= Action.Layer.WORK:
 		return null
+	if block != Schedule.Block.WORK:
+		record.rejected.append("Trabalho: fora do bloco Trabalhar (agora é %s)" % Schedule.name_of(block))
+		return _free_time(colonist, state, record)
 	if colonist.has_trait(Traits.LAZY) and colonist.work_ticks_since_break >= Balance.LAZY_BREAK_EVERY_TICKS:
 		var pause := Action.make(Action.Kind.BREAK, Action.Layer.WORK, colonist.cell,
 			"Preguiçoso: pausa de 15 min a cada 2 h de trabalho")
@@ -53,9 +72,14 @@ func decide(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Ac
 		return pause
 	var work := selector.choose(colonist, state, record)
 	if work:
-		return work
+		var tool := _better_tool(colonist, work, state, record)
+		return tool if tool else work
+	return _free_time(colonist, state, record)
 
-	# 6. Tempo livre (só quando não há tarefa possível)
+
+## 6. Tempo livre: comer ou dormir abaixo dos limites do GDD; senão vagar ou ficar à toa.
+func _free_time(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Action:
+	var needs := colonist.needs
 	if needs.food < Balance.FOOD_FREE_TIME_THRESHOLD:
 		var why := "Sem tarefa e com fome em %d%%, abaixo de %d%%: come no tempo livre" % [
 			needs.food, Balance.FOOD_FREE_TIME_THRESHOLD]
@@ -207,6 +231,64 @@ func _food_shortlist(candidates: Array[Dictionary]) -> Array[Dictionary]:
 	return result
 
 
+## Antes de trabalhar: há ferramenta melhor guardada por perto para este trabalho? (GDD: "pega a
+## melhor ferramenta para a tarefa no rack ou baú mais próximo"). Devolve a ação de pegá-la, ou null.
+func _better_tool(colonist: Colonist, work: Action, state: WorldState, record: DecisionRecord) -> Action:
+	var task := state.task_board.get_task(work.task_id)
+	if task == null:
+		return null
+	var current := _tool_value(colonist.equipment.hand(), task.work_type)
+	var best: Dictionary = {}
+	var best_value := current
+	var limit_squared := Balance.TOOL_SEARCH_MAX_DISTANCE * Balance.TOOL_SEARCH_MAX_DISTANCE
+	for container in state.containers.values():
+		if container.cell.distance_squared_to(colonist.cell) > limit_squared:
+			continue
+		for item in container.contents():
+			var value := _tool_value(item, task.work_type)
+			if value > best_value and container.available(item) > 0:
+				best_value = value
+				best = {"source": Action.ItemSource.CONTAINER, "id": container.id, "cell": container.cell, "item": item, "adjacent": true}
+	for stack in state.stacks.values():
+		var value := _tool_value(stack.item, task.work_type)
+		if value > best_value and stack.available() > 0 and stack.cell.distance_squared_to(colonist.cell) <= limit_squared:
+			best_value = value
+			best = {"source": Action.ItemSource.STACK, "id": stack.id, "cell": stack.cell, "item": stack.item, "adjacent": false}
+	if best.is_empty():
+		return null
+	var path: Array[Vector2i]
+	if best["adjacent"]:
+		path = state.navigation.path_to_adjacent(colonist.cell, best["cell"])
+	else:
+		path = state.navigation.find_path(colonist.cell, best["cell"])
+	var tool_name := Defs.item(best["item"]).display_name
+	if path.is_empty():
+		record.rejected.append("%s: sem caminho até ela" % tool_name)
+		return null
+	var action := Action.make(Action.Kind.EQUIP, Action.Layer.WORK, best["cell"],
+		"Vai %s; antes pega %s, que é melhor para %s" % [work.label().to_lower(), tool_name.to_lower(), WorkType.name_of(task.work_type)])
+	action.item_source = best["source"]
+	action.target_id = best["id"]
+	action.item_id = best["item"]
+	action.adjacent = best["adjacent"]
+	action.path = path
+	action.title = "Pegar %s" % tool_name.to_lower()
+	return action
+
+
+## Quanto o item ajuda no trabalho: bônus de velocidade, ou valor de caça para Caçar. 1 = nada.
+static func _tool_value(item: StringName, work_type: int) -> float:
+	if item == &"" or not Equipment.is_equippable(item):
+		return 1.0
+	var definition := Defs.item(item)
+	if work_type == WorkType.Id.HUNT:
+		var unarmed := Balance.UNARMED_HUNT_DAMAGE * (1.0 + Balance.UNARMED_HUNT_RANGE / 10.0)
+		return maxf(definition.hunting_value() / unarmed, definition.work_bonus.get(&"hunt", 1.0))
+	if definition.equip_slot != &"hand":
+		return 1.0
+	return definition.work_bonus.get(WorkType.key_of(work_type), 1.0)
+
+
 ## Comida com mais nutrição disponível no contêiner, ou vazio.
 func _best_food_in(container: StorageContainer) -> StringName:
 	var best: StringName = &""
@@ -221,15 +303,15 @@ func _best_food_in(container: StorageContainer) -> StringName:
 
 func _free_time_filler(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Action:
 	record.rejected.append("Sem ordens nem tarefa; fome %d%% e sono %d%% acima dos limites" % [colonist.needs.food, colonist.needs.rest])
-	if state.rng.randf() < Balance.WANDER_CHANCE:
-		var target := colonist.cell + Vector2i(
-			state.rng.randi_range(-Balance.WANDER_RADIUS, Balance.WANDER_RADIUS),
-			state.rng.randi_range(-Balance.WANDER_RADIUS, Balance.WANDER_RADIUS),
-		)
+	var curious := colonist.has_trait(Traits.CURIOUS)
+	var radius := Balance.CURIOUS_WANDER_RADIUS if curious else Balance.WANDER_RADIUS
+	if state.rng.randf() < (Balance.CURIOUS_WANDER_CHANCE if curious else Balance.WANDER_CHANCE):
+		var target := colonist.cell + Vector2i(state.rng.randi_range(-radius, radius), state.rng.randi_range(-radius, radius))
 		var path := state.navigation.find_path(colonist.cell, target)
 		if path.size() > 1:
-			var wander := Action.make(Action.Kind.WANDER, Action.Layer.FREE_TIME, target,
-				"Tempo livre sem nada a fazer: dá uma volta por perto")
+			var why := "Curioso: no tempo livre vai olhar um lugar mais longe" if curious \
+				else "Tempo livre sem nada a fazer: dá uma volta por perto"
+			var wander := Action.make(Action.Kind.WANDER, Action.Layer.FREE_TIME, target, why)
 			wander.path = path
 			return wander
 	return Action.make(Action.Kind.IDLE, Action.Layer.FREE_TIME, colonist.cell,

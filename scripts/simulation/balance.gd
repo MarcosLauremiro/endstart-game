@@ -23,6 +23,8 @@ const MAX_TICKS_PER_FRAME := 120
 const TILE_SIZE := 16
 const MAP_SIZE := Vector2i(128, 128)
 const DEFAULT_SEED := 20261030
+## A partida começa às 6 h da manhã do dia 1 (início do bloco Trabalhar da agenda padrão).
+const START_HOUR := 6
 
 # --- Geração do terreno (valores provisórios de M0) ---
 const TERRAIN_NOISE_FREQUENCY := 0.04
@@ -132,11 +134,8 @@ const ANIMAL_SPAWN_MIN_DISTANCE := 20
 const PREDATOR_SIGHT_RADIUS := 25
 const PREDATOR_KILL_DISTANCE := 1.5
 const PREDATOR_EAT_TICKS := 2 * TICKS_PER_HOUR
-## Caça com arma simples improvisada: atira a até 7 tiles, uma vez a cada 1,5 s de jogo.
-## Arco e lança mudam alcance e dano quando o equipamento entrar (M5) e o combate (M7).
-const HUNT_RANGE_TILES := 7
+## Caça: atira uma vez a cada 1,5 s de jogo; alcance e dano vêm da arma na mão (ou da improvisada).
 const HUNT_AIM_TICKS := 90
-const HUNT_DAMAGE := 10.0
 const HUNT_HIT_CHANCE := 0.85
 const HUNT_HIT_FALLOFF_PER_TILE := 0.05
 const HUNT_MIN_HIT_CHANCE := 0.3
@@ -159,11 +158,110 @@ const LAZY_SPEED := 0.8
 const LAZY_BREAK_EVERY_TICKS := 2 * TICKS_PER_HOUR
 const LAZY_BREAK_TICKS := TICKS_PER_HOUR / 4
 
+# --- Habilidades e XP (GDD: Habilidades, Ganho de XP) ---
+const SKILL_MAX_LEVEL := 20
+## 150 XP por hora de trabalho na atividade.
+const SKILL_XP_PER_HOUR := 150.0
+const SKILL_XP_PER_TICK := SKILL_XP_PER_HOUR / TICKS_PER_HOUR
+## XP para subir do nível n = 1.000 + 75 × n².
+const SKILL_XP_BASE_TO_LEVEL := 1000.0
+const SKILL_XP_PER_LEVEL_SQUARED := 75.0
+## Acima de 4.000 XP no mesmo dia, numa habilidade, o ganho cai para ×0,2.
+const SKILL_DAILY_XP_SOFT_CAP := 4000.0
+const SKILL_OVER_CAP_XP_FACTOR := 0.2
+## Esquecimento: acima do nível 12 sem praticar, −40 XP por dia (−80 acima do 16).
+const SKILL_FORGET_FROM_LEVEL := 12
+const SKILL_FORGET_FAST_FROM_LEVEL := 16
+const SKILL_FORGET_XP_PER_DAY := 40.0
+const SKILL_FORGET_FAST_XP_PER_DAY := 80.0
+## Idade: até 17 anos ×1,3; de 60 em diante ×0,7.
+const XP_YOUNG_MAX_AGE := 17
+const XP_YOUNG_FACTOR := 1.3
+const XP_OLD_MIN_AGE := 60
+const XP_OLD_FACTOR := 0.7
+## Humor: contente ou melhor ×1,1; instável ou pior ×0,8.
+const XP_CONTENT_FACTOR := 1.1
+const XP_UNSTABLE_FACTOR := 0.8
+
+# --- Geração de colonos (GDD: Geração e raridade) ---
+const COLONIST_MIN_AGE := 16
+const COLONIST_MAX_AGE := 70
+## A maioria entre 20 e 45 anos.
+const COLONIST_AGE_MEAN := 32.0
+const COLONIST_AGE_DEVIATION := 9.0
+## Habilidades começam entre 0 e 3, mais os bônus das histórias.
+const SKILL_START_MAX := 3
+## Adultos ganham +1 a cada 10 anos (depois dos 20) nas habilidades da vida adulta.
+const ADULT_SKILL_YEARS_PER_LEVEL := 10
+const ADULT_SKILL_FROM_AGE := 20
+## Teto: a soma de todos os níveis não passa de 70.
+const SKILL_SUM_CAP := 70
+## De 1 a 3 interesses ou paixões (1 em 3 é paixão), de 0 a 2 aversões.
+const PASSION_CHANCE := 1.0 / 3.0
+## Chance de cada interesse cair numa habilidade das histórias do colono (provisório).
+const STORY_AFFINITY_BIAS := 0.5
+## Traços: 1 a 3 (provisório: 50% um, 35% dois, 15% três).
+const TRAIT_TWO_CHANCE := 0.35
+const TRAIT_THREE_CHANCE := 0.15
+const STRONG_STRENGTH_BONUS := 2
+## Glutão come 30% a mais: a fome cai 1,3× mais rápido.
+const GLUTTON_HUNGER_FACTOR := 1.3
+## Covarde recusa tarefas a até 10 tiles de um predador.
+const COWARD_DANGER_RADIUS := 10
+## Curioso, no tempo livre, vai olhar lugares mais longe e com mais frequência.
+const CURIOUS_WANDER_RADIUS := 15
+const CURIOUS_WANDER_CHANCE := 0.6
+
+# --- Humor (GDD: Humor; pensamentos do MVP provisórios) ---
+const MOOD_MAX := 100.0
+const MOOD_START := 50.0
+## Abaixo de 35 o colono fica instável; abaixo de 25, em crise (GDD: Humor > Faixa).
+const MOOD_UNSTABLE_BELOW := 35.0
+const MOOD_CRISIS_BELOW := 25.0
+## O humor anda cerca de 12 pontos por dia em direção ao alvo.
+const MOOD_SPEED_PER_TICK := 12.0 / TICKS_PER_DAY
+## Expectativa de um assentamento (porte inicial).
+const MOOD_EXPECTATION_SETTLEMENT := 0.0
+const OPTIMIST_MOOD := 6.0
+const PESSIMIST_MOOD := -6.0
+const HUNGRY_MOOD := -6.0
+const STARVING_MOOD := -12.0
+const TIRED_MOOD := -5.0
+const EXHAUSTED_MOOD := -10.0
+## Dormir no chão pesa por 12 h depois de acordar.
+const SLEPT_ON_GROUND_MOOD := -4.0
+const SLEPT_ON_GROUND_HOURS := 12
+## Afinidade ao trabalhar: interesse +1/h (até +6), paixão +2/h (até +10), aversão -2/h (até -10).
+## O sentimento some devagar sem trabalhar na habilidade (provisório: 0,25 por hora).
+const WORK_FEELING_PER_HOUR := {Skills.Affinity.INTEREST: 1.0, Skills.Affinity.PASSION: 2.0, Skills.Affinity.AVERSION: -2.0}
+const WORK_FEELING_CAP := {Skills.Affinity.INTEREST: 6.0, Skills.Affinity.PASSION: 10.0, Skills.Affinity.AVERSION: -10.0}
+const WORK_FEELING_DECAY_PER_HOUR := 0.25
+
+# --- Agenda (GDD: Agenda; padrão provisório) ---
+## Horas de cada bloco padrão: dormir das 22 às 6, livre das 20 às 22, trabalhar no resto.
+const SCHEDULE_SLEEP_START := 22
+const SCHEDULE_SLEEP_END := 6
+const SCHEDULE_FREE_START := 20
+## No bloco Dormir, vai dormir se o sono estiver abaixo disto.
+const SCHEDULE_SLEEP_BELOW := 90.0
+
+# --- Equipamento e carga (GDD: Inventário e carga, Equipamento) ---
+## Acima de 100% da capacidade o movimento cai 20%; acima de 125%, 50%.
+const LOAD_SLOW_RATIO := 1.0
+const LOAD_SLOWER_RATIO := 1.25
+const LOAD_SLOW_FACTOR := 0.8
+const LOAD_SLOWER_FACTOR := 0.5
+## Arma improvisada de caça (pedras, galhos) quando a mão está vazia.
+const UNARMED_HUNT_RANGE := 6
+const UNARMED_HUNT_DAMAGE := 8.0
+## Ferramenta melhor só é buscada se estiver a até este custo de caminho.
+const TOOL_SEARCH_MAX_DISTANCE := 40
+
 # --- Início da partida (GDD: BALANÇA, comida para ~15 dias) ---
 const STARTING_FOOD_DAYS := 15.0
 const STARTING_WOOD := 100
 const STARTING_CRATES := 2
-## Recursos × (1 + 0,15 × (5 − colonos)).
+## Recursos × (1 + 0,15 × (5 - colonos)).
 const STARTING_BONUS_PER_MISSING_COLONIST := 0.15
 const MAX_STARTING_COLONISTS := 5
 const DAILY_FOOD_NEED := FOOD_DECAY_PER_TICK * TICKS_PER_DAY

@@ -7,6 +7,7 @@ signal tool_selected(tool: Designations.Tool)
 signal build_menu_toggled
 signal work_window_toggled
 signal storage_panel_toggled
+signal schedule_window_toggled
 
 ## ferramenta → [ícone, atalho]
 const _TOOLS := {
@@ -42,6 +43,9 @@ func _ready() -> void:
 	var work := _make_button("ui/icons/tabs/work", "Trabalho: prioridades (W)")
 	work.pressed.connect(func() -> void: work_window_toggled.emit())
 	row.add_child(work)
+	var schedule := _make_button("ui/icons/tabs/schedule", "Agenda: Dormir, Trabalhar e Livre por hora (A)")
+	schedule.pressed.connect(func() -> void: schedule_window_toggled.emit())
+	row.add_child(schedule)
 	var storage := _make_button("ui/icons/tabs/storage", "Armazém: estoque e contêineres (I)")
 	storage.pressed.connect(func() -> void: storage_panel_toggled.emit())
 	row.add_child(storage)

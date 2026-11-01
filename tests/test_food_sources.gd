@@ -102,9 +102,9 @@ func test_grow_zone_sows_grows_and_reaps_again() -> void:
 	for crop in state.crops.values():
 		crop.growth_hours = crop.def.grow_hours() - 1.0
 	var carrot := Defs.crop(&"carrot")
-	var reaped := SimHelpers.run_until(simulation, func() -> bool: return state.total_count(&"carrot") >= 4 * carrot.harvest_yield, 3 * Balance.TICKS_PER_HOUR)
+	var reaped := SimHelpers.run_until(simulation, func() -> bool: return state.total_count(&"carrot") >= 4 * carrot.harvest_yield, 8 * Balance.TICKS_PER_HOUR)
 	expect(reaped, "Maduras, as cenouras são colhidas (%d)" % state.total_count(&"carrot"))
-	var resown := SimHelpers.run_until(simulation, func() -> bool: return state.crops.size() == 4, 3 * Balance.TICKS_PER_HOUR)
+	var resown := SimHelpers.run_until(simulation, func() -> bool: return state.crops.size() == 4, 8 * Balance.TICKS_PER_HOUR)
 	expect(resown, "Depois da colheita, os tiles são semeados de novo")
 
 

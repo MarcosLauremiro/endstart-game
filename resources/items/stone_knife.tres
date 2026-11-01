@@ -12,4 +12,9 @@ stack_size = 10
 value = 5.0
 nutrition = 0.0
 tags = Array[StringName]([])
+equip_slot = &"hand"
+work_bonus = {
+&"cook": 1.1,
+&"hunt": 1.1
+}
 icon = "items/stone_knife"

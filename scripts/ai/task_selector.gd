@@ -11,15 +11,16 @@ enum Mode { WORK, HAUL, DELIVER }
 
 const _OPTIONS_SHOWN := 5
 const _REJECTIONS_PER_TYPE := 4
-## Afinidade e traços que mudam a pontuação chegam no M5 (afinidades, Curioso etc.).
-const _AFFINITY_NEUTRAL := 1.0
+## Traços que mudam a pontuação (Curioso com artefatos, Nômade longe da base) chegam com seus
+## sistemas; no MVP o fator de traços é neutro. O Covarde recusa tarefas perigosas em vez disso.
 const _TRAITS_NEUTRAL := 1.0
 
 
-## Pontuação do GDD. A habilidade vale 0,5 + nível ÷ 20.
-static func score(urgency: int, skill_level: int, path_cost: float) -> float:
+## Pontuação do GDD. A habilidade vale 0,5 + nível ÷ 20; afinidade: paixão 1,3, interesse 1,1,
+## nenhuma 1,0, aversão 0,7.
+static func score(urgency: int, skill_level: int, path_cost: float, affinity: float = 1.0) -> float:
 	var skill := 0.5 + skill_level / 20.0
-	return urgency * skill * _AFFINITY_NEUTRAL * _TRAITS_NEUTRAL / (1.0 + path_cost / Balance.TASK_DISTANCE_DIVISOR)
+	return urgency * skill * affinity * _TRAITS_NEUTRAL / (1.0 + path_cost / Balance.TASK_DISTANCE_DIVISOR)
 
 
 func choose(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Action:
@@ -61,6 +62,10 @@ func evaluate(colonist: Colonist, task: Task, state: WorldState, record_block: b
 	var tick := state.clock.tick
 	if task.is_blocked(tick):
 		return _no("bloqueada: %s" % task.block_reason)
+	if colonist.has_trait(Traits.COWARD):
+		var danger := _predator_near(task.cell, state)
+		if danger:
+			return _no("Covarde: %s a %d tiles" % [danger.def.display_name.to_lower(), roundi(Vector2(danger.cell).distance_to(Vector2(task.cell)))])
 	var result := {"ok": true, "mode": mode, "key": key["key"]}
 	var path: Array[Vector2i] = []
 	match mode:
@@ -127,7 +132,8 @@ func evaluate(colonist: Colonist, task: Task, state: WorldState, record_block: b
 	var cost := state.navigation.path_cost(path)
 	result["path"] = path
 	result["cost"] = cost
-	result["score"] = score(task.urgency, colonist.skill_level(task.work_type), cost)
+	result["score"] = score(task.urgency, colonist.skill_level(task.work_type), cost,
+		Skills.AFFINITY_SCORE[colonist.affinity_for(task.work_type)])
 	return result
 
 
@@ -183,7 +189,7 @@ func make_action(colonist: Colonist, task: Task, evaluation: Dictionary, layer: 
 	action.path = evaluation["path"]
 	action.reason = "pontuação %.2f = urgência %d × habilidade %.2f × afinidade %.1f × traços %.1f ÷ (1 + %.0f ÷ %.0f)" % [
 		evaluation["score"], task.urgency, 0.5 + colonist.skill_level(task.work_type) / 20.0,
-		_AFFINITY_NEUTRAL, _TRAITS_NEUTRAL, evaluation["cost"], Balance.TASK_DISTANCE_DIVISOR]
+		Skills.AFFINITY_SCORE[colonist.affinity_for(task.work_type)], _TRAITS_NEUTRAL, evaluation["cost"], Balance.TASK_DISTANCE_DIVISOR]
 	return action
 
 
@@ -254,6 +260,15 @@ func _free_key(colonist: Colonist, task: Task, mode: Mode, state: WorldState) ->
 	if task.max_workers == 1:
 		return {"reason": "reservada por %s" % holders[0]}
 	return {"reason": "equipe cheia (%s)" % ", ".join(holders)}
+
+
+## Predador a até COWARD_DANGER_RADIUS tiles da célula, ou null.
+static func _predator_near(cell: Vector2i, state: WorldState) -> Animal:
+	var radius_squared := Balance.COWARD_DANGER_RADIUS * Balance.COWARD_DANGER_RADIUS
+	for animal in state.animals.values():
+		if animal.def.is_predator and animal.cell.distance_squared_to(cell) <= radius_squared:
+			return animal
+	return null
 
 
 func _no(reason: String) -> Dictionary:

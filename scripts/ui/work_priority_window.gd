@@ -55,6 +55,8 @@ func refresh() -> void:
 		var colonist := _simulation.state.colonist_by_id(_cells[button][0])
 		var priority := colonist.priority_of(_cells[button][1]) if colonist else 0
 		button.text = str(priority) if priority > 0 else _OFF_TEXT
+		if colonist:
+			button.tooltip_text = _skill_hint(colonist, _cells[button][1])
 	for toggle in _hunt_toggles:
 		toggle.set_pressed_no_signal(_simulation.state.auto_hunt.get(_hunt_toggles[toggle], false))
 
@@ -81,6 +83,16 @@ func _rebuild() -> void:
 			_grid.add_child(button)
 			_cells[button] = [colonist.id, work_type]
 	refresh()
+
+
+## Dica da célula: habilidade usada, nível e afinidade do colono nela.
+static func _skill_hint(colonist: Colonist, work_type: int) -> String:
+	var skill_id := Skills.for_work(work_type)
+	if skill_id < 0:
+		return "%s: %s (sem habilidade)" % [colonist.display_name, WorkType.name_of(work_type)]
+	var state: SkillState = colonist.skills[skill_id]
+	return "%s: %s %d (%s), afinidade: %s" % [colonist.display_name, Skills.name_of(skill_id), state.level,
+		Skills.title_of(state.level), Skills.AFFINITY_NAMES[state.affinity]]
 
 
 func _on_cell_input(event: InputEvent, button: Button) -> void:

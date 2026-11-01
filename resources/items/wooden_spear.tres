@@ -12,4 +12,7 @@ stack_size = 5
 value = 7.0
 nutrition = 0.0
 tags = Array[StringName]([])
+equip_slot = &"hand"
+hunt_range = 6
+hunt_damage = 14.0
 icon = "items/wooden_spear"

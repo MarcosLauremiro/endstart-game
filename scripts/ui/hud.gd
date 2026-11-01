@@ -21,6 +21,7 @@ var _tile_panel: TilePanel
 var _message_log: MessageLog
 var _bottom_bar: BottomBar
 var _work_window: WorkPriorityWindow
+var _schedule_window: ScheduleWindow
 var _build_menu: BuildMenu
 var _storage_panel: StoragePanel
 var _workbench_panel: WorkbenchPanel
@@ -67,11 +68,17 @@ func _ready() -> void:
 	_bottom_bar.work_window_toggled.connect(toggle_work_window)
 	_bottom_bar.build_menu_toggled.connect(toggle_build_menu)
 	_bottom_bar.storage_panel_toggled.connect(toggle_storage_panel)
+	_bottom_bar.schedule_window_toggled.connect(toggle_schedule_window)
 
 	_work_window = WorkPriorityWindow.new()
 	_work_window.visible = false
 	root.add_child(_work_window)
 	_pin(_work_window, 0.5, 0.5)
+
+	_schedule_window = ScheduleWindow.new()
+	_schedule_window.visible = false
+	root.add_child(_schedule_window)
+	_pin(_schedule_window, 0.5, 0.5)
 
 	_build_menu = BuildMenu.new()
 	_build_menu.visible = false
@@ -101,6 +108,7 @@ func bind(simulation: Simulation) -> void:
 	_simulation = simulation
 	_time_panel.bind(simulation.clock, simulation.world_seed)
 	_work_window.bind(simulation)
+	_schedule_window.bind(simulation)
 	_storage_panel.bind(simulation)
 	_workbench_panel.bind(simulation)
 	simulation.message_posted.connect(_message_log.add_message)
@@ -138,6 +146,12 @@ func toggle_work_window() -> void:
 		_work_window.refresh()
 
 
+func toggle_schedule_window() -> void:
+	_schedule_window.visible = not _schedule_window.visible
+	if _schedule_window.visible:
+		_schedule_window.refresh()
+
+
 func is_work_window_open() -> bool:
 	return _work_window.visible
 
@@ -152,7 +166,7 @@ func toggle_storage_panel() -> void:
 
 ## Fecha a janela aberta de cima (Esc). Devolve se havia alguma.
 func close_top_window() -> bool:
-	for window in [_build_menu, _storage_panel, _work_window]:
+	for window in [_build_menu, _storage_panel, _schedule_window, _work_window]:
 		if window.visible:
 			window.visible = false
 			return true

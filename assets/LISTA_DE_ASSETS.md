@@ -108,6 +108,8 @@ Gerado por `tools/generate_placeholder_assets.gd` a partir de `scripts/assets/as
 | `fat.png` | 16×16 | — | Gordura |
 | `small_game_carcass.png` | 16×16 | — | Carcaça de lebre (caça pequena) |
 | `large_game_carcass.png` | 16×16 | — | Carcaça de cervo (caça grande) |
+| `tunic.png` | 16×16 | — | Túnica simples (roupa inicial, espaço Camisa) |
+| `trousers.png` | 16×16 | — | Calça de pano (roupa inicial, espaço Calça) |
 | `artifact.png` | 16×16 | — | Artefato da ruína |
 
 ## assets/characters/colonists/

@@ -119,7 +119,7 @@ func _rebuild_rows(bench: Workbench) -> void:
 		row.add_child(label)
 		_bill_labels[label] = bill
 		row.add_child(_small_button("modo", "Trocar o modo: até ter X → fazer N → sempre", func() -> void: _cycle_mode(bill)))
-		var minus := _small_button("-", "Meta −1 (botão direito: −%d)" % _BIG_STEP, Callable())
+		var minus := _small_button("-", "Meta -1 (botão direito: -%d)" % _BIG_STEP, Callable())
 		minus.gui_input.connect(_on_step_input.bind(minus, bill, -1))
 		row.add_child(minus)
 		var plus := _small_button("+", "Meta +1 (botão direito: +%d)" % _BIG_STEP, Callable())

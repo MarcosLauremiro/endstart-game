@@ -11,6 +11,7 @@ const _KEY_WORK_WINDOW := KEY_W
 const _KEY_BUILD_MENU := KEY_B
 const _KEY_STORAGE := KEY_I
 const _KEY_FULLSCREEN := KEY_F11
+const _KEY_SCHEDULE := KEY_A
 ## tecla → índice em Balance.SPEED_MULTIPLIERS (como no RimWorld: 1, 2, 3)
 const _SPEED_KEYS := {KEY_1: 0, KEY_2: 1, KEY_3: 2}
 const _KEY_DEBUG_SPEED := KEY_4
@@ -138,6 +139,8 @@ func _handle_key(keycode: Key) -> void:
 		_hud.toggle_build_menu()
 	elif keycode == _KEY_STORAGE:
 		_hud.toggle_storage_panel()
+	elif keycode == _KEY_SCHEDULE:
+		_hud.toggle_schedule_window()
 	elif keycode == _KEY_FULLSCREEN:
 		_toggle_fullscreen()
 	elif keycode == _KEY_BACK:

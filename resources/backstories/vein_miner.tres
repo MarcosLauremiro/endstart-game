@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BackstoryDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/colonists/backstory_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"vein_miner"
+display_name = "Mineiro de veio"
+stage = 1
+skill_bonus = {
+&"mining": 5,
+&"construction": 2
+}
+strength_bonus = 0
