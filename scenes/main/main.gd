@@ -36,6 +36,7 @@ var _world_view: WorldView
 var _objects_view: ObjectsView
 var _colonists_view: ColonistsView
 var _camera: CameraController
+var _daylight: DaylightView
 var _hud: Hud
 var _tool: Designations.Tool = Designations.Tool.NONE
 ## Estrutura escolhida no menu de construção (null = não está construindo).
@@ -50,6 +51,8 @@ func _ready() -> void:
 	add_child(_objects_view)
 	_colonists_view = ColonistsView.new()
 	add_child(_colonists_view)
+	_daylight = DaylightView.new()
+	add_child(_daylight)
 	_camera = CameraController.new()
 	add_child(_camera)
 	_hud = Hud.new()
@@ -84,6 +87,7 @@ func _refresh_views() -> void:
 	_objects_view.set_drag_area(_drag_area(_mouse_cell()) if dragging_area else Rect2i())
 	_refresh_build_preview()
 	_objects_view.refresh()
+	_daylight.show_light(Daylight.light_at(simulation.clock.tick))
 	_objects_view.set_selected_cell(selected_cell, has_selected_cell)
 	_colonists_view.sync(simulation.state.colonists, selected_colonist_id)
 	_hud.refresh(selected_colonist_id, selected_cell, has_selected_cell, _tool, _build_def != null)

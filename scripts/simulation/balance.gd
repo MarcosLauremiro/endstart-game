@@ -15,6 +15,9 @@ const DEBUG_SPEED_MULTIPLIER := 15
 ## Calendário do GDD: ano de 60 dias, 4 estações de 15 dias, começando na primavera.
 ## No MVP as estações só mudam a arte (GDD: estações e clima ficam fora do MVP).
 const DAYS_PER_SEASON := 15
+## Dia e noite (GDD): latitude temperada, A = 3 h; amanhecer e anoitecer levam 1 h.
+const DAYLIGHT_AMPLITUDE_HOURS := 3.0
+const TWILIGHT_HOURS := 1.0
 const SEASONS_PER_YEAR := 4
 ## Limite de ticks executados num quadro, para evitar espiral de atraso após travamentos.
 const MAX_TICKS_PER_FRAME := 120

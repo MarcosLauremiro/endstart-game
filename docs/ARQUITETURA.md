@@ -81,6 +81,7 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | --- | --- | --- |
 | Mapa | `scripts/world/world_view.gd` | `TileMapLayer`; uma fonte do TileSet por tipo de terreno. |
 | Objetos | `scripts/world/objects_view.gd` | Plantações e cultivos (4 fases), árvores, arbustos, construções e bancadas, caixotes, pilhas com quantidade, animais (interpolados), designações com barra de progresso (vermelhas se bloqueadas; a caça segue o animal), retângulo de arraste. |
+| Dia e noite | `scripts/simulation/daylight.gd`, `scripts/world/daylight_view.gd` | Horas de luz pela fórmula do GDD e luz de 0 a 1 por tick; um `CanvasModulate` escurece só o mapa à noite (a interface não). |
 | Colonos | `scripts/colonists/colonists_view.gd` | Um `Sprite2D` por colono, interpolado entre células; deitado quando dorme; marcador de seleção. |
 | Câmera | `scripts/world/camera_controller.gd` | Panorâmica e três níveis de zoom fixos. |
 | Catálogo de arte | `scripts/assets/asset_catalog.gd` | Lista única de assets: caminho, tamanho, uso. Fallback provisório. |
@@ -190,6 +191,7 @@ Simulation.step()
 - **Agenda padrão:** dormir das 22 às 6, livre das 20 às 22, trabalhar das 6 às 20. A partida começa às 6 h do dia 1.
 - **Equipamento (MVP: Camisa, Calça, Mão):** todos começam de túnica e calça de pano (sem efeito enquanto a temperatura é fixa). Antes de trabalhar, o colono pega no contêiner ou no chão (até 40 tiles) a ferramenta melhor para aquele trabalho e deixa no lugar a que tinha. Faca de pedra: Cozinhar e Caçar ×1,1 (faca do GDD); machado de pedra: Cortar plantas ×1,25 (provisório, o GDD só cita picareta e martelo); lança e arco: armas de caça. O item na mão pesa na carga e conta nos totais.
 - **Carga:** acima de 100% da capacidade, movimento −20%; acima de 125%, −50%. O GDD trava o colono acima de 150%, mas no MVP isso só ocorre arrastando uma carcaça grande, então ele segue a −50%.
+- **Dia e noite (por enquanto só visual):** latitude temperada (A = 3): ~12 h de luz na primavera e no outono, 15 h no verão, 9 h no inverno, centradas no meio-dia; amanhecer e anoitecer levam 1 h. À noite o mapa fica azul-escuro. As regras do GDD sem luz (trabalho −20%, plantas param, visão −50%) entram junto com tochas e iluminação.
 - **Crescimento provisório** (o GDD não define): árvore leva 15 dias para ficar adulta e, jovem, rende 5 de madeira em metade do tempo de corte; toco some em 10 dias; arbusto muda leva 5 dias; planta de fibra leva 3 dias e rende 5 fibras. No início, 25% das árvores e 20% dos arbustos são jovens.
 
 ## Plano de testes
@@ -213,6 +215,7 @@ godot --headless --path . -s res://tests/test_runner.gd
 | `test_food_sources.gd` | **Aceite do M4** (sem comida guardada nem frutas silvestres, 3 colonos vivem 4 dias de caça automática, abate, cozinha e plantação, sem ordem nova), espécies do MVP no mapa, caça deixa carcaça, presa ferida e colono perto fazem fugir, predador não é marcado, predador caça presa, migração, caça automática marca quem chega, plantação semeia, cresce, colhe e semeia de novo, água não vira plantação, cancelar apaga zona e caça. |
 | `test_context_actions.gd` | Opções do clique: árvore cortar e cancelar, cama desmontar (qualquer tile dela), obra cancelada devolve o material, caçar animais mas não o predador, plantação criar, trocar o cultivo (tarefa refeita) e remover, colono dormir, cancelar ordem e comer; cada cultivo com uma coluna de arte por fase. |
 | `test_colonists.gd` | **Aceite do M5** (Esforçada e Otimista × Preguiçoso, Pessimista e Glutão, com os mesmos níveis: trabalho, pausas, comida e humor diferentes), regras do gerador, curva de velocidade e tabela de XP, trabalho ensina e afinidade muda o humor, limite diário e esquecimento, nível muda a velocidade, humor anda até o alvo, dormir no chão é lembrado, agenda (para no Livre, dorme no Dormir), Esforçado termina a tarefa, Glutão, Covarde, pegar ferramenta melhor e largar, carga pesada. |
+| `test_daylight.gd` | Horas de luz por estação (12, 15 e 9 h), noite, dia e meia-luz no pôr do sol. |
 | `test_ui_theme.gd` | Tamanho da fonte sempre na grade de pixels da fonte para cada escala, escala inteira da janela. |
 | `test_plants.gd` | Calendário das estações, uma linha de arte por estação, árvore jovem cresce, corte deixa toco que some, muda não dá frutas, colheita de fibra rende e volta a crescer, mapa com plantas jovens e adultas. |
 | `test_navigation.gd` | Desvio de obstáculo, destino bloqueado, custo da água rasa, mapa conectado pelos vaus, corredor bloqueado divide regiões, regiões incrementais iguais a um recálculo completo. |
