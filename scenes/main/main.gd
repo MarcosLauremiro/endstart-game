@@ -5,7 +5,9 @@ extends Node2D
 
 const _SEED_ARGUMENT_PREFIX := "--seed="
 const _KEY_PAUSE := KEY_SPACE
-const _KEY_NEW_MAP := KEY_R
+## Mapa novo é atalho de desenvolvimento.
+const _KEY_NEW_MAP := KEY_F5
+const _KEY_RESEARCH := KEY_R
 const _KEY_BACK := KEY_ESCAPE
 const _KEY_WORK_WINDOW := KEY_W
 const _KEY_BUILD_MENU := KEY_B
@@ -135,7 +137,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 func _handle_key(keycode: Key) -> void:
 	if keycode == _KEY_PAUSE:
 		simulation.clock.toggle_pause()
-	elif keycode == _KEY_NEW_MAP:
+	elif keycode == _KEY_NEW_MAP and OS.is_debug_build():
 		start_new_game(_random_seed())
 	elif keycode == _KEY_WORK_WINDOW:
 		_hud.toggle_work_window()
@@ -143,6 +145,8 @@ func _handle_key(keycode: Key) -> void:
 		_hud.toggle_build_menu()
 	elif keycode == _KEY_STORAGE:
 		_hud.toggle_storage_panel()
+	elif keycode == _KEY_RESEARCH:
+		_hud.toggle_research_window()
 	elif keycode == _KEY_SCHEDULE:
 		_hud.toggle_schedule_window()
 	elif keycode == _KEY_FULLSCREEN:

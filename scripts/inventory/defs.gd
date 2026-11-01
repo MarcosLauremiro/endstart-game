@@ -9,6 +9,7 @@ const RECIPES_DIR := "res://resources/recipes/"
 const ANIMALS_DIR := "res://resources/animals/"
 const CROPS_DIR := "res://resources/crops/"
 const BACKSTORIES_DIR := "res://resources/backstories/"
+const RESEARCH_DIR := "res://resources/research/"
 
 static var _items := {}
 static var _containers := {}
@@ -17,6 +18,7 @@ static var _recipes := {}
 static var _animals := {}
 static var _crops := {}
 static var _backstories := {}
+static var _research := {}
 
 
 static func item(id: StringName) -> ItemDef:
@@ -86,6 +88,17 @@ static func crops() -> Array:
 	return _crops.values()
 
 
+static func research(id: StringName) -> ResearchDef:
+	_ensure_loaded()
+	assert(_research.has(id), "Pesquisa sem definição: %s" % id)
+	return _research[id]
+
+
+static func researches() -> Array:
+	_ensure_loaded()
+	return _research.values()
+
+
 ## Histórias de uma fase (infância ou vida adulta), na ordem dos arquivos.
 static func backstories(stage: BackstoryDef.Stage) -> Array[BackstoryDef]:
 	_ensure_loaded()
@@ -106,6 +119,7 @@ static func _ensure_loaded() -> void:
 	_animals = _load_folder(ANIMALS_DIR)
 	_crops = _load_folder(CROPS_DIR)
 	_backstories = _load_folder(BACKSTORIES_DIR)
+	_research = _load_folder(RESEARCH_DIR)
 
 
 static func _load_folder(directory: String) -> Dictionary:

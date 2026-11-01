@@ -215,9 +215,6 @@ const STRONG_STRENGTH_BONUS := 2
 const GLUTTON_HUNGER_FACTOR := 1.3
 ## Covarde recusa tarefas a até 10 tiles de um predador.
 const COWARD_DANGER_RADIUS := 10
-## Curioso, no tempo livre, vai olhar lugares mais longe e com mais frequência.
-const CURIOUS_WANDER_RADIUS := 15
-const CURIOUS_WANDER_CHANCE := 0.6
 
 # --- Humor (GDD: Humor; pensamentos do MVP provisórios) ---
 const MOOD_MAX := 100.0
@@ -263,6 +260,24 @@ const UNARMED_HUNT_RANGE := 6
 const UNARMED_HUNT_DAMAGE := 8.0
 ## Ferramenta melhor só é buscada se estiver a até este custo de caminho.
 const TOOL_SEARCH_MAX_DISTANCE := 40
+
+# --- Pesquisa e ruína (GDD: Quanto cada ação rende) ---
+## A cada 3 horas de trabalho produtivo, 1 P.
+const PRACTICE_POINT_WORK_TICKS := 3 * TICKS_PER_HOUR
+## Fazer algo pela primeira vez: +3 P.
+const FIRST_TIME_PRACTICE := 3.0
+## Investigar uma sala de ruína: 2 V. Encontrar artefato: 5 a 15 V (o do MVP vale 15).
+const RUIN_ROOM_RELIC := 2.0
+const ARTIFACT_FOUND_RELIC := 15.0
+## Curioso: +25% em todos os pontos que gera; ×1,3 na pontuação de tarefas com artefatos.
+const CURIOUS_POINTS_FACTOR := 1.25
+const CURIOUS_ARTIFACT_SCORE := 1.3
+## Investigar uma sala leva 1 h (provisório). As salas sem artefato guardam sucata.
+const RUIN_INVESTIGATE_TICKS := TICKS_PER_HOUR
+const RUIN_ROOM_SCRAP := 4
+## A ruína fica entre 20 e 40 tiles da chegada.
+const RUIN_MIN_DISTANCE := 20.0
+const RUIN_MAX_DISTANCE := 40.0
 
 # --- Início da partida (GDD: BALANÇA, comida para ~15 dias) ---
 const STARTING_FOOD_DAYS := 15.0

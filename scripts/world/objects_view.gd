@@ -30,6 +30,7 @@ const _DESIGNATION_ICONS := {
 	Task.Kind.HARVEST: "ui/icons/orders/harvest",
 	Task.Kind.DECONSTRUCT: "ui/icons/orders/deconstruct",
 	Task.Kind.HUNT: "ui/icons/orders/hunt",
+	Task.Kind.INVESTIGATE: "ui/icons/tabs/research",
 }
 ## Tarefas que não marcam o tile com ícone nem com vermelho quando esperam (a própria arte mostra).
 const _SILENT_TASKS := [Task.Kind.HAUL, Task.Kind.SOW, Task.Kind.REAP, Task.Kind.CRAFT]

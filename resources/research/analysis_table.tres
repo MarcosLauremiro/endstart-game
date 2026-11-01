@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ResearchDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/research/research_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"analysis_table"
+display_name = "Mesa de análise"
+branch = &"rediscovery"
+level = 1
+cost_practice = 0
+cost_relic = 20
+requires = Array[StringName]([])
+unlocks_structures = Array[StringName]([&"analysis_table"])
+unlocks_recipes = Array[StringName]([&"analyze_artifact"])
+unlocks_text = "Mesa de análise"

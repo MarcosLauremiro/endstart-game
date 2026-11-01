@@ -14,7 +14,7 @@ Documento vivo. Atualizar sempre que uma decisão arquitetural mudar.
 A simulação roda em ticks fixos e guarda todo o estado da partida. A apresentação só lê esse estado e desenha.
 Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, tarefas, itens ou terreno.
 
-## Estado atual (M0 a M5 — Colonos completos)
+## Estado atual (M0 a M6 — Pesquisa e ruína)
 
 ### Simulação
 
@@ -75,6 +75,14 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Animal | `scripts/animals/animal.gd`, `wildlife.gd` | Pastar, fugir de colonos e predadores, predador caça presas, migração diária pelas bordas, caça automática por espécie, ferimento e morte (carcaça no chão). |
 | Cultivo | `scripts/farming/crop_def.gd` + `resources/crops/*.tres`, `crop.gd`, `grow_zone.gd`, `farming.gd` | Cenoura (3 fases), trigo (4 fases) e cogumelo (2 fases). Zona de plantação com um cultivo escolhido; tiles livres viram tarefas de semear, plantas crescem por hora × fertilidade, maduras viram tarefas de colher; o tile volta a ser semeado sozinho. |
 
+### Pesquisa e ruína (M6)
+
+| Área | Arquivo | Responsabilidade |
+| --- | --- | --- |
+| Pesquisa | `scripts/research/research_def.gd` + `resources/research/*.tres` | As 6 pesquisas do MVP: ramo, nível, custo em P e V, requisitos, estruturas e receitas que libera. |
+| Conhecimento | `scripts/research/research.gd` | Pontos da comunidade (P e V), gatilhos que revelam ramos, primeiras vezes, Prática por trabalho, motivo de não poder liberar, liberar, o que falta para uma estrutura ou receita. |
+| Ruína | `scripts/world/ruin.gd`, `ruin_builder.gd`, `ruin_exploration.gd` | Prédio antigo de 13×5 com 3 salas, colocado longe da chegada; investigar sala (tarefa de Pesquisar) rende Vestígio, sucata e, na última, o artefato, que revela Redescoberta. |
+
 ### Apresentação
 
 | Área | Arquivo | Responsabilidade |
@@ -92,6 +100,7 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Ficha | `scripts/ui/inspect_panel.gd` | Canto inferior esquerdo, em abas. Geral: histórias, Força, agenda agora, traços (efeitos na dica), o que faz, fome, sono, humor e pensamentos. Habilidades: nível, afinidade, título, % para o próximo nível e velocidade. Equipamento: Camisa, Calça, Mão (com bônus) e carga. Por quê: motivo real, melhores tarefas, decisões recentes. |
 | Ordens | `scripts/ui/bottom_bar.gd` | Base: construir, cortar (C), minerar (M), colher (H), caçar (K), plantação (P), desmontar (D), cancelar (X), Trabalho e Armazém. |
 | Trabalho | `scripts/ui/work_priority_window.gd` | Grade de prioridades 1–4/desligado por colono e tipo (dica com a habilidade, nível e afinidade); caça automática por espécie. |
+| Pesquisa | `scripts/ui/research_window.gd` | Pontos, ramos revelados com custo, o que libera e Liberar (ou o motivo); ramos escondidos como "???" com a dica (R). Construções e receitas travadas aparecem desligadas no menu e no painel da bancada. |
 | Agenda | `scripts/ui/schedule_window.gd` | Uma linha por colono e uma coluna por hora; escolha Dormir, Trabalhar ou Livre e clique ou arraste (A). |
 | Bancada | `scripts/ui/workbench_panel.gd` | Ao selecionar uma bancada (canto superior direito): pedido em andamento com ingredientes, por que está parada, motivo de cada colono, fila com modo, meta (±1, botão direito ±10), pausa, subir e apagar, e botões de novo pedido. |
 | Tile | `scripts/ui/tile_info.gd`, `scripts/ui/tile_panel.gd` | Clique num tile sem colono: terreno (movimento, fertilidade, construção do GDD), plantas, toco, caixote com conteúdo e reservas, pilha, tarefa com progresso/reserva/bloqueio e o motivo de cada colono fazer ou não (mesmo seletor da IA, em modo consulta). Atualiza 4× por segundo. |
@@ -195,6 +204,12 @@ Simulation.step()
 - **Categorias e filtro (GDD: Organização):** o filtro do MVP é por categoria, nas opções do contêiner. O que deixa de ser permitido sai na hora para o chão ao lado (só o que não está reservado) e vira tarefa de Carregar para outro contêiner. O pátio de materiais aceita só recursos básicos. Os números do enum de categoria ficam gravados nos `.tres`: categorias novas entram no fim.
 - **Guardar pelo clique:** a tarefa de Carregar da pilha vira urgência 2 (pedido do jogador, GDD). Sem contêiner que aceite, a opção diz o motivo; o transporte travado por falta de lugar avisa sozinho, no máximo uma vez a cada 6 h por item.
 - **Registro no GDD:** desde o armazenamento por categoria, tudo o que é feito além do GDD também é escrito no `GDD.md`, na seção certa; este documento guarda as decisões técnicas.
+- **Pontos (GDD):** 1 P a cada 3 h de trabalho produtivo (trabalhar numa tarefa ou caçar; carregar não conta), +3 P na primeira vez de cada receita, construção, caça por espécie e colheita por cultivo; 2 V por sala de ruína, 15 V pelo artefato, 10 V por artefato analisado. Curioso: +25% nos pontos que gera e ×1,3 na pontuação de tarefas de Pesquisar. A habilidade Pesquisa (multiplicador da análise) fica fora do MVP.
+- **Travas de pesquisa:** cozinha e abate (Bancada de cozinha), parede de pedra e blocos (Alvenaria de pedra), pátio de materiais (Armazenamento), faca e machado (Ferramentas de pedra), lança, arco e flechas (Armas primitivas), Mesa de análise e analisar artefato (Mesa de análise). A bancada de produção, a fogueira e a Mesa de estudos estão liberadas desde o início (GDD). Contêineres e estruturas colocados direto pelo código (início da partida, testes) não passam pela trava.
+- **Gatilhos no MVP:** Defesa e armas na primeira caça (ainda não há ataques); Redescoberta ao achar o artefato (o gatilho do GDD, "primeiro artefato analisado", depende da própria Mesa de análise).
+- **Mesas com materiais do MVP:** Mesa de estudos 20 madeira e 5 fibra (o GDD pede couro); Mesa de análise 15 madeira e 5 sucata (o GDD pede vidro).
+- **Curioso:** o efeito provisório do M5 (vagar mais longe) saiu; ficou o do GDD.
+- **Atalhos:** R abre a Pesquisa; o mapa novo passou para F5 e só em build de desenvolvimento.
 - **Crescimento provisório** (o GDD não define): árvore leva 15 dias para ficar adulta e, jovem, rende 5 de madeira em metade do tempo de corte; toco some em 10 dias; arbusto muda leva 5 dias; planta de fibra leva 3 dias e rende 5 fibras. No início, 25% das árvores e 20% dos arbustos são jovens.
 
 ## Plano de testes
@@ -220,6 +235,7 @@ godot --headless --path . -s res://tests/test_runner.gd
 | `test_colonists.gd` | **Aceite do M5** (Esforçada e Otimista × Preguiçoso, Pessimista e Glutão, com os mesmos níveis: trabalho, pausas, comida e humor diferentes), regras do gerador, curva de velocidade e tabela de XP, trabalho ensina e afinidade muda o humor, limite diário e esquecimento, nível muda a velocidade, humor anda até o alvo, dormir no chão é lembrado, agenda (para no Livre, dorme no Dormir), Esforçado termina a tarefa, Glutão, Covarde, pegar ferramenta melhor e largar, carga pesada. |
 | `test_daylight.gd` | Horas de luz por estação (12, 15 e 9 h), noite, dia e meia-luz no pôr do sol. |
 | `test_storage.gd` | Toda categoria com nome, categorias de alguns itens, pátio só com recursos básicos, filtro tira a comida e ela vai para o outro caixote, Guardar prioriza a pilha, sem lugar diz o motivo e avisa sozinho. |
+| `test_research.gd` | **Aceite do M6** (um colono investiga as 3 salas depois de uma ordem; o artefato revela Redescoberta e o Vestígio libera a Mesa de análise), ruína alcançável com 3 salas e 1 artefato, árvore do MVP e ramos escondidos, Prática por trabalho e primeira vez, Curioso +25%, travas de construção e receita, liberar na Mesa de estudos, primeira caça revela Defesa e armas, Curioso prefere tarefas com artefatos, analisar o artefato rende 10 V. |
 | `test_ui_theme.gd` | Escala da interface por tamanho de tela e fonte sempre na grade de 8 px; escala inteira da janela. |
 | `test_plants.gd` | Calendário das estações, uma linha de arte por estação, árvore jovem cresce, corte deixa toco que some, muda não dá frutas, colheita de fibra rende e volta a crescer, mapa com plantas jovens e adultas. |
 | `test_navigation.gd` | Desvio de obstáculo, destino bloqueado, custo da água rasa, mapa conectado pelos vaus, corredor bloqueado divide regiões, regiões incrementais iguais a um recálculo completo. |
@@ -235,15 +251,14 @@ godot --headless --path . -s res://tools/generate_placeholder_assets.gd
 
 ## Ordem de implementação (próximos marcos)
 
-1. **M6 — Pesquisa e ruína.**
-2. **M7 — Ameaça e combate.**
-3. **M8 — Salvar/carregar, painéis, balanceamento, testes de partida completa.**
+1. **M7 — Ameaça e combate.**
+2. **M8 — Salvar/carregar, painéis, balanceamento, testes de partida completa.**
 
 ## Limitações conhecidas
 
 - Fome em 0% derruba o humor, mas ainda não fere: saúde entra no M7.
 - Estruturas não giram: a cama é sempre vertical (1×2) e a mesa horizontal (2×1).
-- Pesquisas que liberam construções (Alvenaria de pedra, Armazenamento) entram no M6; por enquanto tudo do MVP está liberado.
+- Os quatro níveis de compreensão dos artefatos (Desconhecido a Reproduzível) ainda não existem: analisar só rende Vestígio. Sem provas nas pesquisas (nenhuma das 6 pede).
 - Não há detecção de cômodos nem teto: qualidade de sala e beleza ficam para depois do MVP.
 - O colono só percebe que o caminho foi bloqueado quando chega no trecho bloqueado.
 - A busca de comida e de tarefas calcula caminho só para as mais próximas em linha reta (6 por tipo); uma opção mais longe em linha reta mas com caminho mais curto pode ser ignorada.

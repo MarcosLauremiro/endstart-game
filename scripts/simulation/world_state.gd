@@ -52,6 +52,8 @@ var zone_by_cell := {}
 ## id → Crop, e célula → Crop
 var crops := {}
 var crops_by_cell := {}
+var research := Research.new()
+var ruins: Array[Ruin] = []
 ## Último tick do aviso "sem lugar para guardar", por item.
 var _no_storage_alerts := {}
 var _next_id: int = 1
@@ -175,6 +177,30 @@ func animals_at(cell: Vector2i) -> Array[Animal]:
 		if animal.cell == cell:
 			result.append(animal)
 	return result
+
+
+## Sala de ruína pelo id, ou vazio.
+func ruin_room(room_id: int) -> Dictionary:
+	for ruin in ruins:
+		var room := ruin.room_by_id(room_id)
+		if not room.is_empty():
+			return room
+	return {}
+
+
+func ruin_at(cell: Vector2i) -> Ruin:
+	for ruin in ruins:
+		if Rect2i(ruin.origin, RuinBuilder.SIZE).has_point(cell):
+			return ruin
+	return null
+
+
+## Existe ao menos uma Mesa de estudos pronta (onde as pesquisas são liberadas)?
+func has_study_desk() -> bool:
+	for structure in structures.values():
+		if structure.def.id == &"study_desk":
+			return true
+	return false
 
 
 ## Bancada que ocupa a célula, ou null.

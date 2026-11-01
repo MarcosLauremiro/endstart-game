@@ -28,9 +28,11 @@ static func clear_area(simulation: Simulation, size: Vector2i) -> Vector2i:
 	return start
 
 
-## Constrói a estrutura na hora, sem colonos (para cenários que testam o uso, não a obra).
+## Constrói a estrutura na hora, sem colonos (para cenários que testam o uso, não a obra nem a
+## pesquisa: todas as pesquisas ficam liberadas).
 static func build_now(simulation: Simulation, structure_id: StringName, origin: Vector2i) -> Structure:
 	var state := simulation.state
+	state.research.unlock_all()
 	var site := Construction.place(state, Defs.structure(structure_id), origin)
 	TaskEffects.complete(state.task_board.construction_for_site(site.id), state)
 	return state.buildings_by_cell.get(origin)

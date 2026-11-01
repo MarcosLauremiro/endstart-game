@@ -119,3 +119,4 @@ static func reap(state: WorldState, crop_id: int) -> void:
 		return
 	state.remove_crop(crop)
 	state.drop_items(crop.cell, crop.def.product, crop.def.harvest_yield)
+	state.research.record_first("colheita:%s" % crop.def.id)

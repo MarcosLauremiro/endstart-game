@@ -20,6 +20,8 @@ var _deconstruct_by_target := {}
 var _craft_by_bench := {}
 ## id do animal → Task de Caçar
 var _hunt_by_animal := {}
+## id da sala da ruína → Task de Investigar
+var _investigate_by_room := {}
 
 
 ## work_type = -1 usa o tipo padrão do tipo de tarefa (bancadas informam o seu).
@@ -83,6 +85,10 @@ func hunt_for(animal_id: int) -> Task:
 	return _hunt_by_animal.get(animal_id)
 
 
+func investigation_for(room_id: int) -> Task:
+	return _investigate_by_room.get(room_id)
+
+
 func all_tasks() -> Array:
 	return _by_id.values()
 
@@ -103,6 +109,8 @@ func _index(task: Task) -> Dictionary:
 			return _craft_by_bench
 		Task.Kind.HUNT:
 			return _hunt_by_animal
+		Task.Kind.INVESTIGATE:
+			return _investigate_by_room
 	return _designation_by_cell
 
 

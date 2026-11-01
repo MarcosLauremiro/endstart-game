@@ -21,6 +21,8 @@ var _shown_bills: Array[Bill] = []
 ## Label → Bill
 var _bill_labels := {}
 var _next_refresh_msec := 0
+## Quantas pesquisas estavam liberadas na última montagem das receitas.
+var _unlocked_seen := -1
 
 
 func _ready() -> void:
@@ -53,8 +55,10 @@ func bind(simulation: Simulation) -> void:
 
 
 func show_bench(bench: Workbench) -> void:
-	if bench.id != _bench_id:
+	var unlocked := _simulation.state.research.unlocked.size()
+	if bench.id != _bench_id or unlocked != _unlocked_seen:
 		_bench_id = bench.id
+		_unlocked_seen = unlocked
 		_rebuild_recipes(bench)
 		_next_refresh_msec = 0
 	if _shown_bills != bench.bills:
@@ -97,6 +101,10 @@ func _rebuild_recipes(bench: Workbench) -> void:
 		button.tooltip_text = "%s -> %s, %s h" % [recipe.ingredients_text(), recipe.products_text(), str(recipe.work_hours).replace(".", ",")]
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(func() -> void: _simulation.add_bill(_bench_id, recipe.id))
+		var missing := _simulation.state.research.missing_for_recipe(recipe.id)
+		if missing:
+			button.disabled = true
+			button.tooltip_text = "Precisa da pesquisa %s" % missing.display_name
 		_recipes.add_child(button)
 
 

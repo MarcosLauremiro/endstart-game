@@ -19,6 +19,8 @@ const TAG_NAMES := {
 @export var work_hours: float = 1.0
 ## Meta inicial de um pedido novo ("fazer até ter X" do produto principal).
 @export var default_target: int = 10
+## Pontos de Vestígio que a receita rende ao terminar (GDD: analisar artefato, 5 a 20 V).
+@export var relic_points: int = 0
 
 
 func work_ticks() -> float:

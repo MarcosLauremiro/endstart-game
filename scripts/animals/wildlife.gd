@@ -80,6 +80,10 @@ static func kill(state: WorldState, animal: Animal, leaves_carcass: bool) -> voi
 		state.task_board.remove(hunt, Task.Status.DONE if leaves_carcass else Task.Status.CANCELLED)
 	if leaves_carcass and animal.def.carcass_item != &"":
 		state.drop_items(animal.cell, animal.def.carcass_item, 1)
+		state.research.record_first("caça:%s" % animal.def.id)
+		var branch := state.research.fire_trigger(&"first_hunt")
+		if not branch.is_empty():
+			state.post_message("Primeira caça! Novo ramo de pesquisa: %s" % branch)
 
 
 static func _think(state: WorldState, animal: Animal) -> void:

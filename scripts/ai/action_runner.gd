@@ -312,9 +312,10 @@ func _work(colonist: Colonist, state: WorldState) -> void:
 	task.progress += colonist.work_speed(task.work_type) * place_speed * _team_share(task, state)
 	colonist.work_ticks_since_break += 1
 	_learn(colonist, task.work_type, 1, state)
+	state.research.work_tick(colonist)
 	_touch(colonist, state)
 	if task.progress >= task.work_required:
-		TaskEffects.complete(task, state)
+		TaskEffects.complete(task, state, colonist)
 		colonist.state = Colonist.State.FINISHING
 
 
@@ -381,6 +382,7 @@ func _hunt(colonist: Colonist, state: WorldState) -> void:
 	_touch(colonist, state)
 	action.progress_ticks += 1
 	_learn(colonist, task.work_type, 1, state)
+	state.research.work_tick(colonist)
 	if action.progress_ticks < Balance.HUNT_AIM_TICKS:
 		return
 	action.progress_ticks = 0
@@ -392,7 +394,7 @@ func _hunt(colonist: Colonist, state: WorldState) -> void:
 	var damage := colonist.hunt_damage() * colonist.work_speed(task.work_type)
 	task.progress = minf(task.progress + damage, task.work_required)
 	if Wildlife.hurt(state, animal, damage, colonist.cell):
-		TaskEffects.complete(task, state)
+		TaskEffects.complete(task, state, colonist)
 		state.post_message("%s caçou um(a) %s" % [colonist.display_name, animal.def.display_name.to_lower()])
 		colonist.state = Colonist.State.FINISHING
 

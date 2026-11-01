@@ -22,6 +22,7 @@ var _message_log: MessageLog
 var _bottom_bar: BottomBar
 var _work_window: WorkPriorityWindow
 var _schedule_window: ScheduleWindow
+var _research_window: ResearchWindow
 var _build_menu: BuildMenu
 var _storage_panel: StoragePanel
 var _workbench_panel: WorkbenchPanel
@@ -69,6 +70,7 @@ func _ready() -> void:
 	_bottom_bar.build_menu_toggled.connect(toggle_build_menu)
 	_bottom_bar.storage_panel_toggled.connect(toggle_storage_panel)
 	_bottom_bar.schedule_window_toggled.connect(toggle_schedule_window)
+	_bottom_bar.research_window_toggled.connect(toggle_research_window)
 
 	_work_window = WorkPriorityWindow.new()
 	_work_window.visible = false
@@ -79,6 +81,11 @@ func _ready() -> void:
 	_schedule_window.visible = false
 	_root.add_child(_schedule_window)
 	_pin(_schedule_window, 0.5, 0.5)
+
+	_research_window = ResearchWindow.new()
+	_research_window.visible = false
+	_root.add_child(_research_window)
+	_pin(_research_window, 0.5, 0.5)
 
 	_build_menu = BuildMenu.new()
 	_build_menu.visible = false
@@ -109,6 +116,8 @@ func bind(simulation: Simulation) -> void:
 	_time_panel.bind(simulation.clock, simulation.world_seed)
 	_work_window.bind(simulation)
 	_schedule_window.bind(simulation)
+	_research_window.bind(simulation)
+	_build_menu.bind(simulation)
 	_storage_panel.bind(simulation)
 	_workbench_panel.bind(simulation)
 	simulation.message_posted.connect(_message_log.add_message)
@@ -122,6 +131,10 @@ func refresh(selected_id: int, tile: Vector2i, has_tile: bool, tool: Designation
 	_bottom_bar.show_tool(tool, building or _build_menu.visible)
 	if _storage_panel.visible:
 		_storage_panel.refresh()
+	if _research_window.visible:
+		_research_window.refresh()
+	if _build_menu.visible:
+		_build_menu.refresh()
 	var colonist := _simulation.state.colonist_by_id(selected_id) if selected_id != 0 else null
 	_inspect_panel.visible = colonist != null
 	if colonist:
@@ -152,6 +165,10 @@ func toggle_work_window() -> void:
 		_work_window.refresh()
 
 
+func toggle_research_window() -> void:
+	_research_window.visible = not _research_window.visible
+
+
 func toggle_schedule_window() -> void:
 	_schedule_window.visible = not _schedule_window.visible
 	if _schedule_window.visible:
@@ -172,7 +189,7 @@ func toggle_storage_panel() -> void:
 
 ## Fecha a janela aberta de cima (Esc). Devolve se havia alguma.
 func close_top_window() -> bool:
-	for window in [_build_menu, _storage_panel, _schedule_window, _work_window]:
+	for window in [_build_menu, _storage_panel, _research_window, _schedule_window, _work_window]:
 		if window.visible:
 			window.visible = false
 			return true

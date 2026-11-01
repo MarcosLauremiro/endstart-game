@@ -30,6 +30,8 @@ enum Placement { SINGLE, AREA, OUTLINE }
 @export var bench_work: StringName = &""
 ## Velocidade da bancada (GDD: rústica ×0,8).
 @export var bench_speed: float = 1.0
+## Aparece no menu de construção (estruturas da ruína já vêm prontas no mapa).
+@export var buildable: bool = true
 ## Id da arte no AssetCatalog.
 @export var asset: String
 

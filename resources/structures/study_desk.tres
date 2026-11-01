@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="StructureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/construction/structure_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"study_desk"
+display_name = "Mesa de estudos"
+layer = 0
+placement = 0
+footprint = Vector2i(2, 2)
+costs = {
+&"wood": 20,
+&"fiber": 5
+}
+work_hours = 3.0
+max_workers = 3
+blocks_movement = true
+move_factor = 1.0
+hit_points = 100
+is_bed = false
+container_def = &""
+bench_work = &""
+bench_speed = 1.0
+buildable = true
+asset = "workstations/study_desk"

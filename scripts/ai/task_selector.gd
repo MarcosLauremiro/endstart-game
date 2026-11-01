@@ -11,16 +11,23 @@ enum Mode { WORK, HAUL, DELIVER }
 
 const _OPTIONS_SHOWN := 5
 const _REJECTIONS_PER_TYPE := 4
-## Traços que mudam a pontuação (Curioso com artefatos, Nômade longe da base) chegam com seus
-## sistemas; no MVP o fator de traços é neutro. O Covarde recusa tarefas perigosas em vez disso.
+## Fator de traços (GDD): Curioso ×1,3 em tarefas com artefatos (investigar ruínas, Mesa de análise).
+## O Covarde não muda a pontuação: recusa tarefas perigosas.
 const _TRAITS_NEUTRAL := 1.0
 
 
 ## Pontuação do GDD. A habilidade vale 0,5 + nível ÷ 20; afinidade: paixão 1,3, interesse 1,1,
 ## nenhuma 1,0, aversão 0,7.
-static func score(urgency: int, skill_level: int, path_cost: float, affinity: float = 1.0) -> float:
+static func score(urgency: int, skill_level: int, path_cost: float, affinity: float = 1.0, traits: float = _TRAITS_NEUTRAL) -> float:
 	var skill := 0.5 + skill_level / 20.0
-	return urgency * skill * affinity * _TRAITS_NEUTRAL / (1.0 + path_cost / Balance.TASK_DISTANCE_DIVISOR)
+	return urgency * skill * affinity * traits / (1.0 + path_cost / Balance.TASK_DISTANCE_DIVISOR)
+
+
+## Fator de traços do colono na tarefa.
+static func traits_factor(colonist: Colonist, task: Task) -> float:
+	if colonist.has_trait(Traits.CURIOUS) and task.work_type == WorkType.Id.RESEARCH:
+		return Balance.CURIOUS_ARTIFACT_SCORE
+	return _TRAITS_NEUTRAL
 
 
 func choose(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Action:
@@ -135,7 +142,7 @@ func evaluate(colonist: Colonist, task: Task, state: WorldState, record_block: b
 	result["path"] = path
 	result["cost"] = cost
 	result["score"] = score(task.urgency, colonist.skill_level(task.work_type), cost,
-		Skills.AFFINITY_SCORE[colonist.affinity_for(task.work_type)])
+		Skills.AFFINITY_SCORE[colonist.affinity_for(task.work_type)], traits_factor(colonist, task))
 	return result
 
 
@@ -191,7 +198,7 @@ func make_action(colonist: Colonist, task: Task, evaluation: Dictionary, layer: 
 	action.path = evaluation["path"]
 	action.reason = "pontuação %.2f = urgência %d × habilidade %.2f × afinidade %.1f × traços %.1f ÷ (1 + %.0f ÷ %.0f)" % [
 		evaluation["score"], task.urgency, 0.5 + colonist.skill_level(task.work_type) / 20.0,
-		Skills.AFFINITY_SCORE[colonist.affinity_for(task.work_type)], _TRAITS_NEUTRAL, evaluation["cost"], Balance.TASK_DISTANCE_DIVISOR]
+		Skills.AFFINITY_SCORE[colonist.affinity_for(task.work_type)], traits_factor(colonist, task), evaluation["cost"], Balance.TASK_DISTANCE_DIVISOR]
 	return action
 
 
@@ -211,7 +218,8 @@ func _mode_of(task: Task, state: WorldState) -> Mode:
 ## Semear, colher plantação e caçar acontecem no próprio tile (a caça segue o animal);
 ## o resto, de um tile vizinho.
 static func _stands_on_target(task: Task) -> bool:
-	return task.kind == Task.Kind.SOW or task.kind == Task.Kind.REAP or task.kind == Task.Kind.HUNT
+	return task.kind == Task.Kind.SOW or task.kind == Task.Kind.REAP or task.kind == Task.Kind.HUNT \
+		or task.kind == Task.Kind.INVESTIGATE
 
 
 ## A origem mais perto (em linha reta) de algum material que falta: {source, item, count} ou vazio.

@@ -34,6 +34,7 @@ func _init(new_world_seed: int, colonist_count: int = Balance.STARTING_COLONISTS
 		taken_names.append(colonist.display_name)
 		state.colonists.append(colonist)
 	WorldPopulator.place_starting_supplies(state, colonist_count)
+	RuinBuilder.place(state)
 	Wildlife.populate(state)
 	# Regiões de navegação prontas antes do primeiro tick, não durante o jogo.
 	state.navigation.prepare()
@@ -289,6 +290,10 @@ func add_bill(bench_id: int, recipe_id: StringName) -> Bill:
 	if bench == null or not recipe.workbenches.has(bench.def().id):
 		push_error("Receita %s não é feita na bancada %d" % [recipe_id, bench_id])
 		return null
+	var research := state.research.missing_for_recipe(recipe_id)
+	if research:
+		state.post_message("%s: precisa da pesquisa %s" % [recipe.display_name, research.display_name])
+		return null
 	var bill := Bill.new(state.next_id(), recipe)
 	bench.bills.append(bill)
 	return bill
@@ -330,6 +335,24 @@ func set_bill_paused(bill: Bill, paused: bool) -> void:
 ## Caça automática de uma espécie (os animais que já estão no mapa e os que chegarem).
 func set_auto_hunt(species: StringName, enabled: bool) -> void:
 	Wildlife.set_auto_hunt(state, species, enabled)
+
+
+## Libera a pesquisa na Mesa de estudos (GDD: liberação imediata). Devolve a mensagem.
+func unlock_research(research_id: StringName) -> String:
+	var definition := Defs.research(research_id)
+	var problem := state.research.unlock_problem(definition, state.has_study_desk())
+	if not problem.is_empty():
+		return "%s: %s" % [definition.display_name, problem]
+	state.research.unlock(definition)
+	return "Pesquisa liberada: %s (%s)" % [definition.display_name, definition.unlocks_text.to_lower()]
+
+
+## Manda investigar as salas da ruína que faltam.
+func investigate_ruin(ruin: Ruin) -> String:
+	var created := RuinExploration.designate(state, ruin)
+	if created == 0:
+		return "A ruína já foi toda investigada" if ruin.is_explored() else "As salas já estão marcadas para investigar"
+	return "Ruína: %d salas para investigar (Pesquisar)" % created
 
 
 func set_schedule_block(colonist_id: int, hour: int, block: Schedule.Block) -> void:

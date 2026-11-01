@@ -136,6 +136,10 @@ func has_reservation_of(owner_id: int) -> bool:
 func finish_job(state: WorldState) -> void:
 	var recipe := job.recipe
 	job.done += 1
+	state.research.record_first("receita:%s" % recipe.id)
+	if recipe.relic_points > 0:
+		state.research.add_points(Research.Points.RELIC, recipe.relic_points)
+		state.post_message("%s: +%d V" % [recipe.display_name, recipe.relic_points])
 	job = null
 	staged.clear()
 	for item in recipe.products:

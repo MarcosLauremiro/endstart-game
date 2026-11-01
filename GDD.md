@@ -797,6 +797,8 @@ Subir de nível custa materiais e exige a pesquisa correspondente.
 
 - **Bancada de produção rústica:** custa 20 madeira e 10 pedra bruta (e não blocos de pedra), porque os blocos só saem dela. A ordem do começo fica: minerar, bancada de produção, blocos, bancada de cozinha.
 - **Painel da bancada:** cada pedido da fila tem modo (fazer N, fazer até ter X, sempre), meta, pausa, subir na fila e apagar. O primeiro pedido possível da fila é feito; o que já tem ingredientes separados termina antes. Apagar o pedido devolve os ingredientes ao chão.
+- **Mesa de estudos no MVP:** custa 20 madeira e 5 fibra (couro fica fora do MVP, e a pele só sai da cozinha, que depende de pesquisa feita nesta mesa). 2×2, 3 h. Não é operada por ninguém: só precisa existir para liberar pesquisas.
+- **Mesa de análise no MVP:** custa 15 madeira e 5 sucata (vidro fica fora do MVP; a sucata vem da ruína). Analisar um artefato leva 3 h (Pesquisar), rende 10 V e o transforma em artefato estudado, que não é analisado de novo.
 
 ### Qualidade
 
@@ -1042,6 +1044,8 @@ A pesquisa não segue o modelo do RimWorld, com um colono preso numa mesa espera
 
 Os pontos são da comunidade inteira, e não há limite para acumular.
 
+**No MVP:** só há pontos de Prática e Vestígio e as 6 pesquisas: Ferramentas de pedra, Armazenamento, Bancada de cozinha, Alvenaria de pedra, Armas primitivas e Mesa de análise. Sobrevivência, Agricultura e Construção aparecem desde o início. **Defesa e armas** aparece na primeira caça (antes de existir ataque) ou no primeiro ataque sofrido. **Redescoberta** aparece quando um artefato é encontrado, porque a Mesa de análise, que analisa artefatos, é ela mesma uma pesquisa desse ramo. A janela de Pesquisa mostra os ramos escondidos como "???", com a dica do gatilho.
+
 ### Tipos de pontos
 
 | Ponto | Sigla | Vem de |
@@ -1091,6 +1095,14 @@ Os pontos são da comunidade inteira, e não há limite para acumular.
 | Devoto do Mundo | +25% em Cultura |
 
 **Ritmo esperado:** uma comunidade de 4 colonos rende por volta de 8 a 12 pontos por dia no começo, o suficiente para uma pesquisa de nível I a cada 2 ou 3 dias.
+
+### A ruína do MVP
+
+Uma ruína pequena fica entre 20 e 40 tiles da chegada: um prédio antigo de 13×5 tiles, com 3 salas em fila (Antessala, Galeria e Câmara) ligadas por portas. Suas paredes não se constroem nem se desmontam.
+
+- O jogador clica na ruína e escolhe **Investigar a ruína**: cada sala vira uma tarefa de Pesquisar, de 1 hora.
+- Cada sala investigada rende 2 V. A Antessala e a Galeria guardam 4 sucatas cada; a Câmara guarda o **artefato**, que rende mais 15 V e revela o ramo Redescoberta.
+- Com isso, os 21 V já pagam a pesquisa Mesa de análise: explorar a ruína libera uma pesquisa.
 
 ### Custos por nível
 
@@ -1924,7 +1936,7 @@ Mostra o que estiver selecionado: colono, animal, bancada, contêiner, planta, c
 - **Construção:** resistência, materiais faltando, quem está trabalhando.
 - **Tile:** terreno, fertilidade, temperatura, beleza.
 
-**Opções do que foi clicado:** no topo do painel aparecem botões com o que dá para fazer ali: cortar uma árvore, colher, minerar, desmontar uma construção, cancelar uma obra, caçar um animal, guardar uma pilha, filtrar um contêiner por categoria, escolher o cultivo da plantação ou criar uma plantação no chão livre. No colono: comer agora, dormir agora, largar o item da mão e cancelar a ordem. O que já está marcado vira "cancelar". A lista começa pequena e cresce com o jogo.
+**Opções do que foi clicado:** no topo do painel aparecem botões com o que dá para fazer ali: cortar uma árvore, colher, minerar, desmontar uma construção, cancelar uma obra, caçar um animal, guardar uma pilha, filtrar um contêiner por categoria, escolher o cultivo da plantação, criar uma plantação no chão livre ou investigar uma ruína. No colono: comer agora, dormir agora, largar o item da mão e cancelar a ordem. O que já está marcado vira "cancelar". A lista começa pequena e cresce com o jogo.
 
 Selecionar vários colonos mostra um resumo do grupo e as ordens em comum.
 
@@ -1936,12 +1948,14 @@ Selecionar vários colonos mostra um resumo do grupo e as ordens em comum.
 | Trabalho | Grade de prioridades (ver Colonos) |
 | Agenda | Grade de horas por colono, com pintura arrastando o mouse |
 | Armazém | Painel de armazenamento (ver Armazenamento) |
-| Pesquisa | Árvore com os ramos revelados; ramos ainda escondidos aparecem como "???"; pontos P, V, R e C no topo |
+| Pesquisa | Árvore com os ramos revelados; ramos ainda escondidos aparecem como "???"; pontos P, V, R e C no topo; no MVP, cada pesquisa tem o custo, o que libera e o botão Liberar (ou o motivo de não poder) |
 | Rádio | Dial de frequência que o jogador gira, onda do sinal, canais conhecidos, missões ativas |
 | Mundo | Mapa-mundi em hexágonos, rotas, expedições em andamento |
 | Diário | Fragmentos de lore, mitos dos clãs, descobertas e histórico de eventos |
 | Comunidade | Porte e requisitos, triângulo de tendência cultural, valores, relações com clãs |
 | Bancada | Fila de pedidos com condições |
+
+**Atalhos do MVP:** Espaço pausa; 1, 2 e 3 mudam a velocidade; B Construir; C Cortar; M Minerar; H Colher; K Caçar; P Plantação; D Desmontar; X Cancelar; W Trabalho; A Agenda; I Armazém; R Pesquisa; Esc fecha a janela ou solta a ferramenta; F11 tela cheia. Em build de desenvolvimento: 4 acelera para 15× e F5 gera um mapa novo.
 
 ### Cartas de evento
 

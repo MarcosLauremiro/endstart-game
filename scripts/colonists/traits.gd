@@ -26,7 +26,7 @@ const ALL := {
 	PESSIMIST: {"name": "Pessimista", "weight": COMMON, "spectrum": &"outlook",
 		"effect": "Humor base -6"},
 	CURIOUS: {"name": "Curioso", "weight": COMMON, "spectrum": &"past",
-		"effect": "No tempo livre vai olhar lugares mais longe; +25% de conhecimento (pesquisa, M6)"},
+		"effect": "+25% nos pontos de conhecimento que gera; prefere tarefas com artefatos (×1,3)"},
 	STRONG: {"name": "Forte", "weight": UNCOMMON, "spectrum": &"",
 		"effect": "Força +2"},
 	GLUTTON: {"name": "Glutão", "weight": COMMON, "spectrum": &"",

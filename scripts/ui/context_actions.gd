@@ -39,7 +39,7 @@ static func for_cell(simulation: Simulation, cell: Vector2i) -> Array[Dictionary
 				"Tira a planta de construção; o material entregue volta ao chão",
 				func() -> String: return simulation.cancel_task(board.construction_for_site(site.id))))
 	for target in [state.buildings_by_cell.get(cell), state.containers_by_cell.get(cell), state.floors_by_cell.get(cell)]:
-		if target == null:
+		if target == null or (target is Structure and not target.def.buildable):
 			continue
 		var title: String = target.def.display_name
 		var deconstruction := board.deconstruction_for(target.id)
@@ -83,6 +83,11 @@ static func for_cell(simulation: Simulation, cell: Vector2i) -> Array[Dictionary
 				option["enabled"] = false
 				option["tooltip"] = "Predador perigoso demais para caçar sem armas de combate"
 			options.append(option)
+
+	var ruin := state.ruin_at(cell)
+	if ruin and not ruin.is_explored():
+		options.append(_option("Investigar a ruína", "Cada sala vira uma tarefa de Pesquisar: rende Vestígio e o que estiver lá dentro",
+			func() -> String: return simulation.investigate_ruin(ruin)))
 
 	var zone: GrowZone = state.zone_by_cell.get(cell)
 	if zone:

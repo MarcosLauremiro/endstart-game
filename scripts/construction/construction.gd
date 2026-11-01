@@ -6,6 +6,11 @@ extends RefCounted
 
 ## Motivo de não poder colocar a estrutura com origem na célula, ou "" se pode.
 static func placement_problem(state: WorldState, def: StructureDef, origin: Vector2i) -> String:
+	if not def.buildable:
+		return "não se constrói"
+	var research := state.research.missing_for_structure(def.id)
+	if research:
+		return "precisa da pesquisa %s" % research.display_name
 	for cell in def.cells_at(origin):
 		if not state.world.contains(cell):
 			return "fora do mapa"
@@ -61,6 +66,7 @@ static func cancel(state: WorldState, site: ConstructionSite) -> void:
 static func complete(state: WorldState, site: ConstructionSite) -> void:
 	state.remove_site(site)
 	var def := site.def
+	state.research.record_first("construção:%s" % def.id)
 	if def.layer == StructureDef.Layer.BUILDING:
 		_clear_plants(state, site.cells())
 	if def.container_def != &"":
@@ -78,6 +84,9 @@ static func complete(state: WorldState, site: ConstructionSite) -> void:
 static func designate_deconstruct(state: WorldState, cell: Vector2i) -> bool:
 	var target := _built_at(state, cell)
 	if target.is_empty() or state.task_board.deconstruction_for(target["id"]):
+		return false
+	if not target["def"].buildable:
+		# Peças da ruína não se desmontam no MVP.
 		return false
 	var def: StructureDef = target["def"]
 	var task := state.task_board.create(Task.Kind.DECONSTRUCT, target["origin"], target["id"],

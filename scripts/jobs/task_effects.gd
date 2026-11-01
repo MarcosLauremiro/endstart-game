@@ -38,10 +38,14 @@ static func is_still_valid(task: Task, state: WorldState) -> bool:
 			return Farming.sow_problem(state, task.cell).is_empty()
 		Task.Kind.REAP:
 			return state.crops.has(task.target_id)
+		Task.Kind.INVESTIGATE:
+			var room := state.ruin_room(task.target_id)
+			return not room.is_empty() and not room["investigated"]
 	return false
 
 
-static func complete(task: Task, state: WorldState) -> void:
+## colonist: quem terminou (para os pontos de conhecimento que dependem de traços); pode ser null.
+static func complete(task: Task, state: WorldState, colonist: Colonist = null) -> void:
 	match task.kind:
 		Task.Kind.CUT:
 			var tree: WildTree = state.trees.get(task.target_id)
@@ -90,6 +94,8 @@ static func complete(task: Task, state: WorldState) -> void:
 			Farming.sow(state, task.cell, task.target_id)
 		Task.Kind.REAP:
 			Farming.reap(state, task.target_id)
+		Task.Kind.INVESTIGATE:
+			RuinExploration.investigate(state, task.target_id, colonist)
 	state.task_board.remove(task, Task.Status.DONE)
 	if task.kind == Task.Kind.REAP:
 		# O tile colhido volta a ser semeado (quando os itens forem levados embora).

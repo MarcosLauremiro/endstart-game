@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="StructureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/construction/structure_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"ruin_wall"
+display_name = "Parede antiga"
+layer = 0
+placement = 0
+footprint = Vector2i(1, 1)
+costs = {
+
+}
+work_hours = 1.0
+max_workers = 1
+blocks_movement = true
+move_factor = 1.0
+hit_points = 600
+is_bed = false
+container_def = &""
+bench_work = &""
+bench_speed = 1.0
+buildable = false
+asset = "ruins/ruin_wall"

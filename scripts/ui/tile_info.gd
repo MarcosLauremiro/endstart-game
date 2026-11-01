@@ -81,6 +81,12 @@ static func _describe_objects(state: WorldState, cell: Vector2i, lines: PackedSt
 		var hunted := " · marcado para caça" if state.task_board.hunt_for(animal.id) else ""
 		lines.append("%s #%d · vida %.0f/%.0f · %s%s%s" % [animal.def.display_name, animal.id, animal.health,
 			animal.def.max_health, animal.mode_name(), " · predador" if animal.def.is_predator else "", hunted])
+	var ruin := state.ruin_at(cell)
+	if ruin:
+		var room := ruin.room_at(cell)
+		var where := "%s · " % room["name"] if not room.is_empty() else ""
+		var status := "investigada" if not room.is_empty() and room["investigated"] else "não investigada"
+		lines.append("Ruína antiga · %s%s · %d de %d salas investigadas" % [where, status if not room.is_empty() else "", ruin.investigated_count(), ruin.rooms.size()])
 	var bench := state.workbench_at(cell)
 	if bench:
 		lines.append("Bancada: %d pedidos na fila%s" % [bench.bills.size(),

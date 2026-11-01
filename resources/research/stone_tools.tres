@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ResearchDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/research/research_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"stone_tools"
+display_name = "Ferramentas de pedra"
+branch = &"survival"
+level = 1
+cost_practice = 15
+cost_relic = 0
+requires = Array[StringName]([])
+unlocks_structures = Array[StringName]([])
+unlocks_recipes = Array[StringName]([&"stone_knife", &"stone_axe"])
+unlocks_text = "Faca e machado de pedra"

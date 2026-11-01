@@ -5,8 +5,12 @@ extends PanelContainer
 
 signal structure_selected(def: StructureDef)
 
-## Três colunas, nome e custo em duas linhas, para caber na tela de 640×360 com a fonte de 12 px.
+## Três colunas, nome e custo em duas linhas, para o menu caber acima da barra de baixo.
 const _COLUMNS := 3
+
+var _simulation: Simulation
+## StructureDef → Button
+var _buttons := {}
 
 
 func _ready() -> void:
@@ -20,6 +24,8 @@ func _ready() -> void:
 	grid.columns = _COLUMNS
 	column.add_child(grid)
 	for def in Defs.structures():
+		if not def.buildable:
+			continue
 		var button := Button.new()
 		button.text = "%s\n%s · %s h" % [def.display_name, def.cost_text(), _hours(def.work_hours)]
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -27,6 +33,23 @@ func _ready() -> void:
 		button.tooltip_text = _placement_hint(def)
 		button.pressed.connect(func() -> void: structure_selected.emit(def))
 		grid.add_child(button)
+		_buttons[def] = button
+
+
+func bind(simulation: Simulation) -> void:
+	_simulation = simulation
+	refresh()
+
+
+## Estruturas que dependem de pesquisa ficam desligadas, com o nome da pesquisa na dica.
+func refresh() -> void:
+	if _simulation == null:
+		return
+	for def in _buttons:
+		var missing := _simulation.state.research.missing_for_structure(def.id)
+		var button: Button = _buttons[def]
+		button.disabled = missing != null
+		button.tooltip_text = "Precisa da pesquisa %s" % missing.display_name if missing else _placement_hint(def)
 
 
 static func _hours(value: float) -> String:

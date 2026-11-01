@@ -303,15 +303,15 @@ func _best_food_in(container: StorageContainer) -> StringName:
 
 func _free_time_filler(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Action:
 	record.rejected.append("Sem ordens nem tarefa; fome %d%% e sono %d%% acima dos limites" % [colonist.needs.food, colonist.needs.rest])
-	var curious := colonist.has_trait(Traits.CURIOUS)
-	var radius := Balance.CURIOUS_WANDER_RADIUS if curious else Balance.WANDER_RADIUS
-	if state.rng.randf() < (Balance.CURIOUS_WANDER_CHANCE if curious else Balance.WANDER_CHANCE):
-		var target := colonist.cell + Vector2i(state.rng.randi_range(-radius, radius), state.rng.randi_range(-radius, radius))
+	if state.rng.randf() < Balance.WANDER_CHANCE:
+		var target := colonist.cell + Vector2i(
+			state.rng.randi_range(-Balance.WANDER_RADIUS, Balance.WANDER_RADIUS),
+			state.rng.randi_range(-Balance.WANDER_RADIUS, Balance.WANDER_RADIUS),
+		)
 		var path := state.navigation.find_path(colonist.cell, target)
 		if path.size() > 1:
-			var why := "Curioso: no tempo livre vai olhar um lugar mais longe" if curious \
-				else "Tempo livre sem nada a fazer: dá uma volta por perto"
-			var wander := Action.make(Action.Kind.WANDER, Action.Layer.FREE_TIME, target, why)
+			var wander := Action.make(Action.Kind.WANDER, Action.Layer.FREE_TIME, target,
+				"Tempo livre sem nada a fazer: dá uma volta por perto")
 			wander.path = path
 			return wander
 	return Action.make(Action.Kind.IDLE, Action.Layer.FREE_TIME, colonist.cell,
