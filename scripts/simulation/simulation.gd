@@ -169,6 +169,46 @@ func cancel_task(task: Task) -> String:
 	return "%s: cancelada" % task.label()
 
 
+## "Guardar" uma pilha do chão: a tarefa de Carregar dela vira prioridade alta (GDD: urgência 2).
+## Sem contêiner que aceite o item, avisa o motivo.
+func store_stack(stack_id: int) -> String:
+	var stack: ItemStack = state.stacks.get(stack_id)
+	if stack == null:
+		return ""
+	var name := Defs.item(stack.item).display_name
+	if state.find_storage_for(stack.item, stack.cell) == null:
+		return "Não dá para guardar %s: %s" % [name.to_lower(), WorldState.no_storage_reason(stack.item)]
+	var task := state.task_board.haul_for_stack(stack.id)
+	if task:
+		task.urgency = Balance.URGENCY_PLAYER
+		task.unblock()
+	return "%s: será guardado primeiro" % name
+
+
+## Filtro do contêiner por categoria. O que deixar de ser permitido sai para o chão ao lado,
+## de onde é levado para outro contêiner que aceite (o que estiver reservado fica até ser retirado).
+func set_container_filter(container_id: int, category: int, allowed: bool) -> String:
+	var container: StorageContainer = state.containers.get(container_id)
+	if container == null or not container.def.can_hold(category):
+		return ""
+	container.set_allowed(category, allowed)
+	var category_name: String = ItemDef.CATEGORY_NAMES[category]
+	if allowed:
+		return "%s #%d agora guarda %s" % [container.def.display_name, container.id, category_name.to_lower()]
+	var moved := 0
+	var contents := container.contents()
+	for item in contents:
+		if Defs.item(item).category != category:
+			continue
+		var amount := container.available(item)
+		if amount > 0:
+			container.remove_items(item, amount)
+			state.drop_items(container.cell, item, amount)
+			moved += amount
+	var note := " (%d itens tirados)" % moved if moved > 0 else ""
+	return "%s #%d não guarda mais %s%s" % [container.def.display_name, container.id, category_name.to_lower(), note]
+
+
 func hunt_animal(animal_id: int) -> String:
 	var animal: Animal = state.animals.get(animal_id)
 	if animal == null:

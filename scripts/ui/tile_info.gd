@@ -109,6 +109,11 @@ static func _describe_container(container: StorageContainer, lines: PackedString
 		if slot["item"] != &"":
 			used += 1
 	lines.append("%s #%d · %d/%d espaços ocupados" % [container.def.display_name, container.id, used, container.slots.size()])
+	var kept := PackedStringArray()
+	for category in ItemDef.CATEGORY_NAMES:
+		if container.allowed.get(category, false):
+			kept.append(ItemDef.CATEGORY_NAMES[category].to_lower())
+	lines.append("   guarda: %s" % (", ".join(kept) if not kept.is_empty() else "nada (filtro vazio)"))
 	var contents := container.contents()
 	if contents.is_empty():
 		lines.append("   vazio")

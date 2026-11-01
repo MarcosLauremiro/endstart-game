@@ -21,6 +21,7 @@ const _SUITES := [
 	"res://tests/test_ui_theme.gd",
 	"res://tests/test_colonists.gd",
 	"res://tests/test_daylight.gd",
+	"res://tests/test_storage.gd",
 ]
 
 

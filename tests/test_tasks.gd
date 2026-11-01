@@ -170,7 +170,7 @@ func test_full_storage_blocks_hauling_with_reason() -> void:
 	expect_equal(_ground_count(simulation, &"stone_raw"), 10, "Sem espaço, a pedra fica no chão")
 	var stack: ItemStack = simulation.state.stacks_by_cell.values().filter(func(s: ItemStack) -> bool: return s.item == &"stone_raw")[0]
 	var task := simulation.state.task_board.haul_for_stack(stack.id)
-	expect_equal(task.block_reason, "sem espaço nos contêineres", "O motivo do bloqueio deve aparecer")
+	expect_equal(task.block_reason, "nenhum contêiner com espaço aceita pedra bruta (recursos básicos)", "O motivo do bloqueio deve aparecer")
 
 
 func test_priority_off_is_respected_and_explained() -> void:

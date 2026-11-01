@@ -50,6 +50,27 @@ static func for_cell(simulation: Simulation, cell: Vector2i) -> Array[Dictionary
 			options.append(_option("Desmontar: %s" % title, "Devolve metade do material; contêineres largam o conteúdo",
 				func() -> String: return _designated(simulation, Designations.Tool.DECONSTRUCT, Rect2i(target_cell(target), Vector2i.ONE), title)))
 
+	var stack: ItemStack = state.stacks_by_cell.get(cell)
+	if stack:
+		var haul := board.haul_for_stack(stack.id)
+		var option := _option("Guardar %s" % Defs.item(stack.item).display_name.to_lower(),
+			"Leva a pilha para um contêiner que aceite %s, antes das outras" % Defs.item(stack.item).category_name().to_lower(),
+			func() -> String: return simulation.store_stack(stack.id))
+		if haul and haul.urgency >= Balance.URGENCY_PLAYER:
+			option["enabled"] = false
+			option["tooltip"] = "Já está marcada para ser guardada primeiro"
+		options.append(option)
+	var container: StorageContainer = state.containers_by_cell.get(cell)
+	if container:
+		for category in ItemDef.CATEGORY_NAMES:
+			if not container.def.can_hold(category):
+				continue
+			var on: bool = container.allowed.get(category, false)
+			var category_name: String = ItemDef.CATEGORY_NAMES[category]
+			options.append(_option("[%s] %s" % ["x" if on else " ", category_name],
+				"Filtro: %s %s" % ["parar de guardar" if on else "guardar", category_name.to_lower()],
+				func() -> String: return simulation.set_container_filter(container.id, category, not on)))
+
 	for animal in state.animals_at(cell):
 		var hunt := board.hunt_for(animal.id)
 		if hunt:

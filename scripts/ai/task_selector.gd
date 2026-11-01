@@ -75,9 +75,11 @@ func evaluate(colonist: Colonist, task: Task, state: WorldState, record_block: b
 				return _no("itens já reservados por outro")
 			var destination := state.find_storage_for(stack.item, stack.cell)
 			if destination == null:
+				var why := WorldState.no_storage_reason(stack.item)
 				if record_block:
-					task.block(tick, "sem espaço nos contêineres")
-				return _no("sem espaço nos contêineres")
+					task.block(tick, why)
+					state.alert_no_storage(stack.item)
+				return _no(why)
 			result["destination"] = destination
 			path = state.navigation.find_path(colonist.cell, stack.cell)
 		Mode.DELIVER:

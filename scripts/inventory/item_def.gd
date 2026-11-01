@@ -3,7 +3,21 @@ extends Resource
 ## Definição de um tipo de item (dados do GDD: pesos, pilhas e valores).
 ## Um arquivo .tres por item em res://resources/items/; adicionar item não exige código.
 
-enum Category { MATERIAL, FOOD, TOOL, WEAPON, ARTIFACT, APPAREL }
+## Categoria de armazenamento (filtro dos contêineres). Os números ficam gravados nos .tres:
+## não renumerar; categorias novas entram no fim.
+enum Category { BASIC_RESOURCE = 0, FOOD = 1, TOOL = 2, WEAPON = 3, ARTIFACT = 4, APPAREL = 5, ADVANCED_RESOURCE = 6, CARCASS = 7 }
+
+## Ordem e nomes das categorias na interface.
+const CATEGORY_NAMES := {
+	Category.FOOD: "Alimentos",
+	Category.CARCASS: "Carcaças",
+	Category.BASIC_RESOURCE: "Recursos básicos",
+	Category.ADVANCED_RESOURCE: "Recursos avançados",
+	Category.TOOL: "Ferramentas",
+	Category.WEAPON: "Armas",
+	Category.APPAREL: "Roupas",
+	Category.ARTIFACT: "Artefatos",
+}
 
 @export var id: StringName
 @export var display_name: String
@@ -24,6 +38,14 @@ enum Category { MATERIAL, FOOD, TOOL, WEAPON, ARTIFACT, APPAREL }
 @export var hunt_damage: float = 0.0
 ## Id do ícone no AssetCatalog.
 @export var icon: String
+
+
+func category_name() -> String:
+	return CATEGORY_NAMES[category]
+
+
+static func is_resource(value: int) -> bool:
+	return value == Category.BASIC_RESOURCE or value == Category.ADVANCED_RESOURCE
 
 
 func is_edible() -> bool:

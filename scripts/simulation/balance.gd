@@ -110,6 +110,10 @@ const ROCK_STONE_YIELD := 4
 const TREE_DENSITY_TALL_GRASS := 0.35
 const TREE_DENSITY_GRASS := 0.04
 const SPAWN_CLEAR_RADIUS := 4
+## Aviso "sem lugar para guardar" do mesmo item no máximo a cada 6 h de jogo.
+const NO_STORAGE_ALERT_TICKS := 6 * TICKS_PER_HOUR
+## Urgência de uma pilha que o jogador mandou guardar (GDD: alta 2 = pedido marcado pelo jogador).
+const URGENCY_PLAYER := 2
 ## Raio de busca de lugar livre ao largar itens no chão.
 const DROP_SEARCH_RADIUS := 8
 

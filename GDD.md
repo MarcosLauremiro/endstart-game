@@ -78,6 +78,8 @@ A história não precisa ser profunda. Basta que o jogador perceba, aos poucos, 
 
 - **Animais comuns:** espécies atuais (cães, cabras, aves, cavalos), usadas para criação, caça e transporte.
 - **Criaturas evoluídas:** descendentes da bioengenharia antiga. Algumas são domáveis, outras são predadoras, e algumas formam ninhos que crescem se forem ignorados.
+- **Espécies do MVP:** Lebre (caça pequena), Cervo (caça grande) e Lobo-espinho (criatura evoluída, predadora). Presas pastam e fogem quando um colono ou um predador chega perto; o lobo-espinho caça presas de tempos em tempos. Quando uma espécie fica abaixo da população que o mapa sustenta, outro animal chega pela borda uma vez por dia.
+- **Caça:** o caçador se aproxima até o alcance da arma (improvisada, lança ou arco) e ataca de longe. O animal ferido foge e o caçador persegue. Morto, vira uma carcaça no chão, que é guardada e abatida na cozinha. A **caça automática** por espécie marca os animais que estão no mapa e os que chegarem.
 
 ## Culturas
 
@@ -424,10 +426,14 @@ O humor vai de 0 a 100. Ele tende ao **humor-alvo** = 50 + soma dos pensamentos 
 - **Crises menores:** comer compulsivamente, isolar-se, recusar trabalho por um dia.
 - **Crises maiores:** brigas, sabotagem, destruir relíquias (Devoto), mexer em artefatos proibidos (Obcecado), tentar fugir.
 - **Inspirações:** um dia de XP ×2, trabalho com qualidade garantida acima do normal, ou ideia de pesquisa.
+- **Pensamentos do MVP:** fome, sono, Otimista e Pessimista, dormir no chão (por 12 h) e o sentimento pelo trabalho: interesse +1 por hora (até +6), paixão +2 (até +10), aversão −2 (até −10), que some devagar sem trabalhar na habilidade.
 
 ### Agenda
 
 Cada colono tem uma agenda por hora, editável como no RimWorld, com blocos de **Dormir**, **Trabalhar**, **Lazer**, **Livre**, **Estudo** (aprender com um mestre) e **Ritual**.
+
+- **Agenda padrão:** Dormir das 22 h às 6 h, Livre das 20 h às 22 h e Trabalhar no resto. A partida começa às 6 h do dia 1.
+- No bloco Dormir, o colono vai dormir se o sono estiver abaixo de 90%. Quando o bloco Trabalhar acaba, ele larga a tarefa (o Esforçado termina a que está fazendo).
 
 O **calendário** da colônia mostra o ano de 60 dias e, para cada colono:
 
@@ -503,7 +509,8 @@ Cada colono tem 8 espaços:
 | Cinto | Cinto simples (2 espaços), cinto de ferramentas (4 espaços) | Itens de uso rápido: remédio, munição, rádio |
 | Mão | Ferramenta ou arma | Bônus de trabalho ou combate |
 
-- **Ferramentas na mão** dão bônus: picareta Mineração ×1,25; martelo Construção ×1,15; faca de esfolar Caça e Cozinha ×1,1. Ferramentas antigas valem mais.
+- **Ferramentas na mão** dão bônus: picareta Mineração ×1,25; martelo Construção ×1,15; faca de esfolar Caça e Cozinha ×1,1; machado Cortar plantas ×1,25. Ferramentas antigas valem mais.
+- **Troca de ferramenta:** antes de um trabalho, o colono busca por perto (num contêiner ou no chão) a ferramenta melhor para ele e deixa no lugar a que tinha. Para caçar, vale a melhor arma (lança ou arco).
 - **Trocar o item da mão** leva 1 segundo, se o outro estiver no cinto, ou 3 segundos, se estiver na mochila.
 - **Qualidade:** ruim, normal, boa, excelente, obra-prima. Depende da habilidade de quem fez.
 - **Desgaste:** roupas e ferramentas se desgastam com o uso. Roupa rasgada ou tirada de um morto reduz o humor.
@@ -788,6 +795,9 @@ Subir de nível custa materiais e exige a pesquisa correspondente.
 | Laboratório antigo | 4×3 | 20 barras de ferro, 10 peças antigas, energia antiga | Pesquisa e Mecânica | Reproduzir artefatos antigos | — |
 | Bancada de campanha | 1×1 | 6 madeira, 2 couro (8 kg) | Cozinha ou Artesanato | Cozinhar e consertar em expedições | — |
 
+- **Bancada de produção rústica:** custa 20 madeira e 10 pedra bruta (e não blocos de pedra), porque os blocos só saem dela. A ordem do começo fica: minerar, bancada de produção, blocos, bancada de cozinha.
+- **Painel da bancada:** cada pedido da fila tem modo (fazer N, fazer até ter X, sempre), meta, pausa, subir na fila e apagar. O primeiro pedido possível da fila é feito; o que já tem ingredientes separados termina antes. Apagar o pedido devolve os ingredientes ao chão.
+
 ### Qualidade
 
 | Habilidade | Ruim | Normal | Boa | Excelente | Obra-prima |
@@ -884,6 +894,16 @@ Multiplicadores de qualidade: ruim 0,6; normal 1,0; boa 1,25; excelente 1,6; obr
 | Tocha | 1 madeira | 0,1 h | — | Luz por 2 dias |
 | Lampião a óleo | 1 barra de cobre, óleo | 0,5 h | — | Luz contínua com óleo |
 
+### Plantação
+
+O jogador desenha uma **zona de plantação** e escolhe o que ela planta. Os colonos semeiam os tiles livres (Cultivar), as plantas crescem conforme a fertilidade e, maduras, são colhidas; o tile volta a ser semeado sozinho. Planta silvestre ou itens no tile impedem semear. Trocar o cultivo ou apagar a zona não destrói o que já foi semeado.
+
+| Cultivo | Fases | Dias até madura | Colheita | Observação |
+| --- | --- | --- | --- | --- |
+| Cenoura | 3 | 5 | 5 cenouras | Comida crua (nutrição 20) |
+| Trigo | 4 | 8 | 10 trigos | Não se come cru; serve de porção crua para refeições |
+| Cogumelo | 2 | 3 | 3 cogumelos | Comida crua (nutrição 15) |
+
 ### Armazenamento
 
 No RimWorld, os itens ficam espalhados no chão em zonas de estoque, o que deixa a base feia e bagunçada. Aqui, **tudo é guardado em contêineres**: baús, barris, prateleiras e pátios de materiais. O chão é só um estado temporário.
@@ -892,6 +912,7 @@ No RimWorld, os itens ficam espalhados no chão em zonas de estoque, o que deixa
 
 - Viram uma **pilha solta**, com um marcador visível.
 - Geram uma tarefa de "guardar" automaticamente.
+- Clicar numa pilha dá a opção **Guardar**, que leva a pilha antes das outras. Se nenhum contêiner com espaço aceita a categoria do item, o jogo diz o motivo; o mesmo aviso aparece sozinho quando o transporte trava por falta de lugar.
 - Estragam mais rápido ao ar livre: comida apodrece 2× mais rápido, metal enferruja, roupas se desgastam.
 - Cada pilha solta reduz a beleza do ambiente em 2.
 
@@ -928,11 +949,28 @@ Cada contêiner tem **espaços**. Cada espaço guarda um tipo de item até o tam
 
 Cada cultura tem visuais próprios: Enraizados usam cestos e baús entalhados; Remendadores, caixotes de sucata; Herdeiros, cofres e caixas antigas restauradas.
 
+### Categorias de itens
+
+Todo item pertence a uma categoria. O filtro dos contêineres trabalha com elas.
+
+| Categoria | Itens |
+| --- | --- |
+| Alimentos | Refeições, frutas silvestres, cenoura, cogumelo, trigo, carne crua |
+| Carcaças | Animais caçados, antes do abate |
+| Recursos básicos | Madeira, pedra bruta, fibra, sucata (e minérios, quando entrarem) |
+| Recursos avançados | Blocos de pedra, pele, gordura (e couro, tecido, barras, quando entrarem) |
+| Ferramentas | Faca, machado, picareta |
+| Armas | Lança, arco, flechas |
+| Roupas | Túnica, calça e as outras peças de vestir |
+| Artefatos | Artefatos e peças antigas |
+
+O pátio de materiais aceita só recursos básicos; caixotes e baús aceitam tudo.
+
 ### Organização
 
 Cada contêiner tem configurações próprias:
 
-- **Filtro:** por categoria, item, qualidade mínima e estado (por exemplo, "só roupas acima de 50% de durabilidade").
+- **Filtro:** por categoria, item, qualidade mínima e estado (por exemplo, "só roupas acima de 50% de durabilidade"). No MVP, o filtro é por categoria e fica nas opções do contêiner. O que deixa de ser permitido sai para o chão ao lado e é levado para outro contêiner que aceite.
 - **Prioridade:** baixa, normal, alta ou crítica. Itens vão primeiro para os de prioridade maior.
 - **Ligação com bancada:** um contêiner ligado a uma bancada abastece ela primeiro. Uma despensa ligada à cozinha encurta o caminho de quem cozinha.
 - **Tranca:** baús reforçados, arcas e cofres podem ser trancados, com lista de colonos autorizados.
@@ -1647,6 +1685,7 @@ Valores no meio de cada estação.
 - Plantas só crescem com luz (do dia ou artificial).
 - À noite, a chance de eventos com criaturas é multiplicada por 1,5.
 - Colonos dormem por padrão das 22 h às 6 h, ajustável por agenda.
+- **Visual:** o mapa escurece à noite num tom azulado, com amanhecer e anoitecer de 1 hora; a interface não escurece. No MVP a latitude é temperada.
 
 ### Estações e temperatura
 
@@ -1885,6 +1924,8 @@ Mostra o que estiver selecionado: colono, animal, bancada, contêiner, planta, c
 - **Construção:** resistência, materiais faltando, quem está trabalhando.
 - **Tile:** terreno, fertilidade, temperatura, beleza.
 
+**Opções do que foi clicado:** no topo do painel aparecem botões com o que dá para fazer ali: cortar uma árvore, colher, minerar, desmontar uma construção, cancelar uma obra, caçar um animal, guardar uma pilha, filtrar um contêiner por categoria, escolher o cultivo da plantação ou criar uma plantação no chão livre. No colono: comer agora, dormir agora, largar o item da mão e cancelar a ordem. O que já está marcado vira "cancelar". A lista começa pequena e cresce com o jogo.
+
 Selecionar vários colonos mostra um resumo do grupo e as ordens em comum.
 
 ### Janelas
@@ -1930,7 +1971,7 @@ A estética mistura **cyberpunk** e **rústico**: painéis de metal oxidado, mad
 - **Fundo dos painéis:** escuro e quase opaco (90%), para o mapa não competir com o texto.
 - **Telas de tecnologia:** Rádio, Pesquisa e terminais usam efeito de tela antiga, com linhas de varredura leves e brilho.
 - **Interferência do Mundo:** com atenção alta, a interface sofre falhas visuais breves (texto tremido, chiado). A própria interface conta a história.
-- **Fonte:** pixel art monoespaçada, com suporte completo a acentos do português. Tamanho base de 8 px lógicos (24 px reais em 1080p).
+- **Fonte:** pixel art com suporte completo a acentos do português (Determination). Ela é desenhada numa grade de 12 px, então o tamanho segue a escala da tela para continuar nítida: 6 px lógicos com a tela em ×2 e 8 px em ×3 (24 px reais em 1080p).
 - **Sons de interface:** cliques mecânicos, chaves, chiado de rádio.
 
 **Cores com significado:**
@@ -1980,7 +2021,8 @@ A regra principal é separar a simulação da apresentação. A simulação roda
 
 - **Motor:** Godot 4, com GDScript no começo. C# fica para depois, se o desempenho exigir.
 - **Mapa:** `TileMapLayer`, com camadas separadas para terreno, construções e objetos.
-- **Tempo:** ticks fixos de simulação, com velocidades 1×, 2× e 3× e pausa.
+- **Tempo:** ticks fixos de simulação, com velocidades 1×, 3× e 6× e pausa, como no RimWorld (teclas 1 a 3 e Espaço).
+- **Janela:** abre maximizada; F11 alterna a tela cheia. A tela base de 640×360 cresce em escala inteira e ocupa a janela toda, mostrando mais mapa nas sobras.
 - **Caminhos:** `AStarGrid2D` para movimentação na grade.
 - **IA dos colonos:** Utility AI, em que cada tarefa recebe uma pontuação com base em necessidades, habilidades e prioridades, e o colono escolhe a maior.
 - **Dados:** itens, construções, traços e tecnologias definidos como `Resource` (`.tres`), para adicionar conteúdo sem mexer em código.

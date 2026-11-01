@@ -6,7 +6,7 @@
 script = ExtResource("1_def")
 id = &"small_game_carcass"
 display_name = "Carcaça de lebre"
-category = 1
+category = 7
 weight_kg = 3.0
 stack_size = 10
 value = 10.5

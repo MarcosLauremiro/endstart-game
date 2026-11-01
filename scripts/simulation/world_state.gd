@@ -52,6 +52,8 @@ var zone_by_cell := {}
 ## id → Crop, e célula → Crop
 var crops := {}
 var crops_by_cell := {}
+## Último tick do aviso "sem lugar para guardar", por item.
+var _no_storage_alerts := {}
 var _next_id: int = 1
 
 
@@ -417,6 +419,21 @@ func has_any_reservation(owner_id: int) -> bool:
 
 func post_message(text: String) -> void:
 	message_posted.emit(text)
+
+
+## Por que o item não tem onde ser guardado (GDD: alerta "item sem lugar para ir").
+static func no_storage_reason(item: StringName) -> String:
+	var definition := Defs.item(item)
+	return "nenhum contêiner com espaço aceita %s (%s)" % [definition.display_name.to_lower(), definition.category_name().to_lower()]
+
+
+## Avisa que o item não tem lugar, no máximo uma vez a cada 6 h de jogo por item.
+func alert_no_storage(item: StringName) -> void:
+	var last: int = _no_storage_alerts.get(item, -Balance.NO_STORAGE_ALERT_TICKS)
+	if clock.tick - last < Balance.NO_STORAGE_ALERT_TICKS:
+		return
+	_no_storage_alerts[item] = clock.tick
+	post_message("Sem lugar para guardar: %s. Construa um contêiner ou libere a categoria no filtro." % no_storage_reason(item))
 
 
 func _create_stack(cell: Vector2i, item: StringName, amount: int) -> void:

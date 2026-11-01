@@ -10,6 +10,9 @@ var def: ContainerDef
 var cell: Vector2i
 ## Cada espaço: {"item": StringName (vazio = livre), "count": int, "pending": int (entregas reservadas)}
 var slots: Array[Dictionary] = []
+## Filtro do jogador (GDD: Organização > Filtro por categoria): categoria → permitida.
+## Começa com tudo o que o tipo de contêiner aceita.
+var allowed := {}
 ## id do colono → {"item": StringName, "count": int}
 var _takes := {}
 ## id do colono → Array de {"slot": int, "count": int}
@@ -22,6 +25,19 @@ func _init(new_id: int, new_def: ContainerDef, new_cell: Vector2i) -> void:
 	cell = new_cell
 	for _i in def.slot_count:
 		slots.append({"item": &"", "count": 0, "pending": 0})
+	for category in ItemDef.CATEGORY_NAMES:
+		if def.can_hold(category):
+			allowed[category] = true
+
+
+## O tipo aceita e o filtro permite?
+func accepts(definition: ItemDef) -> bool:
+	return def.accepts(definition) and allowed.get(definition.category, false)
+
+
+func set_allowed(category: int, value: bool) -> void:
+	if def.can_hold(category):
+		allowed[category] = value
 
 
 func cells() -> Array[Vector2i]:
@@ -50,7 +66,7 @@ func available(item: StringName) -> int:
 
 func free_space(item: StringName) -> int:
 	var definition := Defs.item(item)
-	if not def.accepts(definition):
+	if not accepts(definition):
 		return 0
 	var stack_size := def.stack_size_for(definition)
 	var total := 0
@@ -72,7 +88,7 @@ func contents() -> Dictionary:
 ## Reserva espaço para uma entrega. Usa primeiro espaços com o mesmo item, depois espaços livres.
 func reserve_space(owner_id: int, item: StringName, amount: int) -> int:
 	var definition := Defs.item(item)
-	if not def.accepts(definition):
+	if not accepts(definition):
 		return 0
 	var stack_size := def.stack_size_for(definition)
 	var remaining := amount
@@ -144,6 +160,23 @@ func take(owner_id: int) -> int:
 func add_items(item: StringName, amount: int) -> int:
 	var granted := reserve_space(0, item, amount)
 	return deposit(0, item, granted)
+
+
+## Tira unidades livres (não reservadas) do item, sem reserva. Devolve quanto saiu.
+func remove_items(item: StringName, amount: int) -> int:
+	var remaining := mini(amount, available(item))
+	var removed := 0
+	for slot in slots:
+		if remaining <= 0:
+			break
+		if slot["item"] != item:
+			continue
+		var taken := mini(slot["count"], remaining)
+		slot["count"] -= taken
+		remaining -= taken
+		removed += taken
+	_clear_unused_slots()
+	return removed
 
 
 ## Esvazia o item do contêiner e devolve quanto havia (uso em testes e cenários).
