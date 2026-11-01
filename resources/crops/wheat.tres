@@ -4,11 +4,12 @@
 
 [resource]
 script = ExtResource("1_def")
-id = &"vegetables"
-display_name = "Hortaliças"
-product = &"vegetable"
-harvest_yield = 6
-grow_days = 6.0
+id = &"wheat"
+display_name = "Trigo"
+product = &"wheat"
+harvest_yield = 10
+grow_days = 8.0
 sow_hours = 0.25
 harvest_hours = 0.3
+stages = 4
 asset = "plants/Wheatfield"

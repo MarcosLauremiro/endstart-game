@@ -3,7 +3,7 @@ extends PanelContainer
 ## Painel da bancada (GDD: Painel de inspeção > Bancada: fila de pedidos com condições).
 ## Aparece quando o tile selecionado tem uma bancada. Cada pedido: modo (fazer N, até ter X, sempre),
 ## meta (clique ±1, botão direito ±10), pausar, subir na fila e apagar. O primeiro pedido possível
-## da fila é o que se faz. Ordens passam pelas APIs da simulação.
+## da fila é o que se faz. O motivo de cada colono fica no painel do tile. Ordens passam pelas APIs da simulação.
 
 const _WIDTH := 290
 const _REFRESH_MSEC := 250
@@ -85,9 +85,6 @@ func _status_text(bench: Workbench, state: WorldState) -> String:
 		lines.append("Próximo: %s" % next["bill"].recipe.display_name)
 	else:
 		lines.append("Parada: %s" % next["reason"])
-	if task:
-		for colonist in state.colonists:
-			lines.append("   %s: %s" % [colonist.display_name, _simulation.explain_task(colonist, task)])
 	return "\n".join(lines)
 
 

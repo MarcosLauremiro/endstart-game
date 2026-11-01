@@ -29,6 +29,7 @@ func _ready() -> void:
 	_search.text_changed.connect(func(_text: String) -> void: _next_refresh_msec = 0)
 	column.add_child(_search)
 	_totals = Label.new()
+	_totals.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_totals)
 	var header := Label.new()
 	header.text = "Contêineres"
@@ -98,10 +99,12 @@ func _rebuild_list(state: WorldState, wanted: Array[StringName]) -> void:
 				used += 1
 		var button := Button.new()
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.clip_text = true
 		button.focus_mode = Control.FOCUS_NONE
 		button.text = "%s #%d (%d, %d) · %d/%d espaços%s" % [
 			container.def.display_name, container.id, container.cell.x, container.cell.y, used, container.slots.size(),
 			" · " + ", ".join(shown) if not shown.is_empty() else ""]
+		button.tooltip_text = button.text
 		var cell: Vector2i = container.cell
 		button.pressed.connect(func() -> void: container_focused.emit(cell))
 		_list.add_child(button)

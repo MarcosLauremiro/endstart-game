@@ -3,7 +3,7 @@ extends PanelContainer
 ## Topo esquerdo (GDD > Interface): recursos rápidos. Os números são somados dos itens reais
 ## (contêineres, chão e mãos dos colonos), nunca de um contador separado.
 
-const _ITEMS := [&"wood", &"stone_raw", &"raw_meat", &"vegetable", &"berries"]
+const _ITEMS := [&"wood", &"stone_raw", &"raw_meat", &"carrot", &"wheat", &"mushroom", &"berries"]
 
 var _food_label: Label
 ## item → Label

@@ -113,7 +113,7 @@ func refresh(selected_id: int, tile: Vector2i, has_tile: bool, tool: Designation
 	var colonist := _simulation.state.colonist_by_id(selected_id) if selected_id != 0 else null
 	_inspect_panel.visible = colonist != null
 	if colonist:
-		_inspect_panel.show_colonist(colonist, _simulation.state)
+		_inspect_panel.show_colonist(colonist, _simulation)
 	_tile_panel.visible = colonist == null and has_tile
 	if _tile_panel.visible:
 		_tile_panel.show_tile(_simulation, tile)

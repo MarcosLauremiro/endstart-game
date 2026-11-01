@@ -17,6 +17,7 @@ const _SUITES := [
 	"res://tests/test_construction.gd",
 	"res://tests/test_production.gd",
 	"res://tests/test_food_sources.gd",
+	"res://tests/test_context_actions.gd",
 ]
 
 

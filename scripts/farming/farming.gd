@@ -4,7 +4,8 @@ extends RefCounted
 ## O jogador desenha a zona uma vez; daí em diante os colonos semeiam, as plantas crescem
 ## e, maduras, viram tarefas de colher. Depois da colheita o tile volta a ser semeado sozinho.
 
-const DEFAULT_CROP := &"vegetables"
+## Cultivo de uma zona nova; o jogador troca pelas opções do tile.
+const DEFAULT_CROP := &"carrot"
 
 
 ## Cria uma zona com os tiles cultiváveis da área. Devolve quantos tiles entraram.
@@ -92,6 +93,17 @@ static func sow_problem(state: WorldState, cell: Vector2i) -> String:
 	if state.stacks_by_cell.has(cell):
 		return "itens no chão"
 	return ""
+
+
+## Troca o que a zona planta. O que já foi semeado continua até a colheita; as tarefas de semear
+## abertas são refeitas com o cultivo novo.
+static func set_zone_crop(state: WorldState, zone: GrowZone, crop: CropDef) -> void:
+	zone.crop = crop
+	for cell in zone.cells:
+		var task := state.task_board.designation_at(cell)
+		if task and task.kind == Task.Kind.SOW:
+			state.task_board.remove(task, Task.Status.CANCELLED)
+	update_tasks(state)
 
 
 static func sow(state: WorldState, cell: Vector2i, zone_id: int) -> void:

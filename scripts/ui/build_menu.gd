@@ -5,6 +5,9 @@ extends PanelContainer
 
 signal structure_selected(def: StructureDef)
 
+## Três colunas, nome e custo em duas linhas, para caber na tela de 640×360 com a fonte de 12 px.
+const _COLUMNS := 3
+
 
 func _ready() -> void:
 	var column := VBoxContainer.new()
@@ -13,14 +16,17 @@ func _ready() -> void:
 	title.text = "Construir (B) — escolha e clique ou arraste no mapa"
 	title.add_theme_color_override("font_color", UiTheme.COMMUNITY)
 	column.add_child(title)
+	var grid := GridContainer.new()
+	grid.columns = _COLUMNS
+	column.add_child(grid)
 	for def in Defs.structures():
 		var button := Button.new()
-		button.text = "%s — %s, %s h" % [def.display_name, def.cost_text(), _hours(def.work_hours)]
+		button.text = "%s\n%s · %s h" % [def.display_name, def.cost_text(), _hours(def.work_hours)]
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.focus_mode = Control.FOCUS_NONE
 		button.tooltip_text = _placement_hint(def)
 		button.pressed.connect(func() -> void: structure_selected.emit(def))
-		column.add_child(button)
+		grid.add_child(button)
 
 
 static func _hours(value: float) -> String:

@@ -59,6 +59,8 @@ const FOOD_DECAY_PER_TICK := NEED_MAX / (30.0 * TICKS_PER_HOUR)
 const REST_DECAY_PER_TICK := NEED_MAX / (32.0 * TICKS_PER_HOUR)
 const REST_GROUND_RECOVERY_PER_TICK := 10.0 / TICKS_PER_HOUR
 const EAT_UNTIL := 90.0
+## Ordem "dormir agora" só aparece com sono abaixo disto.
+const SLEEP_ORDER_MAX_REST := 90.0
 
 # --- Crescimento das plantas (provisório; o GDD não define) ---
 const TREE_YOUNG_FRACTION := 0.25

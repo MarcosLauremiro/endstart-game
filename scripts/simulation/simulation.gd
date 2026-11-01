@@ -102,6 +102,76 @@ func order_task(colonist_id: int, cell: Vector2i) -> bool:
 	return true
 
 
+## Ordem "comer agora" (camada 3): a melhor comida por perto. Devolve a mensagem para o registro.
+func order_eat(colonist_id: int) -> String:
+	var colonist := state.colonist_by_id(colonist_id)
+	if colonist == null:
+		return ""
+	var record := DecisionRecord.new(clock.tick)
+	var order := _brain.food_action(colonist, state, record, Action.Layer.ORDER, "Ordem do jogador: comer agora")
+	if order == null:
+		return "%s não tem o que comer: %s" % [colonist.display_name, record.rejected[-1] if not record.rejected.is_empty() else "sem comida"]
+	_give_order(colonist, order)
+	return "%s vai comer %s" % [colonist.display_name, Defs.item(order.item_id).display_name.to_lower()]
+
+
+## Ordem "dormir agora" (camada 3): na cama livre mais perto ou no chão.
+func order_sleep(colonist_id: int) -> String:
+	var colonist := state.colonist_by_id(colonist_id)
+	if colonist == null:
+		return ""
+	var record := DecisionRecord.new(clock.tick)
+	var order := _brain.sleep_action(colonist, state, record, Action.Layer.ORDER, "Ordem do jogador: dormir agora")
+	_give_order(colonist, order)
+	return "%s vai dormir" % colonist.display_name
+
+
+## Esquece a ordem direta; se ele a estava cumprindo, para e volta a decidir sozinho.
+func cancel_order(colonist_id: int) -> String:
+	var colonist := state.colonist_by_id(colonist_id)
+	if colonist == null or colonist.direct_order == null:
+		return ""
+	var order := colonist.direct_order
+	colonist.direct_order = null
+	if colonist.action == order:
+		_runner.abort(colonist, state, "ordem cancelada pelo jogador")
+	colonist.force_think = true
+	return "%s: ordem cancelada" % colonist.display_name
+
+
+## Cancela uma tarefa do quadro. Obra cancelada devolve o material entregue.
+func cancel_task(task: Task) -> String:
+	if task == null or not task.is_open():
+		return ""
+	if task.kind == Task.Kind.CONSTRUCT and state.sites.has(task.target_id):
+		Construction.cancel(state, state.sites[task.target_id])
+	else:
+		state.task_board.remove(task, Task.Status.CANCELLED)
+	return "%s: cancelada" % task.label()
+
+
+func hunt_animal(animal_id: int) -> String:
+	var animal: Animal = state.animals.get(animal_id)
+	if animal == null:
+		return ""
+	if Wildlife.designate_hunt(state, animal):
+		return "%s marcado(a) para caça" % animal.def.display_name
+	return "%s não pode ser caçado(a)" % animal.def.display_name
+
+
+func set_zone_crop(zone_id: int, crop_id: StringName) -> String:
+	var zone: GrowZone = state.zones.get(zone_id)
+	if zone == null:
+		return ""
+	Farming.set_zone_crop(state, zone, Defs.crop(crop_id))
+	return "Plantação: agora planta %s" % zone.crop.display_name.to_lower()
+
+
+func remove_zone_cells(area: Rect2i) -> String:
+	var removed := Farming.remove_cells(state, area)
+	return "Plantação: %d tile(s) removido(s)" % removed if removed > 0 else ""
+
+
 ## A tarefa ligada à célula: designação, caça, obra, bancada, desmontagem ou transporte da pilha.
 func task_at(cell: Vector2i) -> Task:
 	var board := state.task_board

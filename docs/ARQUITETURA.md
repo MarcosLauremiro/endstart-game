@@ -69,7 +69,7 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Bancada | `scripts/production/workbench.gd` | Fila de pedidos, pedido em andamento, ingredientes separados (reais, voltam ao chão se o pedido sumir) e entregas a caminho. Uma tarefa no quadro por bancada, do tipo de trabalho dela. |
 | Espécie | `scripts/animals/animal_def.gd` + `resources/animals/*.tres` | Lebre (pequena), cervo (grande), lobo-espinho (predador): vida, velocidade, fuga, carcaça, presas, população. |
 | Animal | `scripts/animals/animal.gd`, `wildlife.gd` | Pastar, fugir de colonos e predadores, predador caça presas, migração diária pelas bordas, caça automática por espécie, ferimento e morte (carcaça no chão). |
-| Cultivo | `scripts/farming/crop_def.gd` + `resources/crops/*.tres`, `crop.gd`, `grow_zone.gd`, `farming.gd` | Zona de plantação; tiles livres viram tarefas de semear, plantas crescem por hora × fertilidade, maduras viram tarefas de colher; o tile volta a ser semeado sozinho. |
+| Cultivo | `scripts/farming/crop_def.gd` + `resources/crops/*.tres`, `crop.gd`, `grow_zone.gd`, `farming.gd` | Cenoura (3 fases), trigo (4 fases) e cogumelo (2 fases). Zona de plantação com um cultivo escolhido; tiles livres viram tarefas de semear, plantas crescem por hora × fertilidade, maduras viram tarefas de colher; o tile volta a ser semeado sozinho. |
 
 ### Apresentação
 
@@ -81,7 +81,7 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Câmera | `scripts/world/camera_controller.gd` | Panorâmica e três níveis de zoom fixos. |
 | Catálogo de arte | `scripts/assets/asset_catalog.gd` | Lista única de assets: caminho, tamanho, uso. Fallback provisório. |
 | Arte provisória | `scripts/assets/placeholder_painter.gd`, `tools/generate_placeholder_assets.gd` | Provisórios no tamanho final; o gerador nunca sobrescreve. |
-| Tema | `scripts/ui/ui_theme.gd` | Paleta "rust punk" do GDD, molduras 9-slice, barras, fonte de 8 px. |
+| Tema | `scripts/ui/ui_theme.gd` | Paleta "rust punk" do GDD, molduras 9-slice, barras, fonte pixel Determination em 12 px sem suavização. |
 | Recursos | `scripts/ui/resource_bar.gd` | Topo esquerdo: comida em dias, madeira, pedra, carne crua, vegetais, frutas — somados dos itens reais. |
 | Tempo | `scripts/ui/time_panel.gd` | Topo direito: dia, hora, pausa e velocidades. |
 | Inspeção | `scripts/ui/inspect_panel.gd` | Canto inferior esquerdo: colono, Força, traços, carga, necessidades, o que faz, por quê, melhores tarefas avaliadas, decisões recentes. |
@@ -91,6 +91,7 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Tile | `scripts/ui/tile_info.gd`, `scripts/ui/tile_panel.gd` | Clique num tile sem colono: terreno (movimento, fertilidade, construção do GDD), plantas, toco, caixote com conteúdo e reservas, pilha, tarefa com progresso/reserva/bloqueio e o motivo de cada colono fazer ou não (mesmo seletor da IA, em modo consulta). Atualiza 4× por segundo. |
 | Construir | `scripts/ui/build_menu.gd` | Menu com custo e tempo de cada estrutura (B). Prévia verde/vermelha na colocação; plantas aparecem em azul translúcido. |
 | Armazém | `scripts/ui/storage_panel.gd` | Totais por item (contêineres, chão, mãos), comida em dias, busca, contêineres com ocupação; clicar centraliza a câmera (I). |
+| Opções | `scripts/ui/context_actions.gd`, `scripts/ui/action_bar.gd` | Botões do que foi clicado, no topo do painel do tile ou do colono. Árvore: cortar; planta: colher; rocha: minerar; obra: cancelar (devolve o material); construção, contêiner ou bancada: desmontar; animal: caçar (predador desligado, com motivo); plantação: plantar cenoura, trigo ou cogumelo, remover; chão livre: criar plantação; colono: comer agora, dormir agora, cancelar ordem. Marcado vira "cancelar". |
 | Mensagens | `scripts/ui/message_log.gd` | Canto inferior direito: mensagens que somem sozinhas. |
 | Entrada | `scenes/main/main.gd` + `main.tscn` | Liga tudo e traduz mouse e teclado em comandos. |
 
@@ -172,7 +173,10 @@ Simulation.step()
 - **Caça sem combate (até o M7):** o caçador chega a 7 tiles e atira a cada 1,5 s (85% de acerto, −5% por tile, mínimo 30%, 10 de dano × velocidade de trabalho). A presa ferida foge; o caçador persegue. Morta, vira carcaça no chão (lebre 3 kg; cervo 40 kg, carregado um por vez mesmo acima da capacidade). Arco e lança mudam isso com o equipamento (M5) e o combate (M7).
 - **Predador não ataca colonos nem pode ser caçado** até o M7 (sem combate seria injusto). Ele caça lebres e cervos a cada 36 h; presas fogem dele.
 - **Animais (provisório):** lebre 20 de vida, 3,6 tiles/s, 10 no mapa; cervo 60, 3,3 tiles/s, 5; lobo-espinho 80, 4,2 tiles/s, 2. Abaixo da população, um animal por espécie migra pela borda a cada dia. **Caça automática** por espécie (janela de Trabalho) marca os que estão no mapa e os que chegarem.
-- **Plantação de hortaliças (provisório):** 6 dias até madura (× fertilidade), semear 0,25 h, colher 0,3 h, rende 6 vegetais. Planta silvestre ou itens no tile impedem semear, com motivo. Apagar a zona não destrói o que já foi semeado.
+- **Cultivos (provisório; o GDD não define):** cenoura 5 dias, rende 5 (nutrição 20 crua); trigo 8 dias, rende 10 (não se come cru, nutrição 0, mas serve de porção crua na refeição simples); cogumelo 3 dias, rende 3 (nutrição 15). Os três contam como "porção crua". Semear 0,25 h e colher 0,3 h. A arte tem uma coluna por fase (`stages` no `.tres`) e a última é a madura. Planta silvestre ou itens no tile impedem semear, com motivo. Apagar a zona ou trocar o cultivo não destrói o que já foi semeado.
+- **Cenoura e cogumelo substituem o "vegetal" genérico** do GDD (o item `vegetable` saiu): são os vegetais do MVP. Zona nova planta cenoura; o cultivo é trocado pelas opções do tile.
+- **Fonte Determination em 12 px:** os contornos ficam numa grade de 2048 ÷ 12 unidades, então 12 px (ou múltiplos) é o tamanho nítido. Sem suavização, sem hinting, sem posição subpixel. Com a fonte maior, o menu de construção usa 3 colunas, o painel do tile rola acima de 150 px e o painel da bancada não repete os motivos dos colonos (estão no painel do tile).
+- **Opções do clique são atalhos para as mesmas ordens:** cortar, minerar, colher, desmontar, caçar e plantação usam as designações; "Comer agora" e "Dormir agora" são ordens diretas (camada 3), com a mesma escolha de comida e cama da IA.
 - **Crescimento provisório** (o GDD não define): árvore leva 15 dias para ficar adulta e, jovem, rende 5 de madeira em metade do tempo de corte; toco some em 10 dias; arbusto muda leva 5 dias; planta de fibra leva 3 dias e rende 5 fibras. No início, 25% das árvores e 20% dos arbustos são jovens.
 
 ## Plano de testes
@@ -194,6 +198,7 @@ godot --headless --path . -s res://tests/test_runner.gd
 | `test_construction.gd` | **Aceite do M3** (3 colonos erguem um cômodo 5×5 com porta e cama sozinhos, madeira gasta = custo exato, dá para entrar pela porta, colono com sono usa a cama), regras de colocação com motivo, parede com material exato, equipe mais rápida na cama, falta de material com motivo, cancelar devolve tudo, desmontar devolve metade e larga o conteúdo, pátio só aceita materiais, piso acelera, árvore no local é cortada antes, colono sai do lugar da parede, cama recupera 15/h. |
 | `test_production.gd` | Fogueira cozinha até a meta e para (2 porções cruas por refeição, exato), "fazer N" e pausa, receita com dois ingredientes de lugares diferentes, falta de ingrediente explicada, apagar o pedido devolve os ingredientes, desmontar a bancada devolve os ingredientes, cozinha abate (6 carne e 1 pele), fogueira não abate, Cozinhar desligado, refeição preferida a frutas mais perto. |
 | `test_food_sources.gd` | **Aceite do M4** (sem comida guardada nem frutas silvestres, 3 colonos vivem 4 dias de caça automática, abate, cozinha e plantação, sem ordem nova), espécies do MVP no mapa, caça deixa carcaça, presa ferida e colono perto fazem fugir, predador não é marcado, predador caça presa, migração, caça automática marca quem chega, plantação semeia, cresce, colhe e semeia de novo, água não vira plantação, cancelar apaga zona e caça. |
+| `test_context_actions.gd` | Opções do clique: árvore cortar e cancelar, cama desmontar (qualquer tile dela), obra cancelada devolve o material, caçar animais mas não o predador, plantação criar, trocar o cultivo (tarefa refeita) e remover, colono dormir, cancelar ordem e comer; cada cultivo com uma coluna de arte por fase. |
 | `test_plants.gd` | Calendário das estações, uma linha de arte por estação, árvore jovem cresce, corte deixa toco que some, muda não dá frutas, colheita de fibra rende e volta a crescer, mapa com plantas jovens e adultas. |
 | `test_navigation.gd` | Desvio de obstáculo, destino bloqueado, custo da água rasa, mapa conectado pelos vaus, corredor bloqueado divide regiões, regiões incrementais iguais a um recálculo completo. |
 | `test_needs_and_reservations.gd` | Ritmo e limites das necessidades, dono único da reserva, rebrota dos arbustos. |
@@ -229,7 +234,7 @@ godot --headless --path . -s res://tools/generate_placeholder_assets.gd
 - Bancadas não têm níveis, anexos, ligação com contêineres nem ambiente (luz, limpeza, temperatura): fora do MVP pelo GDD.
 - Uma só cultura (hortaliças) e sem estações no crescimento, conforme o escopo do MVP.
 - Sem salvamento: o estado ainda não é serializado (os dados já usam ids estáveis, sem referência a nós).
-- Árvores, arbustos e plantas de fibra já usam a arte final; o resto ainda é provisório. Sem fonte pixel própria até existir `assets/ui/fonts/main.ttf`.
+- Árvores, arbustos e plantas de fibra já usam a arte final; o resto ainda é provisório. Os números das pilhas no chão ainda usam a fonte padrão (a Determination em 12 px não cabe num tile).
 - Estações não afetam a simulação (só a arte), conforme o escopo do MVP.
 - Árvores e arbustos não se espalham sozinhos: o mapa só perde árvores com o corte.
 - A validação visual é manual; os testes automatizados cobrem a lógica.

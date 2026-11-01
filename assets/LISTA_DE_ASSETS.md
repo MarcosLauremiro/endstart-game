@@ -60,7 +60,9 @@ Gerado por `tools/generate_placeholder_assets.gd` a partir de `scripts/assets/as
 | `trees.png` | 64×64 | 4 × 4 de 16×16 | Árvore. Colunas: toco da jovem, toco da adulta, jovem, adulta. Linhas: primavera, verão, outono, inverno |
 | `berry_bushs.png` | 48×64 | 3 × 4 de 16×16 | Arbusto de frutas. Colunas: muda, sem frutas, com frutas. Linhas: estações |
 | `low_growing_vegetation.png` | 32×64 | 2 × 4 de 16×16 | Planta de fibra. Colunas: pequena, crescida (colhível). Linhas: estações |
-| `Wheatfield.png` | 64×16 | 4 × 1 de 16×16 | Plantação de hortaliças. Colunas: plantada, broto, amadurecendo, madura |
+| `Wheatfield.png` | 64×16 | 4 × 1 de 16×16 | Trigo na plantação. Colunas: 4 fases de crescimento, a última é madura |
+| `carrot.png` | 48×16 | 3 × 1 de 16×16 | Cenoura na plantação. Colunas: 3 fases de crescimento, a última é madura |
+| `mushroom.png` | 32×16 | 2 × 1 de 16×16 | Cogumelo na plantação. Colunas: 2 fases de crescimento, a última é madura |
 | `Rocks.png` | 48×64 | 3 × 4 de 16×16 | Pedras soltas, 3 variações. Linhas: estações (ainda sem uso) |
 | `DeadTrees.png` | 64×16 | 4 × 1 de 16×16 | Árvore seca: 2 tocos e 2 árvores (fora do MVP) |
 | `WinterDeadTrees.png` | 64×16 | 4 × 1 de 16×16 | Árvore seca com neve: 2 tocos e 2 árvores (fora do MVP) |
@@ -90,7 +92,9 @@ Gerado por `tools/generate_placeholder_assets.gd` a partir de `scripts/assets/as
 | `stone_block.png` | 16×16 | — | Blocos de pedra |
 | `fiber.png` | 16×16 | — | Fibra |
 | `raw_meat.png` | 16×16 | — | Carne crua |
-| `vegetable.png` | 16×16 | — | Vegetal |
+| `carrot.png` | 16×16 | — | Cenoura (colhida) |
+| `wheat.png` | 16×16 | — | Trigo (colhido) |
+| `mushroom.png` | 16×16 | — | Cogumelo (colhido) |
 | `berries.png` | 16×16 | — | Frutas silvestres |
 | `simple_meal.png` | 16×16 | — | Refeição simples |
 | `scrap.png` | 16×16 | — | Sucata |

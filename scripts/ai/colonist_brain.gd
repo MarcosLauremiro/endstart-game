@@ -69,6 +69,16 @@ func decide(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Ac
 	return _free_time_filler(colonist, state, record)
 
 
+## Comer, para ordens do jogador: mesma escolha da IA, na camada pedida (null se não há comida).
+func food_action(colonist: Colonist, state: WorldState, record: DecisionRecord, layer: Action.Layer, why: String) -> Action:
+	return _find_food(colonist, state, record, layer, why)
+
+
+## Dormir, para ordens do jogador: mesma escolha de cama da IA, na camada pedida.
+func sleep_action(colonist: Colonist, state: WorldState, record: DecisionRecord, layer: Action.Layer, why: String) -> Action:
+	return _sleep(colonist, state, record, layer, why)
+
+
 ## Dorme na cama livre mais perto (por custo de caminho); sem cama alcançável, dorme no chão onde está.
 func _sleep(colonist: Colonist, state: WorldState, record: DecisionRecord, layer: Action.Layer, why: String) -> Action:
 	var beds := state.beds()

@@ -8,6 +8,7 @@ const _HISTORY_SHOWN := 3
 const _REJECTIONS_SHOWN := 3
 
 var _title: Label
+var _actions: ActionBar
 var _profile: Label
 var _doing: Label
 var _why: Label
@@ -23,6 +24,8 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	add_child(column)
 	_title = _add_label(column, UiTheme.COMMUNITY)
+	_actions = ActionBar.new()
+	column.add_child(_actions)
 	_profile = _add_label(column, UiTheme.TEXT_SECONDARY)
 	_doing = _add_label(column, UiTheme.TEXT)
 	_why = _add_label(column, UiTheme.TEXT_SECONDARY)
@@ -38,8 +41,10 @@ func _ready() -> void:
 		_bar_styles[color_name] = style
 
 
-func show_colonist(colonist: Colonist, state: WorldState) -> void:
+func show_colonist(colonist: Colonist, simulation: Simulation) -> void:
+	var state := simulation.state
 	_title.text = "%s, %d anos" % [colonist.display_name, colonist.age]
+	_actions.show_options(simulation, ContextActions.for_colonist(simulation, colonist))
 	var trait_names := colonist.traits.map(func(t: StringName) -> String: return Traits.name_of(t))
 	var profile := "Força %d · %s" % [colonist.strength, ", ".join(trait_names) if not trait_names.is_empty() else "sem traço de trabalho"]
 	if colonist.carrying_count > 0:

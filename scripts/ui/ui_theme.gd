@@ -12,8 +12,9 @@ const POSITIVE := Color("7bc96f")
 const DANGER := Color("e5534b")
 const LORE := Color("9b7bd8")
 
-const FONT_SIZE := 8
-const FONT_PATH := "res://assets/ui/fonts/main.ttf"
+## Fonte pixel "Determination": desenhada numa grade de 12 px por em, então 12 px fica nítido.
+const FONT_SIZE := 12
+const FONT_PATH := "res://assets/ui/fonts/determination.ttf"
 const PANEL_CORNER := 16
 const PANEL_PADDING := 6
 const BUTTON_CORNER := 8
@@ -25,7 +26,7 @@ static func build() -> Theme:
 	var theme := Theme.new()
 	theme.default_font_size = FONT_SIZE
 	if ResourceLoader.exists(FONT_PATH):
-		theme.default_font = load(FONT_PATH)
+		theme.default_font = pixel_font()
 
 	var panel := _nine_slice("ui/frames/panel", PANEL_CORNER, PANEL_PADDING)
 	theme.set_stylebox("panel", "PanelContainer", panel)
@@ -52,6 +53,16 @@ static func build() -> Theme:
 	theme.set_color("font_hover_color", "Button", TEXT)
 	theme.set_color("font_pressed_color", "Button", COMMUNITY)
 	return theme
+
+
+## A fonte da interface sem suavização nem hinting, para os pixels não borrarem.
+static func pixel_font() -> Font:
+	var font: FontFile = load(FONT_PATH)
+	font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+	font.hinting = TextServer.HINTING_NONE
+	font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+	font.generate_mipmaps = false
+	return font
 
 
 static func _nine_slice(asset_id: String, corner: int, padding: int) -> StyleBoxTexture:

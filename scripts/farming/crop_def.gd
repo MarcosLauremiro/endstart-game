@@ -12,7 +12,9 @@ extends Resource
 @export var grow_days: float = 6.0
 @export var sow_hours: float = 0.25
 @export var harvest_hours: float = 0.3
-## Folha de sprites com 4 fases (plantada, broto, amadurecendo, madura).
+## Fases de crescimento na folha de sprites, da semente à madura (a última coluna é a madura).
+@export var stages: int = 4
+## Folha de sprites: uma coluna por fase.
 @export var asset: String
 
 
