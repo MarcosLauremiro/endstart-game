@@ -10,6 +10,7 @@ const _KEY_BACK := KEY_ESCAPE
 const _KEY_WORK_WINDOW := KEY_W
 const _KEY_BUILD_MENU := KEY_B
 const _KEY_STORAGE := KEY_I
+const _KEY_FULLSCREEN := KEY_F11
 ## tecla → índice em Balance.SPEED_MULTIPLIERS (como no RimWorld: 1, 2, 3)
 const _SPEED_KEYS := {KEY_1: 0, KEY_2: 1, KEY_3: 2}
 const _KEY_DEBUG_SPEED := KEY_4
@@ -137,6 +138,8 @@ func _handle_key(keycode: Key) -> void:
 		_hud.toggle_build_menu()
 	elif keycode == _KEY_STORAGE:
 		_hud.toggle_storage_panel()
+	elif keycode == _KEY_FULLSCREEN:
+		_toggle_fullscreen()
 	elif keycode == _KEY_BACK:
 		if _tool != Designations.Tool.NONE or _build_def:
 			_set_tool(Designations.Tool.NONE)
@@ -148,6 +151,15 @@ func _handle_key(keycode: Key) -> void:
 		simulation.clock.set_speed(Balance.SPEED_MULTIPLIERS[_SPEED_KEYS[keycode]])
 	elif keycode == _KEY_DEBUG_SPEED and simulation.clock.allow_debug_speed:
 		simulation.clock.set_speed(Balance.DEBUG_SPEED_MULTIPLIER)
+
+
+## F11: tela cheia ↔ janela maximizada (a janela já abre maximizada, ver project.godot).
+func _toggle_fullscreen() -> void:
+	var window := get_window()
+	if window.mode == Window.MODE_FULLSCREEN:
+		window.mode = Window.MODE_MAXIMIZED
+	else:
+		window.mode = Window.MODE_FULLSCREEN
 
 
 ## Clique esquerdo: um colono ali vira a seleção; senão, o próprio tile (GDD: Painel de inspeção).

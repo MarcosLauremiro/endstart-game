@@ -81,7 +81,7 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Câmera | `scripts/world/camera_controller.gd` | Panorâmica e três níveis de zoom fixos. |
 | Catálogo de arte | `scripts/assets/asset_catalog.gd` | Lista única de assets: caminho, tamanho, uso. Fallback provisório. |
 | Arte provisória | `scripts/assets/placeholder_painter.gd`, `tools/generate_placeholder_assets.gd` | Provisórios no tamanho final; o gerador nunca sobrescreve. |
-| Tema | `scripts/ui/ui_theme.gd` | Paleta "rust punk" do GDD, molduras 9-slice, barras, fonte pixel Determination em 12 px sem suavização. |
+| Tema | `scripts/ui/ui_theme.gd` | Paleta "rust punk" do GDD, molduras 9-slice, barras, fonte pixel Determination sem suavização, no tamanho nítido para a escala da janela. |
 | Recursos | `scripts/ui/resource_bar.gd` | Topo esquerdo: comida em dias, madeira, pedra, carne crua, vegetais, frutas — somados dos itens reais. |
 | Tempo | `scripts/ui/time_panel.gd` | Topo direito: dia, hora, pausa e velocidades. |
 | Inspeção | `scripts/ui/inspect_panel.gd` | Canto inferior esquerdo: colono, Força, traços, carga, necessidades, o que faz, por quê, melhores tarefas avaliadas, decisões recentes. |
@@ -128,7 +128,7 @@ Simulation.step()
 ## Decisões registradas
 
 - **Tile 16×16 e 1 tile ≈ 1 m**, conforme o GDD.
-- **Resolução base 640×360**, escala inteira `canvas_items`/`integer`, filtro `Nearest`, snap de transformações e vértices em pixel. Janela de teste em 1280×720 (escala 2×).
+- **Resolução base 640×360**, escala inteira `canvas_items`/`integer` com aspecto `expand` (a tela ocupa a janela toda, mostrando mais mapa nas sobras), filtro `Nearest`, snap de transformações e vértices em pixel. A janela abre maximizada; F11 alterna tela cheia. Fora do maximizado, 1280×720 (escala 2×).
 - **Zoom fixo** em `[0.5, 1.0, 2.0]`: 0.5 mostra ~80×45 tiles, 1.0 ~40×22 tiles.
 - **60 ticks por segundo** a 1×; `MAX_TICKS_PER_FRAME = 120` descarta tempo excedente para não travar após um quadro longo.
 - **Velocidades como no RimWorld:** 1×, 3× e 6× (teclas 1–3, Espaço pausa); 15× na tecla 4 só em build de desenvolvimento. Ainda falta: forçar 1× quando chega uma ameaça (M7) e acelerar quando todos dormem.
@@ -175,7 +175,7 @@ Simulation.step()
 - **Animais (provisório):** lebre 20 de vida, 3,6 tiles/s, 10 no mapa; cervo 60, 3,3 tiles/s, 5; lobo-espinho 80, 4,2 tiles/s, 2. Abaixo da população, um animal por espécie migra pela borda a cada dia. **Caça automática** por espécie (janela de Trabalho) marca os que estão no mapa e os que chegarem.
 - **Cultivos (provisório; o GDD não define):** cenoura 5 dias, rende 5 (nutrição 20 crua); trigo 8 dias, rende 10 (não se come cru, nutrição 0, mas serve de porção crua na refeição simples); cogumelo 3 dias, rende 3 (nutrição 15). Os três contam como "porção crua". Semear 0,25 h e colher 0,3 h. A arte tem uma coluna por fase (`stages` no `.tres`) e a última é a madura. Planta silvestre ou itens no tile impedem semear, com motivo. Apagar a zona ou trocar o cultivo não destrói o que já foi semeado.
 - **Cenoura e cogumelo substituem o "vegetal" genérico** do GDD (o item `vegetable` saiu): são os vegetais do MVP. Zona nova planta cenoura; o cultivo é trocado pelas opções do tile.
-- **Fonte Determination em 12 px:** os contornos ficam numa grade de 2048 ÷ 12 unidades, então 12 px (ou múltiplos) é o tamanho nítido. Sem suavização, sem hinting, sem posição subpixel. Com a fonte maior, o menu de construção usa 3 colunas, o painel do tile rola acima de 150 px e o painel da bancada não repete os motivos dos colonos (estão no painel do tile).
+- **Fonte Determination no tamanho da escala:** os contornos ficam numa grade de 12 px por em; com o oversampling do Godot ela fica nítida quando tamanho × escala da janela é múltiplo de 12. O HUD escolhe o tamanho pela escala inteira atual (×2 → 6 px = 12 px na tela; ×3 → 8 px = 24 px), perto de 8 px, e recalcula quando a janela muda. Sem suavização, sem hinting, sem posição subpixel. O menu de construção usa 3 colunas, o painel do tile rola acima de 150 px e o painel da bancada não repete os motivos dos colonos (estão no painel do tile).
 - **Opções do clique são atalhos para as mesmas ordens:** cortar, minerar, colher, desmontar, caçar e plantação usam as designações; "Comer agora" e "Dormir agora" são ordens diretas (camada 3), com a mesma escolha de comida e cama da IA.
 - **Crescimento provisório** (o GDD não define): árvore leva 15 dias para ficar adulta e, jovem, rende 5 de madeira em metade do tempo de corte; toco some em 10 dias; arbusto muda leva 5 dias; planta de fibra leva 3 dias e rende 5 fibras. No início, 25% das árvores e 20% dos arbustos são jovens.
 
@@ -199,6 +199,7 @@ godot --headless --path . -s res://tests/test_runner.gd
 | `test_production.gd` | Fogueira cozinha até a meta e para (2 porções cruas por refeição, exato), "fazer N" e pausa, receita com dois ingredientes de lugares diferentes, falta de ingrediente explicada, apagar o pedido devolve os ingredientes, desmontar a bancada devolve os ingredientes, cozinha abate (6 carne e 1 pele), fogueira não abate, Cozinhar desligado, refeição preferida a frutas mais perto. |
 | `test_food_sources.gd` | **Aceite do M4** (sem comida guardada nem frutas silvestres, 3 colonos vivem 4 dias de caça automática, abate, cozinha e plantação, sem ordem nova), espécies do MVP no mapa, caça deixa carcaça, presa ferida e colono perto fazem fugir, predador não é marcado, predador caça presa, migração, caça automática marca quem chega, plantação semeia, cresce, colhe e semeia de novo, água não vira plantação, cancelar apaga zona e caça. |
 | `test_context_actions.gd` | Opções do clique: árvore cortar e cancelar, cama desmontar (qualquer tile dela), obra cancelada devolve o material, caçar animais mas não o predador, plantação criar, trocar o cultivo (tarefa refeita) e remover, colono dormir, cancelar ordem e comer; cada cultivo com uma coluna de arte por fase. |
+| `test_ui_theme.gd` | Tamanho da fonte sempre na grade de pixels da fonte para cada escala, escala inteira da janela. |
 | `test_plants.gd` | Calendário das estações, uma linha de arte por estação, árvore jovem cresce, corte deixa toco que some, muda não dá frutas, colheita de fibra rende e volta a crescer, mapa com plantas jovens e adultas. |
 | `test_navigation.gd` | Desvio de obstáculo, destino bloqueado, custo da água rasa, mapa conectado pelos vaus, corredor bloqueado divide regiões, regiões incrementais iguais a um recálculo completo. |
 | `test_needs_and_reservations.gd` | Ritmo e limites das necessidades, dono único da reserva, rebrota dos arbustos. |

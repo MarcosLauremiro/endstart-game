@@ -25,14 +25,18 @@ var _build_menu: BuildMenu
 var _storage_panel: StoragePanel
 var _workbench_panel: WorkbenchPanel
 var _simulation: Simulation
+var _theme: Theme
 
 
 func _ready() -> void:
 	var root := Control.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.theme = UiTheme.build()
+	_theme = UiTheme.build()
+	root.theme = _theme
 	add_child(root)
+	_fit_font_to_window()
+	get_window().size_changed.connect(_fit_font_to_window)
 
 	_resource_bar = ResourceBar.new()
 	root.add_child(_resource_bar)
@@ -121,6 +125,11 @@ func refresh(selected_id: int, tile: Vector2i, has_tile: bool, tool: Designation
 	_workbench_panel.visible = bench != null
 	if bench:
 		_workbench_panel.show_bench(bench)
+
+
+## A fonte acompanha a escala da janela para continuar nítida (ver UiTheme.font_size_for).
+func _fit_font_to_window() -> void:
+	_theme.default_font_size = UiTheme.font_size_for(UiTheme.screen_scale(get_window().size))
 
 
 func toggle_work_window() -> void:

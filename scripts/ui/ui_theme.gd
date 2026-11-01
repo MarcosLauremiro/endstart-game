@@ -12,8 +12,11 @@ const POSITIVE := Color("7bc96f")
 const DANGER := Color("e5534b")
 const LORE := Color("9b7bd8")
 
-## Fonte pixel "Determination": desenhada numa grade de 12 px por em, então 12 px fica nítido.
-const FONT_SIZE := 12
+## Fonte pixel "Determination": desenhada numa grade de 12 px por em. Com a escala inteira da
+## janela (×2, ×3...) e o oversampling do Godot, ela fica nítida quando tamanho × escala é
+## múltiplo de 12. O tamanho é escolhido pela escala (font_size_for), perto deste alvo.
+const FONT_SIZE := 8
+const FONT_GRID := 12
 const FONT_PATH := "res://assets/ui/fonts/determination.ttf"
 const PANEL_CORNER := 16
 const PANEL_PADDING := 6
@@ -53,6 +56,29 @@ static func build() -> Theme:
 	theme.set_color("font_hover_color", "Button", TEXT)
 	theme.set_color("font_pressed_color", "Button", COMMUNITY)
 	return theme
+
+
+## Tamanho da fonte (em pixels da arte) para a escala inteira da janela: o mais perto de
+## FONT_SIZE entre os que caem na grade da fonte; no empate, o menor.
+static func font_size_for(scale: int) -> int:
+	var safe_scale := maxi(scale, 1)
+	var best := 0
+	var step := 1
+	while step * FONT_GRID <= FONT_SIZE * safe_scale * 2:
+		if step * FONT_GRID % safe_scale == 0:
+			var size := step * FONT_GRID / safe_scale
+			if best == 0 or absi(size - FONT_SIZE) < absi(best - FONT_SIZE):
+				best = size
+		step += 1
+	return best if best > 0 else FONT_SIZE
+
+
+## Escala inteira que o Godot aplica à tela base de 640×360 nesta janela.
+static func screen_scale(window_size: Vector2i) -> int:
+	var base := Vector2i(
+		ProjectSettings.get_setting("display/window/size/viewport_width"),
+		ProjectSettings.get_setting("display/window/size/viewport_height"))
+	return maxi(1, mini(window_size.x / base.x, window_size.y / base.y))
 
 
 ## A fonte da interface sem suavização nem hinting, para os pixels não borrarem.
