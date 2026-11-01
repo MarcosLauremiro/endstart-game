@@ -1971,7 +1971,8 @@ A estética mistura **cyberpunk** e **rústico**: painéis de metal oxidado, mad
 - **Fundo dos painéis:** escuro e quase opaco (90%), para o mapa não competir com o texto.
 - **Telas de tecnologia:** Rádio, Pesquisa e terminais usam efeito de tela antiga, com linhas de varredura leves e brilho.
 - **Interferência do Mundo:** com atenção alta, a interface sofre falhas visuais breves (texto tremido, chiado). A própria interface conta a história.
-- **Fonte:** pixel art com suporte completo a acentos do português (Determination). Ela é desenhada numa grade de 12 px, então o tamanho segue a escala da tela para continuar nítida: 6 px lógicos com a tela em ×2 e 8 px em ×3 (24 px reais em 1080p).
+- **Fonte:** Dogica Pixel (pixel art proporcional, com os acentos do português; licença SIL OFL, com crédito em CREDITOS.md). Ela é desenhada numa grade de 8 px e fica no tamanho nativo: 8 px reais com a interface em ×2.
+- **Escala da interface:** separada da do mapa e sempre inteira e par, para a fonte ficar nítida: ×2 do 720p ao 1440p (em tela cheia 1080p o mapa fica em ×3 e a interface continua em ×2, com mais espaço), ×4 em 4K.
 - **Sons de interface:** cliques mecânicos, chaves, chiado de rádio.
 
 **Cores com significado:**

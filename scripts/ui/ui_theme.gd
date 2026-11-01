@@ -12,12 +12,13 @@ const POSITIVE := Color("7bc96f")
 const DANGER := Color("e5534b")
 const LORE := Color("9b7bd8")
 
-## Fonte pixel "Determination": desenhada numa grade de 12 px por em. Com a escala inteira da
-## janela (×2, ×3...) e o oversampling do Godot, ela fica nítida quando tamanho × escala é
-## múltiplo de 12. O tamanho é escolhido pela escala (font_size_for), perto deste alvo.
-const FONT_SIZE := 8
-const FONT_GRID := 12
-const FONT_PATH := "res://assets/ui/fonts/determination.ttf"
+## Fonte pixel "Dogica Pixel" (Roberto Mocci, licença SIL OFL 1.1: assets/ui/fonts/dogica/).
+## Desenhada numa grade de 8 px por em: fica nítida quando tamanho × escala na tela é múltiplo de 8.
+## A interface tem escala própria (ui_scale_for) e a fonte usa 4 unidades dela: 8 px na tela com
+## a interface em ×2, o tamanho nativo da fonte.
+const FONT_SIZE := 4
+const FONT_GRID := 8
+const FONT_PATH := "res://assets/ui/fonts/dogica/TTF/dogicapixel.ttf"
 const PANEL_CORNER := 16
 const PANEL_PADDING := 6
 const BUTTON_CORNER := 8
@@ -58,19 +59,20 @@ static func build() -> Theme:
 	return theme
 
 
-## Tamanho da fonte (em pixels da arte) para a escala inteira da janela: o mais perto de
-## FONT_SIZE entre os que caem na grade da fonte; no empate, o menor.
-static func font_size_for(scale: int) -> int:
-	var safe_scale := maxi(scale, 1)
-	var best := 0
-	var step := 1
-	while step * FONT_GRID <= FONT_SIZE * safe_scale * 2:
-		if step * FONT_GRID % safe_scale == 0:
-			var size := step * FONT_GRID / safe_scale
-			if best == 0 or absi(size - FONT_SIZE) < absi(best - FONT_SIZE):
-				best = size
-		step += 1
-	return best if best > 0 else FONT_SIZE
+## Escala da interface na tela, separada da do mapa: ×2 do 720p ao 1440p (inclusive em tela cheia
+## 1080p, em que o mapa fica em ×3), ×4 em 4K; ×1 só em janelas pequenas. Sempre par a partir de ×2,
+## para a fonte de grade 8 cair inteira nos pixels.
+static func ui_scale_for(screen: int) -> int:
+	if screen < 2:
+		return 1
+	if screen <= 4:
+		return 2
+	return 4
+
+
+## Tamanho da fonte em unidades da interface: 4 (8 px na tela em ×2); em ×1, o nativo 8.
+static func font_size_for(ui_scale: int) -> int:
+	return FONT_GRID if ui_scale < 2 else FONT_SIZE
 
 
 ## Escala inteira que o Godot aplica à tela base de 640×360 nesta janela.

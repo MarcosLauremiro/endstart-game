@@ -1,15 +1,18 @@
 class_name TestUiTheme
 extends TestCase
-## Fonte da interface: tamanho escolhido pela escala inteira da janela, sempre na grade da fonte
-## (tamanho × escala múltiplo de 12) e perto do alvo.
+## Interface: escala própria na tela (independente do mapa) e fonte pixel Dogica sempre na grade
+## de 8 px dela.
 
 
-func test_font_size_stays_on_the_pixel_grid() -> void:
-	expect_equal(UiTheme.font_size_for(2), 6, "Janela ×2 (1280×720 ou maximizada em 1080p): 6 px = 12 px na tela")
-	expect_equal(UiTheme.font_size_for(3), 8, "Tela cheia 1080p (×3): 8 px = 24 px na tela")
-	for scale in range(1, 7):
-		var size := UiTheme.font_size_for(scale)
-		expect_equal(size * scale % UiTheme.FONT_GRID, 0, "Escala %d: tamanho %d cai na grade da fonte" % [scale, size])
+func test_ui_scale_and_font_stay_on_the_pixel_grid() -> void:
+	expect_equal(UiTheme.ui_scale_for(2), 2, "Janela maximizada em 1080p (mapa ×2): interface ×2")
+	expect_equal(UiTheme.ui_scale_for(3), 2, "Tela cheia 1080p (mapa ×3): interface continua ×2")
+	expect_equal(UiTheme.ui_scale_for(6), 4, "4K: interface ×4")
+	expect_equal(UiTheme.font_size_for(2), 4, "Em ×2 a fonte usa 4 unidades = 8 px na tela, o tamanho nativo")
+	for screen in range(1, 7):
+		var ui := UiTheme.ui_scale_for(screen)
+		var size := UiTheme.font_size_for(ui)
+		expect_equal(size * ui % UiTheme.FONT_GRID, 0, "Tela ×%d: fonte %d × interface ×%d cai na grade" % [screen, size, ui])
 
 
 func test_screen_scale_matches_integer_stretch() -> void:

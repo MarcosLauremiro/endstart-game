@@ -122,7 +122,7 @@ func _show_general(colonist: Colonist, state: WorldState) -> void:
 	_set_bar(_food_bar, colonist.needs.food, Balance.FOOD_FREE_TIME_THRESHOLD, Balance.FOOD_CRITICAL_THRESHOLD)
 	_set_bar(_rest_bar, colonist.needs.rest, Balance.REST_FREE_TIME_THRESHOLD, Balance.REST_CRITICAL_THRESHOLD)
 	_set_bar(_mood_bar, colonist.mood.value, Balance.MOOD_UNSTABLE_BELOW, Balance.MOOD_CRISIS_BELOW)
-	var lines := PackedStringArray(["Humor %d (%s) → alvo %d" % [
+	var lines := PackedStringArray(["Humor %d (%s) -> alvo %d" % [
 		roundi(colonist.mood.value), colonist.mood.state_name(), roundi(colonist.mood.target())]])
 	for thought in colonist.mood.thoughts:
 		lines.append("   %+d %s" % [roundi(thought["value"]), thought["label"]])

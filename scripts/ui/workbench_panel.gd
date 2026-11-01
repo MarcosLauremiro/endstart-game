@@ -94,7 +94,7 @@ func _rebuild_recipes(bench: Workbench) -> void:
 	for recipe in Defs.recipes_for(bench.def().id):
 		var button := Button.new()
 		button.text = "+ %s" % recipe.display_name
-		button.tooltip_text = "%s → %s, %s h" % [recipe.ingredients_text(), recipe.products_text(), str(recipe.work_hours).replace(".", ",")]
+		button.tooltip_text = "%s -> %s, %s h" % [recipe.ingredients_text(), recipe.products_text(), str(recipe.work_hours).replace(".", ",")]
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(func() -> void: _simulation.add_bill(_bench_id, recipe.id))
 		_recipes.add_child(button)
@@ -118,7 +118,7 @@ func _rebuild_rows(bench: Workbench) -> void:
 		label.clip_text = true
 		row.add_child(label)
 		_bill_labels[label] = bill
-		row.add_child(_small_button("modo", "Trocar o modo: até ter X → fazer N → sempre", func() -> void: _cycle_mode(bill)))
+		row.add_child(_small_button("modo", "Trocar o modo: até ter X -> fazer N -> sempre", func() -> void: _cycle_mode(bill)))
 		var minus := _small_button("-", "Meta -1 (botão direito: -%d)" % _BIG_STEP, Callable())
 		minus.gui_input.connect(_on_step_input.bind(minus, bill, -1))
 		row.add_child(minus)

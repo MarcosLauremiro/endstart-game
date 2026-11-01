@@ -19,7 +19,8 @@ const _FIBER_SMALL := 0
 const _FIBER_GROWN := 1
 const _DESIGNATION_TINT := Color(1, 1, 1, 0.75)
 const _BLOCKED_TINT := Color(1, 0.4, 0.4, 0.75)
-const _COUNT_FONT_SIZE := 6
+## Números das pilhas: a fonte pixel no tamanho nativo (8), nítida em qualquer escala inteira.
+const _COUNT_FONT_SIZE := UiTheme.FONT_GRID
 const _PROGRESS_HEIGHT := 2
 const _DRAG_FILL := Color(0.95, 0.65, 0.25, 0.15)
 const _DRAG_BORDER := Color(0.95, 0.65, 0.25, 0.9)
@@ -97,7 +98,7 @@ func _draw() -> void:
 	_draw_layer(StructureDef.Layer.BUILDING)
 	for container in _state.containers.values():
 		_draw_built(container.def.asset, container.cell, container.def.footprint, Color.WHITE)
-	var font := ThemeDB.fallback_font
+	var font := UiTheme.pixel_font()
 	for stack in _state.stacks.values():
 		var origin := Vector2(stack.cell * tile)
 		draw_texture(AssetCatalog.texture(Defs.item(stack.item).icon), origin)

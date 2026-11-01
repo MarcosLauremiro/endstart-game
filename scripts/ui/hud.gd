@@ -27,42 +27,42 @@ var _storage_panel: StoragePanel
 var _workbench_panel: WorkbenchPanel
 var _simulation: Simulation
 var _theme: Theme
+var _root: Control
 
 
 func _ready() -> void:
-	var root := Control.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root = Control.new()
+	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_theme = UiTheme.build()
-	root.theme = _theme
-	add_child(root)
-	_fit_font_to_window()
-	get_window().size_changed.connect(_fit_font_to_window)
+	_root.theme = _theme
+	add_child(_root)
+	_fit_to_window()
+	get_viewport().size_changed.connect(_fit_to_window)
 
 	_resource_bar = ResourceBar.new()
-	root.add_child(_resource_bar)
+	_root.add_child(_resource_bar)
 	_pin(_resource_bar, 0.0, 0.0)
 
 	_time_panel = TimePanel.new()
-	root.add_child(_time_panel)
+	_root.add_child(_time_panel)
 	_pin(_time_panel, 1.0, 0.0)
 
 	_inspect_panel = InspectPanel.new()
 	_inspect_panel.visible = false
-	root.add_child(_inspect_panel)
+	_root.add_child(_inspect_panel)
 	_pin(_inspect_panel, 0.0, 1.0)
 
 	_tile_panel = TilePanel.new()
 	_tile_panel.visible = false
-	root.add_child(_tile_panel)
+	_root.add_child(_tile_panel)
 	_pin(_tile_panel, 0.0, 1.0)
 
 	_message_log = MessageLog.new()
-	root.add_child(_message_log)
+	_root.add_child(_message_log)
 	_pin(_message_log, 1.0, 1.0)
 
 	_bottom_bar = BottomBar.new()
-	root.add_child(_bottom_bar)
+	_root.add_child(_bottom_bar)
 	_pin(_bottom_bar, 0.5, 1.0)
 	_bottom_bar.tool_selected.connect(func(tool: Designations.Tool) -> void: tool_selected.emit(tool))
 	_bottom_bar.work_window_toggled.connect(toggle_work_window)
@@ -72,17 +72,17 @@ func _ready() -> void:
 
 	_work_window = WorkPriorityWindow.new()
 	_work_window.visible = false
-	root.add_child(_work_window)
+	_root.add_child(_work_window)
 	_pin(_work_window, 0.5, 0.5)
 
 	_schedule_window = ScheduleWindow.new()
 	_schedule_window.visible = false
-	root.add_child(_schedule_window)
+	_root.add_child(_schedule_window)
 	_pin(_schedule_window, 0.5, 0.5)
 
 	_build_menu = BuildMenu.new()
 	_build_menu.visible = false
-	root.add_child(_build_menu)
+	_root.add_child(_build_menu)
 	_pin(_build_menu, 0.5, 1.0)
 	_build_menu.offset_top -= _ABOVE_BOTTOM_BAR
 	_build_menu.offset_bottom -= _ABOVE_BOTTOM_BAR
@@ -92,13 +92,13 @@ func _ready() -> void:
 
 	_storage_panel = StoragePanel.new()
 	_storage_panel.visible = false
-	root.add_child(_storage_panel)
+	_root.add_child(_storage_panel)
 	_pin(_storage_panel, 1.0, 0.5)
 	_storage_panel.container_focused.connect(func(cell: Vector2i) -> void: container_focused.emit(cell))
 
 	_workbench_panel = WorkbenchPanel.new()
 	_workbench_panel.visible = false
-	root.add_child(_workbench_panel)
+	_root.add_child(_workbench_panel)
 	_pin(_workbench_panel, 1.0, 0.0)
 	_workbench_panel.offset_top += _BELOW_TIME_PANEL
 	_workbench_panel.offset_bottom += _BELOW_TIME_PANEL
@@ -135,9 +135,15 @@ func refresh(selected_id: int, tile: Vector2i, has_tile: bool, tool: Designation
 		_workbench_panel.show_bench(bench)
 
 
-## A fonte acompanha a escala da janela para continuar nítida (ver UiTheme.font_size_for).
-func _fit_font_to_window() -> void:
-	_theme.default_font_size = UiTheme.font_size_for(UiTheme.screen_scale(get_window().size))
+## A interface tem escala própria na tela (UiTheme.ui_scale_for), independente da do mapa:
+## a camada encolhe ou cresce para isso, e a raiz ocupa a tela inteira nessas unidades.
+func _fit_to_window() -> void:
+	var screen := UiTheme.screen_scale(get_window().size)
+	var ui := UiTheme.ui_scale_for(screen)
+	scale = Vector2.ONE * float(ui) / screen
+	_root.position = Vector2.ZERO
+	_root.size = get_viewport().get_visible_rect().size * screen / ui
+	_theme.default_font_size = UiTheme.font_size_for(ui)
 
 
 func toggle_work_window() -> void:
