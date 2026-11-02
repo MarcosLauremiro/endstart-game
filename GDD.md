@@ -926,6 +926,8 @@ No RimWorld, os itens ficam espalhados no chão em zonas de estoque, o que deixa
 
 Cada contêiner tem **espaços**. Cada espaço guarda um tipo de item até o tamanho máximo da pilha.
 
+Clicar num contêiner mostra o interior como num baú: a grade de espaços, cada um com o ícone do item e a quantidade no canto (nada quando há só um). Passar o mouse num espaço mostra o item, quanto tem e quanto cabe, o que está a caminho e o que está reservado. Embaixo da grade, o botão **Configurar** abre as configurações do contêiner (no MVP, o filtro por categoria).
+
 | Contêiner | Tamanho | Custo | Espaços | Aceita | Especial |
 | --- | --- | --- | --- | --- | --- |
 | Cesto de vime | 1×1 | 3 fibra | 4 | Leves e médios | Barato e leve (3 kg), dá para levar em expedições |
@@ -945,7 +947,7 @@ Cada contêiner tem **espaços**. Cada espaço guarda um tipo de item até o tam
 
 | Tipo de item | Pilha | Pilha em espaço grande |
 | --- | --- | --- |
-| Materiais (madeira, pedra, minério, sucata) | 50 | 300 |
+| Materiais (madeira, pedra, minério, sucata) | 50 (no MVP, os recursos básicos juntam até 99) | 300 |
 | Barras de metal, peças simples | 25 | — |
 | Comida e ingredientes | 20 | — |
 | Grãos | 50 | 500 |
@@ -976,7 +978,7 @@ O pátio de materiais aceita só recursos básicos; caixotes e baús aceitam tud
 
 Cada contêiner tem configurações próprias:
 
-- **Filtro:** por categoria, item, qualidade mínima e estado (por exemplo, "só roupas acima de 50% de durabilidade"). No MVP, o filtro é por categoria e fica nas opções do contêiner. O que deixa de ser permitido sai para o chão ao lado e é levado para outro contêiner que aceite.
+- **Filtro:** por categoria, item, qualidade mínima e estado (por exemplo, "só roupas acima de 50% de durabilidade"). No MVP, o filtro é por categoria e fica no botão Configurar, embaixo dos espaços do contêiner. O que deixa de ser permitido sai para o chão ao lado e é levado para outro contêiner que aceite.
 - **Prioridade:** baixa, normal, alta ou crítica. Itens vão primeiro para os de prioridade maior.
 - **Ligação com bancada:** um contêiner ligado a uma bancada abastece ela primeiro. Uma despensa ligada à cozinha encurta o caminho de quem cozinha.
 - **Tranca:** baús reforçados, arcas e cofres podem ser trancados, com lista de colonos autorizados.
@@ -1968,13 +1970,15 @@ A organização da informação segue o RimWorld, porque funciona: mapa no centr
 
 Mostra o que estiver selecionado: colono, animal, bancada, contêiner, planta, construção ou tile.
 
+**Seleção por arraste:** sem ferramenta ativa, arrastar com o botão esquerdo desenha um retângulo. Soltar no mesmo tile é um clique comum. Se o retângulo pega colonos, só eles são selecionados (um só vira a seleção comum). O painel lista cada um com o que está fazendo; clicar num nome seleciona só ele. As opções valem para o grupo: convocar ou dispensar todos (V) e cancelar as ordens. Com o botão direito, todos atacam o saqueador clicado, o mais perto que puder faz a tarefa clicada, ou cada um vai para um tile livre em volta do ponto clicado. Sem colonos, ficam selecionadas as **árvores, rochas, arbustos e plantas de fibra** do retângulo, cada uma com sua marca, e o painel mostra só as opções delas, nesta ordem: **Cortar**, **Minerar** e **Colher** (com a quantidade, como "Cortar (12)", e os cancelamentos do que já está marcado). O que é cortado ou minerado sai da seleção. Sem nada disso no retângulo, a área inteira fica selecionada: o painel resume o que há nela ("16 árvores, 5 plantas de fibra") e junta as opções iguais numa só, que vale para todos os alvos ("Desmontar: Caixote (2)", "Caçar: Lebre (4)"). Uma construção de vários tiles conta uma vez, e criar plantação fica de fora (para isso, há a ordem Plantação).
+
 - **Colono:** abas Geral, Habilidades, Saúde, Equipamento, Social e Por quê.
 - **Bancada:** fila de pedidos, anexos, nível e condições do ambiente.
 - **Contêiner:** grade de espaços, filtro e prioridade.
 - **Construção:** resistência, materiais faltando, quem está trabalhando.
 - **Tile:** terreno, fertilidade, temperatura, beleza.
 
-**Opções do que foi clicado:** no topo do painel aparecem botões com o que dá para fazer ali: cortar uma árvore, colher, minerar, desmontar uma construção, cancelar uma obra, caçar um animal, guardar uma pilha, filtrar um contêiner por categoria, escolher o cultivo da plantação, criar uma plantação no chão livre ou investigar uma ruína. No colono: convocar ou dispensar, comer agora, dormir agora, largar o item da mão e cancelar a ordem. No MVP, a saúde (ferimentos, sangue perdido e sangramento por hora) fica na aba Geral, e o painel do tile mostra os saqueadores que estão nele. O que já está marcado vira "cancelar". A lista começa pequena e cresce com o jogo.
+**Opções do que foi clicado:** no topo do painel aparecem botões com o que dá para fazer ali: cortar uma árvore, colher, minerar, desmontar uma construção, cancelar uma obra, caçar um animal, guardar uma pilha, escolher o cultivo da plantação, criar uma plantação no chão livre ou investigar uma ruína. No colono: convocar ou dispensar, comer agora, dormir agora, largar o item da mão e cancelar a ordem. No MVP, a saúde (ferimentos, sangue perdido e sangramento por hora) fica na aba Geral, e o painel do tile mostra os saqueadores que estão nele. O que já está marcado vira "cancelar". A lista começa pequena e cresce com o jogo.
 
 Selecionar vários colonos mostra um resumo do grupo e as ordens em comum.
 
@@ -1993,7 +1997,7 @@ Selecionar vários colonos mostra um resumo do grupo e as ordens em comum.
 | Comunidade | Porte e requisitos, triângulo de tendência cultural, valores, relações com clãs |
 | Bancada | Fila de pedidos com condições |
 
-**Atalhos do MVP:** Espaço pausa; 1, 2 e 3 mudam a velocidade; B Construir; C Cortar; M Minerar; H Colher; K Caçar; P Plantação; D Desmontar; X Cancelar; W Trabalho; A Agenda; I Armazém; R Pesquisa; V Convocar (sem seleção: todos); Esc fecha a janela ou solta a ferramenta; F11 tela cheia. Botão direito com um colono selecionado: num saqueador, atacar; numa tarefa, priorizar; no chão, ir até lá. Em build de desenvolvimento: 4 acelera para 15× e F5 gera um mapa novo.
+**Atalhos do MVP:** Espaço pausa; 1, 2 e 3 mudam a velocidade; B Construir; C Cortar; M Minerar; H Colher; K Caçar; P Plantação; D Desmontar; X Cancelar; W Trabalho; A Agenda; I Armazém; R Pesquisa; V Convocar (sem seleção: todos); Esc fecha a janela ou solta a ferramenta; F11 tela cheia. Botão direito com um colono selecionado: num saqueador, atacar; numa tarefa, priorizar; no chão, ir até lá. Arrastar sem ferramenta seleciona vários colonos, as árvores, rochas e plantas (Cortar, Minerar, Colher) ou uma área. Em build de desenvolvimento: 4 acelera para 15× e F5 gera um mapa novo.
 
 ### Cartas de evento
 

@@ -34,6 +34,11 @@ var selected_colonist_id: int = 0
 ## Tile selecionado quando o clique não pegou nenhum colono.
 var selected_cell := Vector2i.ZERO
 var has_selected_cell := false
+## Seleção por arraste: vários colonos (dois ou mais) ou, sem colonos no retângulo, uma área com as
+## árvores, rochas e plantas dela (selected_resources; vazio = tudo o que há na área).
+var selected_group: Array[int] = []
+var selected_area := Rect2i()
+var selected_resources: Array[Vector2i] = []
 
 var _world_view: WorldView
 var _objects_view: ObjectsView
@@ -65,6 +70,9 @@ func _ready() -> void:
 	_hud.container_focused.connect(func(cell: Vector2i) -> void:
 		_camera.focus(cell)
 		_select_at(cell))
+	_hud.colonist_chosen.connect(func(id: int) -> void:
+		_clear_selection()
+		selected_colonist_id = id)
 	start_new_game(_read_seed_argument())
 
 
@@ -82,6 +90,9 @@ func start_new_game(world_seed: int) -> void:
 
 func _process(delta: float) -> void:
 	simulation.advance(delta)
+	# Arraste de seleção solto em cima da interface: o botão já não está apertado, então desiste.
+	if _selecting() and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_drag_start = _NO_DRAG
 	_refresh_views()
 
 
@@ -92,8 +103,11 @@ func _refresh_views() -> void:
 	_objects_view.refresh()
 	_daylight.show_light(Daylight.light_at(simulation.clock.tick))
 	_objects_view.set_selected_cell(selected_cell, has_selected_cell)
-	_colonists_view.sync(simulation.state.colonists, selected_colonist_id)
-	_hud.refresh(selected_colonist_id, selected_cell, has_selected_cell, _tool, _build_def != null)
+	_prune_group()
+	_prune_resources()
+	_objects_view.set_selected_area(selected_area, selected_resources)
+	_colonists_view.sync(simulation.state.colonists, _selected_ids())
+	_hud.refresh(selected_colonist_id, selected_cell, has_selected_cell, _tool, _build_def != null, selected_group, selected_area, selected_resources)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -123,10 +137,21 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 				_apply_tool(_drag_area(cell))
 				_drag_start = _NO_DRAG
 		elif event.pressed:
-			_select_at(cell)
+			_drag_start = cell
+		elif _drag_start != _NO_DRAG:
+			# Soltar no mesmo tile é um clique; arrastar seleciona tudo no retângulo.
+			if cell == _drag_start:
+				_select_at(cell)
+			else:
+				_select_area(_drag_area(cell))
+			_drag_start = _NO_DRAG
 	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		if _tool != Designations.Tool.NONE:
 			_set_tool(Designations.Tool.NONE)
+		elif selected_group.size() > 1:
+			var message := MultiSelect.order_group(simulation, selected_group, cell)
+			if not message.is_empty():
+				_hud.post_message(message)
 		elif selected_colonist_id != 0:
 			# Botão direito num saqueador = atacar; numa tarefa = priorizar; em chão livre = ir até lá.
 			var raider := RaiderAI.raider_at(simulation.state, cell)
@@ -172,8 +197,11 @@ func _handle_key(keycode: Key) -> void:
 		simulation.clock.set_speed(Balance.DEBUG_SPEED_MULTIPLIER)
 
 
-## V: convoca ou dispensa o colono selecionado; sem seleção, todos de uma vez.
+## V: convoca ou dispensa o colono selecionado (ou o grupo); sem seleção, todos de uma vez.
 func _toggle_draft() -> void:
+	if selected_group.size() > 1:
+		_hud.post_message(MultiSelect.draft_group(simulation, selected_group))
+		return
 	var colonist := simulation.state.colonist_by_id(selected_colonist_id) if selected_colonist_id != 0 else null
 	var message := simulation.set_drafted(colonist.id, not colonist.drafted) if colonist else simulation.toggle_draft_all()
 	if not message.is_empty():
@@ -203,9 +231,66 @@ func _select_at(cell: Vector2i) -> void:
 		has_selected_cell = true
 
 
+## Fim do arraste sem ferramenta: os colonos do retângulo (um vira a seleção comum); sem colonos,
+## as árvores, rochas e plantas dele; sem nada disso, a área inteira (MultiSelect).
+func _select_area(area: Rect2i) -> void:
+	_clear_selection()
+	var ids := MultiSelect.colonists_in(simulation.state, area)
+	if ids.size() == 1:
+		selected_colonist_id = ids[0]
+	elif ids.size() > 1:
+		selected_group = ids
+	else:
+		selected_area = area.intersection(Rect2i(Vector2i.ZERO, simulation.world.size))
+		selected_resources = MultiSelect.resources_in(simulation.state, selected_area)
+
+
 func _clear_selection() -> void:
 	selected_colonist_id = 0
 	has_selected_cell = false
+	selected_group = []
+	selected_area = Rect2i()
+	selected_resources = []
+
+
+## Quem morreu sai do grupo; sobrando um, ele vira a seleção comum.
+func _prune_group() -> void:
+	if selected_group.is_empty():
+		return
+	var alive: Array[int] = []
+	for id in selected_group:
+		if simulation.state.colonist_by_id(id) != null:
+			alive.append(id)
+	selected_group = alive
+	if selected_group.size() == 1:
+		selected_colonist_id = selected_group[0]
+		selected_group = []
+
+
+## Árvore cortada, rocha minerada: sai da seleção; sem nenhuma, a seleção acaba.
+func _prune_resources() -> void:
+	if selected_resources.is_empty():
+		return
+	var left: Array[Vector2i] = []
+	for cell in selected_resources:
+		if MultiSelect.is_resource(simulation.state, cell):
+			left.append(cell)
+	selected_resources = left
+	if left.is_empty():
+		_clear_selection()
+
+
+func _selected_ids() -> Array[int]:
+	if selected_group.size() > 1:
+		return selected_group
+	var ids: Array[int] = []
+	if selected_colonist_id != 0:
+		ids.append(selected_colonist_id)
+	return ids
+
+
+func _selecting() -> bool:
+	return _drag_start != _NO_DRAG and _tool == Designations.Tool.NONE and _build_def == null
 
 
 func _toggle_tool(tool: Designations.Tool) -> void:

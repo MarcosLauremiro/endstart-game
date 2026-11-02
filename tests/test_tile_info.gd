@@ -22,7 +22,7 @@ func test_container_lists_real_contents() -> void:
 	var text := "\n".join(TileInfo.describe(simulation, crate.cell))
 	expect(text.contains("Caixote #%d" % crate.id), "Deve nomear o caixote")
 	for item in crate.contents():
-		expect(text.contains("%s: %d" % [Defs.item(item).display_name, crate.contents()[item]]), "Deve listar %s" % item)
+		expect(text.contains("%d %s" % [crate.contents()[item], Defs.item(item).display_name.to_lower()]), "Deve listar %s" % item)
 
 
 func test_task_shows_why_each_colonist_would_or_would_not() -> void:

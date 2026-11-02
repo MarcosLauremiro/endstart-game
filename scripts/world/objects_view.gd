@@ -48,6 +48,10 @@ const _INVALID_FILL := Color(0.9, 0.3, 0.3, 0.35)
 
 var _state: WorldState
 var _drag_area := Rect2i()
+## Área selecionada por arraste (contorno que fica depois de soltar) e, nela, as árvores, rochas e
+## plantas selecionadas (uma marca em cada; com elas, o contorno não aparece).
+var _selected_area := Rect2i()
+var _selected_cells: Array[Vector2i] = []
 var _selected_cell := Vector2i.ZERO
 var _has_selected_cell := false
 var _preview_def: StructureDef
@@ -62,6 +66,11 @@ func bind(state: WorldState) -> void:
 
 func set_drag_area(area: Rect2i) -> void:
 	_drag_area = area
+
+
+func set_selected_area(area: Rect2i, cells: Array[Vector2i]) -> void:
+	_selected_area = area
+	_selected_cells = cells
 
 
 func set_selected_cell(cell: Vector2i, has_cell: bool) -> void:
@@ -118,6 +127,10 @@ func _draw() -> void:
 	_draw_preview()
 	if _has_selected_cell:
 		draw_texture(AssetCatalog.texture("ui/selection/bracket"), Vector2(_selected_cell * tile))
+	for cell in _selected_cells:
+		draw_texture(AssetCatalog.texture("ui/selection/bracket"), Vector2(cell * tile))
+	if _selected_area.has_area() and _selected_cells.is_empty():
+		draw_rect(Rect2(Vector2(_selected_area.position * tile), Vector2(_selected_area.size * tile)), _DRAG_BORDER, false, 1.0)
 	if _drag_area.has_area():
 		var area := Rect2(Vector2(_drag_area.position * tile), Vector2(_drag_area.size * tile))
 		draw_rect(area, _DRAG_FILL)

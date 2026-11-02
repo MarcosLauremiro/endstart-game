@@ -8,6 +8,8 @@ extends CanvasLayer
 signal tool_selected(tool: Designations.Tool)
 signal structure_selected(def: StructureDef)
 signal container_focused(cell: Vector2i)
+## Clique num nome da lista de vários colonos selecionados.
+signal colonist_chosen(colonist_id: int)
 
 ## O menu de construção abre logo acima da barra de baixo.
 const _ABOVE_BOTTOM_BAR := 40
@@ -18,6 +20,7 @@ var _resource_bar: ResourceBar
 var _time_panel: TimePanel
 var _inspect_panel: InspectPanel
 var _tile_panel: TilePanel
+var _selection_panel: SelectionPanel
 var _message_log: MessageLog
 var _bottom_bar: BottomBar
 var _work_window: WorkPriorityWindow
@@ -57,6 +60,12 @@ func _ready() -> void:
 	_tile_panel.visible = false
 	_root.add_child(_tile_panel)
 	_pin(_tile_panel, 0.0, 1.0)
+
+	_selection_panel = SelectionPanel.new()
+	_selection_panel.visible = false
+	_root.add_child(_selection_panel)
+	_pin(_selection_panel, 0.0, 1.0)
+	_selection_panel.colonist_chosen.connect(func(id: int) -> void: colonist_chosen.emit(id))
 
 	_message_log = MessageLog.new()
 	_root.add_child(_message_log)
@@ -124,8 +133,11 @@ func bind(simulation: Simulation) -> void:
 
 
 ## Mostra o colono selecionado; se não houver, o tile selecionado (has_tile = false: nenhum),
-## e o painel da bancada quando o tile tem uma.
-func refresh(selected_id: int, tile: Vector2i, has_tile: bool, tool: Designations.Tool, building: bool) -> void:
+## e o painel da bancada quando o tile tem uma. Seleção por arraste: group (vários colonos) ou
+## area (as árvores, rochas e plantas dela em resources; sem elas, tudo o que há na área) aparecem
+## no painel de seleção.
+func refresh(selected_id: int, tile: Vector2i, has_tile: bool, tool: Designations.Tool, building: bool,
+		group: Array[int] = [], area := Rect2i(), resources: Array[Vector2i] = []) -> void:
 	_resource_bar.refresh(_simulation.state)
 	_time_panel.refresh()
 	_bottom_bar.show_tool(tool, building or _build_menu.visible)
@@ -135,6 +147,11 @@ func refresh(selected_id: int, tile: Vector2i, has_tile: bool, tool: Designation
 		_research_window.refresh()
 	if _build_menu.visible:
 		_build_menu.refresh()
+	_selection_panel.visible = group.size() > 1 or area.has_area()
+	if group.size() > 1:
+		_selection_panel.show_colonists(_simulation, group)
+	elif area.has_area():
+		_selection_panel.show_area(_simulation, area, resources)
 	var colonist := _simulation.state.colonist_by_id(selected_id) if selected_id != 0 else null
 	_inspect_panel.visible = colonist != null
 	if colonist:

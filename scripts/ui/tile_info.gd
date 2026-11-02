@@ -126,12 +126,10 @@ static func _describe_container(container: StorageContainer, lines: PackedString
 			kept.append(ItemDef.CATEGORY_NAMES[category].to_lower())
 	lines.append("   guarda: %s" % (", ".join(kept) if not kept.is_empty() else "nada (filtro vazio)"))
 	var contents := container.contents()
-	if contents.is_empty():
-		lines.append("   vazio")
+	var held := PackedStringArray()
 	for item in contents:
-		var reserved: int = contents[item] - container.available(item)
-		lines.append("   %s: %d%s" % [
-			Defs.item(item).display_name, contents[item], " (%d reservados)" % reserved if reserved > 0 else ""])
+		held.append("%d %s" % [contents[item], Defs.item(item).display_name.to_lower()])
+	lines.append("   tem: %s" % (", ".join(held) if not held.is_empty() else "nada"))
 
 
 static func _describe_task(simulation: Simulation, task: Task, lines: PackedStringArray) -> void:

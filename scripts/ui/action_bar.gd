@@ -19,6 +19,7 @@ func show_options(simulation: Simulation, options: Array[Dictionary]) -> void:
 		return
 	_signature = signature
 	for child in get_children():
+		remove_child(child)
 		child.queue_free()
 	for option in options:
 		var button := Button.new()

@@ -1,7 +1,7 @@
 class_name TilePanel
 extends PanelContainer
 ## Canto inferior esquerdo, quando o jogador clica num tile sem colono:
-## opções do que há ali (cortar, desmontar, caçar...), terreno, objetos, conteúdo, tarefa
+## opções do que há ali (cortar, desmontar, caçar...), os espaços do contêiner, terreno, objetos, tarefa
 ## e por que cada colono a faria ou não.
 
 const _WIDTH := 270
@@ -13,6 +13,7 @@ const _REFRESH_MSEC := 250
 
 var _title: Label
 var _actions: ActionBar
+var _container_view: ContainerView
 var _body: Label
 var _scroll: ScrollContainer
 var _cell := Vector2i(-1, -1)
@@ -29,6 +30,9 @@ func _ready() -> void:
 	_actions = ActionBar.new()
 	_actions.option_used.connect(func() -> void: _next_refresh_msec = 0)
 	column.add_child(_actions)
+	_container_view = ContainerView.new()
+	_container_view.filter_changed.connect(func() -> void: _next_refresh_msec = 0)
+	column.add_child(_container_view)
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	column.add_child(_scroll)
@@ -46,5 +50,9 @@ func show_tile(simulation: Simulation, cell: Vector2i) -> void:
 	_next_refresh_msec = now + _REFRESH_MSEC
 	_title.text = TileInfo.title(cell)
 	_actions.show_options(simulation, ContextActions.for_cell(simulation, cell))
+	var container: StorageContainer = simulation.state.containers_by_cell.get(cell)
+	_container_view.visible = container != null
+	if container:
+		_container_view.show_container(simulation, container)
 	_body.text = "\n".join(TileInfo.describe(simulation, cell))
 	_scroll.custom_minimum_size.y = minf(_body.get_minimum_size().y, _MAX_BODY_HEIGHT)

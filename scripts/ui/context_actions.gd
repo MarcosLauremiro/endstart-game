@@ -3,6 +3,8 @@ extends RefCounted
 ## Opções do que o jogador clicou (GDD: Painel de inspeção). Cada opção é
 ## {"label": String, "tooltip": String, "enabled": bool, "run": Callable}; run() executa pela API da
 ## simulação e devolve a mensagem para o registro (ou ""). Só lê o estado para montar a lista.
+## Opções de um alvo maior que um tile têm também "key", para a seleção por área (MultiSelect)
+## não repetir a mesma opção uma vez por tile.
 
 
 static func for_cell(simulation: Simulation, cell: Vector2i) -> Array[Dictionary]:
@@ -35,20 +37,20 @@ static func for_cell(simulation: Simulation, cell: Vector2i) -> Array[Dictionary
 	for layer in [StructureDef.Layer.BUILDING, StructureDef.Layer.FLOOR]:
 		var site := state.site_at(cell, layer)
 		if site:
-			options.append(_option("Cancelar obra: %s" % site.def.display_name,
+			options.append(_keyed("site:%d" % site.id, _option("Cancelar obra: %s" % site.def.display_name,
 				"Tira a planta de construção; o material entregue volta ao chão",
-				func() -> String: return simulation.cancel_task(board.construction_for_site(site.id))))
+				func() -> String: return simulation.cancel_task(board.construction_for_site(site.id)))))
 	for target in [state.buildings_by_cell.get(cell), state.containers_by_cell.get(cell), state.floors_by_cell.get(cell)]:
 		if target == null or (target is Structure and not target.def.buildable):
 			continue
 		var title: String = target.def.display_name
 		var deconstruction := board.deconstruction_for(target.id)
 		if deconstruction:
-			options.append(_option("Cancelar desmontagem", "Desmarca %s" % title.to_lower(),
-				func() -> String: return simulation.cancel_task(deconstruction)))
+			options.append(_keyed("target:%d" % target.id, _option("Cancelar desmontagem", "Desmarca %s" % title.to_lower(),
+				func() -> String: return simulation.cancel_task(deconstruction))))
 		else:
-			options.append(_option("Desmontar: %s" % title, "Devolve metade do material; contêineres largam o conteúdo",
-				func() -> String: return _designated(simulation, Designations.Tool.DECONSTRUCT, Rect2i(target_cell(target), Vector2i.ONE), title)))
+			options.append(_keyed("target:%d" % target.id, _option("Desmontar: %s" % title, "Devolve metade do material; contêineres largam o conteúdo",
+				func() -> String: return _designated(simulation, Designations.Tool.DECONSTRUCT, Rect2i(target_cell(target), Vector2i.ONE), title))))
 
 	var stack: ItemStack = state.stacks_by_cell.get(cell)
 	if stack:
@@ -60,17 +62,6 @@ static func for_cell(simulation: Simulation, cell: Vector2i) -> Array[Dictionary
 			option["enabled"] = false
 			option["tooltip"] = "Já está marcada para ser guardada primeiro"
 		options.append(option)
-	var container: StorageContainer = state.containers_by_cell.get(cell)
-	if container:
-		for category in ItemDef.CATEGORY_NAMES:
-			if not container.def.can_hold(category):
-				continue
-			var on: bool = container.allowed.get(category, false)
-			var category_name: String = ItemDef.CATEGORY_NAMES[category]
-			options.append(_option("[%s] %s" % ["x" if on else " ", category_name],
-				"Filtro: %s %s" % ["parar de guardar" if on else "guardar", category_name.to_lower()],
-				func() -> String: return simulation.set_container_filter(container.id, category, not on)))
-
 	for animal in state.animals_at(cell):
 		var hunt := board.hunt_for(animal.id)
 		if hunt:
@@ -86,8 +77,8 @@ static func for_cell(simulation: Simulation, cell: Vector2i) -> Array[Dictionary
 
 	var ruin := state.ruin_at(cell)
 	if ruin and not ruin.is_explored():
-		options.append(_option("Investigar a ruína", "Cada sala vira uma tarefa de Pesquisar: rende Vestígio e o que estiver lá dentro",
-			func() -> String: return simulation.investigate_ruin(ruin)))
+		options.append(_keyed("ruin", _option("Investigar a ruína", "Cada sala vira uma tarefa de Pesquisar: rende Vestígio e o que estiver lá dentro",
+			func() -> String: return simulation.investigate_ruin(ruin))))
 
 	var zone: GrowZone = state.zone_by_cell.get(cell)
 	if zone:
@@ -98,7 +89,7 @@ static func for_cell(simulation: Simulation, cell: Vector2i) -> Array[Dictionary
 			if crop == zone.crop:
 				option["enabled"] = false
 				option["tooltip"] = "Esta plantação já planta %s" % crop.display_name.to_lower()
-			options.append(option)
+			options.append(_keyed("zone:%d:%s" % [zone.id, crop.id], option))
 		options.append(_option("Remover plantação", "Tira o tile da plantação; o que já foi semeado continua até a colheita",
 			func() -> String: return simulation.remove_zone_cells(one_cell)))
 	elif options.is_empty() and Farming.zone_problem(state, cell).is_empty() and not state.has_object_at(cell):
@@ -161,3 +152,8 @@ static func _designated(simulation: Simulation, tool: Designations.Tool, area: R
 
 static func _option(label: String, tooltip: String, run: Callable) -> Dictionary:
 	return {"label": label, "tooltip": tooltip, "enabled": true, "run": run}
+
+
+static func _keyed(key: String, option: Dictionary) -> Dictionary:
+	option["key"] = key
+	return option

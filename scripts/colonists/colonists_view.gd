@@ -12,19 +12,16 @@ const _STATUS_SCALE := Vector2(0.5, 0.5)
 
 ## id do colono → Sprite2D
 var _sprites := {}
-var _selection: Sprite2D
+## Marcas de seleção, reaproveitadas (uma por colono selecionado).
+var _brackets: Array[Sprite2D] = []
 
 
 func _ready() -> void:
 	y_sort_enabled = true
-	_selection = Sprite2D.new()
-	_selection.texture = AssetCatalog.texture("ui/selection/bracket")
-	_selection.z_index = 1
-	_selection.visible = false
-	add_child(_selection)
 
 
-func sync(colonists: Array[Colonist], selected_id: int) -> void:
+## selected_ids: os colonos selecionados (um ou vários, na seleção por arraste).
+func sync(colonists: Array[Colonist], selected_ids: Array[int]) -> void:
 	var alive := {}
 	for colonist in colonists:
 		alive[colonist.id] = true
@@ -45,13 +42,25 @@ func sync(colonists: Array[Colonist], selected_id: int) -> void:
 		var icon: Sprite2D = sprite.get_node("Status")
 		icon.texture = _status_texture(colonist)
 		icon.rotation = -sprite.rotation
-		if colonist.id == selected_id:
-			_selection.position = sprite.position
 	for id in _sprites.keys():
 		if not alive.has(id):
 			_sprites[id].queue_free()
 			_sprites.erase(id)
-	_selection.visible = selected_id != 0 and alive.has(selected_id)
+	var shown := 0
+	for id in selected_ids:
+		if not _sprites.has(id):
+			continue
+		if shown == _brackets.size():
+			var bracket := Sprite2D.new()
+			bracket.texture = AssetCatalog.texture("ui/selection/bracket")
+			bracket.z_index = 1
+			add_child(bracket)
+			_brackets.append(bracket)
+		_brackets[shown].position = _sprites[id].position
+		_brackets[shown].visible = true
+		shown += 1
+	for index in range(shown, _brackets.size()):
+		_brackets[index].visible = false
 
 
 static func _status_texture(colonist: Colonist) -> Texture2D:
