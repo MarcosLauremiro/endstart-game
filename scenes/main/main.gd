@@ -43,6 +43,7 @@ var selected_resources: Array[Vector2i] = []
 var _world_view: WorldView
 var _objects_view: ObjectsView
 var _colonists_view: ColonistsView
+var _trees_view: TreesView
 var _camera: CameraController
 var _daylight: DaylightView
 var _hud: Hud
@@ -57,8 +58,14 @@ func _ready() -> void:
 	add_child(_world_view)
 	_objects_view = ObjectsView.new()
 	add_child(_objects_view)
+	# Árvores e colonos sob o mesmo nó ordenado pela altura: a copa esconde quem está atrás.
+	var actors := Node2D.new()
+	actors.y_sort_enabled = true
+	add_child(actors)
+	_trees_view = TreesView.new()
+	actors.add_child(_trees_view)
 	_colonists_view = ColonistsView.new()
-	add_child(_colonists_view)
+	actors.add_child(_colonists_view)
 	_daylight = DaylightView.new()
 	add_child(_daylight)
 	_camera = CameraController.new()
@@ -83,6 +90,7 @@ func start_new_game(world_seed: int) -> void:
 	_set_tool(Designations.Tool.NONE)
 	_world_view.show_world(simulation.world)
 	_objects_view.bind(simulation.state)
+	_trees_view.clear()
 	_camera.set_map_bounds(simulation.world.size * Balance.TILE_SIZE)
 	_hud.bind(simulation)
 	_refresh_views()
@@ -106,6 +114,7 @@ func _refresh_views() -> void:
 	_prune_group()
 	_prune_resources()
 	_objects_view.set_selected_area(selected_area, selected_resources)
+	_trees_view.sync(simulation.state)
 	_colonists_view.sync(simulation.state.colonists, _selected_ids())
 	_hud.refresh(selected_colonist_id, selected_cell, has_selected_cell, _tool, _build_def != null, selected_group, selected_area, selected_resources)
 

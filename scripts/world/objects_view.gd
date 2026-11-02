@@ -1,7 +1,9 @@
 class_name ObjectsView
 extends Node2D
-## Desenha o que está sobre o terreno: plantações, árvores, arbustos, construções, bancadas,
-## caixotes, pilhas no chão, animais, designações com o progresso das tarefas e o arraste das ordens.
+## Desenha o que está sobre o terreno: plantações, tocos, arbustos, construções, bancadas,
+## caixotes, pilhas no chão e animais. As árvores ficam no TreesView, ordenadas com os colonos.
+## Numa camada por cima de árvores e colonos (_overlay): designações com o progresso das tarefas,
+## barras de vida, fumaça, prévia de construção, seleção e o arraste das ordens.
 ## Só lê o WorldState; nada aqui é fonte de verdade.
 
 const _TREES := "plants/trees"
@@ -10,8 +12,6 @@ const _FIBER := "plants/low_growing_vegetation"
 ## Colunas das folhas de sprites (ver AssetCatalog).
 const _TREE_STUMP_YOUNG := 0
 const _TREE_STUMP_ADULT := 1
-const _TREE_YOUNG := 2
-const _TREE_ADULT := 3
 const _BUSH_SEEDLING := 0
 const _BUSH_EMPTY := 1
 const _BUSH_WITH_BERRIES := 2
@@ -46,7 +46,11 @@ const _BLUEPRINT_TINT := Color(0.55, 0.8, 1.0, 0.5)
 const _PREVIEW_TINT := Color(0.6, 1.0, 0.6, 0.6)
 const _INVALID_FILL := Color(0.9, 0.3, 0.3, 0.35)
 
+## Acima das árvores e dos colonos (z 0) e das marcas de seleção dos colonos (z 1).
+const _OVERLAY_Z := 2
+
 var _state: WorldState
+var _overlay: Node2D
 var _drag_area := Rect2i()
 ## Área selecionada por arraste (contorno que fica depois de soltar) e, nela, as árvores, rochas e
 ## plantas selecionadas (uma marca em cada; com elas, o contorno não aparece).
@@ -57,6 +61,13 @@ var _has_selected_cell := false
 var _preview_def: StructureDef
 var _preview_valid: Array[Vector2i] = []
 var _preview_invalid: Array[Vector2i] = []
+
+
+func _ready() -> void:
+	_overlay = Node2D.new()
+	_overlay.z_index = _OVERLAY_Z
+	_overlay.draw.connect(_draw_overlay)
+	add_child(_overlay)
 
 
 func bind(state: WorldState) -> void:
@@ -87,6 +98,7 @@ func set_build_preview(def: StructureDef, valid: Array[Vector2i], invalid: Array
 
 func refresh() -> void:
 	queue_redraw()
+	_overlay.queue_redraw()
 
 
 func _draw() -> void:
@@ -108,8 +120,6 @@ func _draw() -> void:
 		if bush.is_mature():
 			column = _BUSH_WITH_BERRIES if bush.portions > 0 else _BUSH_EMPTY
 		_draw_frame(_BUSHES, column, season, bush.cell)
-	for tree in _state.trees.values():
-		_draw_frame(_TREES, _TREE_ADULT if tree.is_adult() else _TREE_YOUNG, season, tree.cell)
 	_draw_layer(StructureDef.Layer.BUILDING)
 	for container in _state.containers.values():
 		_draw_built(container.def.asset, container.cell, container.def.footprint, Color.WHITE)
@@ -121,20 +131,26 @@ func _draw() -> void:
 		draw_string(font, origin + Vector2(1, tile - 1), str(stack.count), HORIZONTAL_ALIGNMENT_LEFT, -1, _COUNT_FONT_SIZE, UiTheme.TEXT)
 	_draw_animals(tile)
 	_draw_raiders(tile)
+
+
+func _draw_overlay() -> void:
+	if _state == null:
+		return
+	var tile := Balance.TILE_SIZE
 	_draw_designations(tile)
-	_draw_colonist_health(tile)
+	_draw_health_bars(tile)
 	_draw_smoke(tile)
 	_draw_preview()
 	if _has_selected_cell:
-		draw_texture(AssetCatalog.texture("ui/selection/bracket"), Vector2(_selected_cell * tile))
+		_overlay.draw_texture(AssetCatalog.texture("ui/selection/bracket"), Vector2(_selected_cell * tile))
 	for cell in _selected_cells:
-		draw_texture(AssetCatalog.texture("ui/selection/bracket"), Vector2(cell * tile))
+		_overlay.draw_texture(AssetCatalog.texture("ui/selection/bracket"), Vector2(cell * tile))
 	if _selected_area.has_area() and _selected_cells.is_empty():
-		draw_rect(Rect2(Vector2(_selected_area.position * tile), Vector2(_selected_area.size * tile)), _DRAG_BORDER, false, 1.0)
+		_overlay.draw_rect(Rect2(Vector2(_selected_area.position * tile), Vector2(_selected_area.size * tile)), _DRAG_BORDER, false, 1.0)
 	if _drag_area.has_area():
 		var area := Rect2(Vector2(_drag_area.position * tile), Vector2(_drag_area.size * tile))
-		draw_rect(area, _DRAG_FILL)
-		draw_rect(area, _DRAG_BORDER, false, 1.0)
+		_overlay.draw_rect(area, _DRAG_FILL)
+		_overlay.draw_rect(area, _DRAG_BORDER, false, 1.0)
 
 
 ## Estruturas prontas e plantas de construção de uma camada (pisos por baixo de tudo).
@@ -148,21 +164,21 @@ func _draw_layer(layer: StructureDef.Layer) -> void:
 
 
 ## A arte fica alinhada pela base do footprint: paredes de 16×24 sobem 8 px acima do tile.
-func _draw_built(asset_id: String, origin: Vector2i, footprint: Vector2i, tint: Color) -> void:
+func _draw_built(asset_id: String, origin: Vector2i, footprint: Vector2i, tint: Color, canvas: CanvasItem = self) -> void:
 	var texture := AssetCatalog.texture(asset_id)
 	var tile := Balance.TILE_SIZE
 	var position := Vector2(origin * tile) + Vector2(0, footprint.y * tile - texture.get_height())
-	draw_texture(texture, position, tint)
+	canvas.draw_texture(texture, position, tint)
 
 
 func _draw_preview() -> void:
 	if _preview_def == null:
 		return
 	for origin in _preview_valid:
-		_draw_built(_preview_def.asset, origin, _preview_def.footprint, _PREVIEW_TINT)
+		_draw_built(_preview_def.asset, origin, _preview_def.footprint, _PREVIEW_TINT, _overlay)
 	var tile := Balance.TILE_SIZE
 	for origin in _preview_invalid:
-		draw_rect(Rect2(Vector2(origin * tile), Vector2(_preview_def.footprint * tile)), _INVALID_FILL)
+		_overlay.draw_rect(Rect2(Vector2(origin * tile), Vector2(_preview_def.footprint * tile)), _INVALID_FILL)
 
 
 ## Tiles das plantações: fundo verde claro com borda, sob as plantas.
@@ -182,28 +198,31 @@ func _draw_animals(tile: int) -> void:
 		draw_texture(texture, position.round())
 
 
-## Saqueadores na posição interpolada, com a barra de vida quando feridos.
+## Saqueadores na posição interpolada (a barra de vida fica na camada de cima).
 func _draw_raiders(tile: int) -> void:
 	for raider: Raider in _state.threats.raiders.values():
 		var texture := AssetCatalog.texture(raider.asset())
 		var at := Vector2(raider.cell).lerp(Vector2(raider.next_cell()), raider.move_progress) * tile
 		var position := at + Vector2((tile - texture.get_width()) / 2.0, tile - texture.get_height())
 		draw_texture(texture, position.round())
-		_draw_health_bar(at, raider.health, tile)
 
 
-func _draw_colonist_health(tile: int) -> void:
+## Barras de vida sob colonos e saqueadores feridos.
+func _draw_health_bars(tile: int) -> void:
 	for colonist in _state.colonists:
 		var at := Vector2(colonist.cell).lerp(Vector2(colonist.next_cell()), colonist.move_progress) * tile
 		_draw_health_bar(at, colonist.health, tile)
+	for raider: Raider in _state.threats.raiders.values():
+		var at := Vector2(raider.cell).lerp(Vector2(raider.next_cell()), raider.move_progress) * tile
+		_draw_health_bar(at, raider.health, tile)
 
 
 func _draw_health_bar(at: Vector2, health: Health, tile: int) -> void:
 	if not health.is_hurt():
 		return
 	var origin := (at + Vector2(0, tile)).round()
-	draw_rect(Rect2(origin, Vector2(tile, _HEALTH_BAR_HEIGHT)), _HEALTH_BAR_BACK)
-	draw_rect(Rect2(origin, Vector2(tile * health.percent() / 100.0, _HEALTH_BAR_HEIGHT)), _HEALTH_BAR_FILL)
+	_overlay.draw_rect(Rect2(origin, Vector2(tile, _HEALTH_BAR_HEIGHT)), _HEALTH_BAR_BACK)
+	_overlay.draw_rect(Rect2(origin, Vector2(tile * health.percent() / 100.0, _HEALTH_BAR_HEIGHT)), _HEALTH_BAR_FILL)
 
 
 ## Aviso de ataque (GDD: sinais antes da ameaça): uma coluna de fumaça perto da borda.
@@ -214,12 +233,15 @@ func _draw_smoke(tile: int) -> void:
 	var base := Vector2(raid.smoke_cell * tile) + Vector2(tile / 2.0, tile)
 	var drift := sin(_state.clock.tick / 40.0) * 2.0
 	for i in 4:
-		draw_circle(base + Vector2(drift * i, -6.0 * i), 4.0 + i, _SMOKE)
+		_overlay.draw_circle(base + Vector2(drift * i, -6.0 * i), 4.0 + i, _SMOKE)
 
 
+## Quadro maior que o tile (árvore de 32×32) fica centrado no tile e apoiado na base dele.
 func _draw_frame(asset_id: String, column: int, row: int, cell: Vector2i) -> void:
 	var frame := AssetCatalog.frame_size(asset_id)
-	var destination := Rect2(Vector2(cell * Balance.TILE_SIZE), Vector2(frame))
+	var tile := Balance.TILE_SIZE
+	var offset := Vector2((tile - frame.x) / 2.0, tile - frame.y)
+	var destination := Rect2(Vector2(cell * tile) + offset, Vector2(frame))
 	draw_texture_rect_region(AssetCatalog.texture(asset_id), destination, AssetCatalog.frame_region(asset_id, column, row))
 
 
@@ -231,10 +253,10 @@ func _draw_designations(tile: int) -> void:
 		var origin := Vector2(task.cell * tile)
 		var tint := _BLOCKED_TINT if task.is_blocked(tick) else _DESIGNATION_TINT
 		if _DESIGNATION_ICONS.has(task.kind):
-			draw_texture(AssetCatalog.texture(_DESIGNATION_ICONS[task.kind]), origin, tint)
+			_overlay.draw_texture(AssetCatalog.texture(_DESIGNATION_ICONS[task.kind]), origin, tint)
 		elif task.is_blocked(tick) and not _SILENT_TASKS.has(task.kind):
-			draw_rect(Rect2(origin, Vector2(tile, tile)), _INVALID_FILL)
+			_overlay.draw_rect(Rect2(origin, Vector2(tile, tile)), _INVALID_FILL)
 		if task.progress > 0.0 and task.work_required > 0.0:
 			var fraction := clampf(task.progress / task.work_required, 0.0, 1.0)
-			draw_rect(Rect2(origin + Vector2(0, tile - _PROGRESS_HEIGHT), Vector2(tile, _PROGRESS_HEIGHT)), UiTheme.PANEL_BACKGROUND)
-			draw_rect(Rect2(origin + Vector2(0, tile - _PROGRESS_HEIGHT), Vector2(tile * fraction, _PROGRESS_HEIGHT)), UiTheme.COMMUNITY)
+			_overlay.draw_rect(Rect2(origin + Vector2(0, tile - _PROGRESS_HEIGHT), Vector2(tile, _PROGRESS_HEIGHT)), UiTheme.PANEL_BACKGROUND)
+			_overlay.draw_rect(Rect2(origin + Vector2(0, tile - _PROGRESS_HEIGHT), Vector2(tile * fraction, _PROGRESS_HEIGHT)), UiTheme.COMMUNITY)

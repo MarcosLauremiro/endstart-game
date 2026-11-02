@@ -38,8 +38,8 @@ const ENTRIES := {
 	"containers/chest_rustic": {"size": Vector2i(16, 16), "color": "7a4a32", "use": "Baú rústico"},
 	"containers/material_yard": {"size": Vector2i(32, 32), "color": "6a5a48", "use": "Pátio de materiais (2×2)"},
 	# --- Plantas (folhas de sprites 16×16; linhas = estações na ordem de GameClock.Season) ---
-	"plants/trees": {"size": Vector2i(64, 64), "frames": Vector2i(4, 4), "color": "2f5a2a",
-		"use": "Árvore. Colunas: toco da jovem, toco da adulta, jovem, adulta. Linhas: primavera, verão, outono, inverno"},
+	"plants/trees": {"size": Vector2i(128, 128), "frames": Vector2i(4, 4), "color": "2f5a2a",
+		"use": "Árvore em quadros de 32×32 (maior que o colono), apoiada no tile pela base. Colunas: toco da jovem, toco da adulta, jovem, adulta. Linhas: primavera, verão, outono, inverno"},
 	"plants/berry_bushs": {"size": Vector2i(48, 64), "frames": Vector2i(3, 4), "color": "5a7a3a",
 		"use": "Arbusto de frutas. Colunas: muda, sem frutas, com frutas. Linhas: estações"},
 	"plants/low_growing_vegetation": {"size": Vector2i(32, 64), "frames": Vector2i(2, 4), "color": "8a9a4a",

@@ -98,7 +98,8 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Área | Arquivo | Responsabilidade |
 | --- | --- | --- |
 | Mapa | `scripts/world/world_view.gd` | `TileMapLayer`; uma fonte do TileSet por tipo de terreno. |
-| Objetos | `scripts/world/objects_view.gd` | Plantações e cultivos (4 fases), árvores, arbustos, construções e bancadas, caixotes, pilhas com quantidade, animais e saqueadores (interpolados), barras de vida de quem está ferido, fumaça do aviso de ataque, designações com barra de progresso (vermelhas se bloqueadas; a caça segue o animal), retângulo de arraste. |
+| Objetos | `scripts/world/objects_view.gd` | Plantações e cultivos (4 fases), tocos, arbustos, construções e bancadas, caixotes, pilhas com quantidade, animais e saqueadores (interpolados), e, numa camada por cima de árvores e colonos (z 2): barras de vida de quem está ferido, fumaça do aviso de ataque, designações com barra de progresso (vermelhas se bloqueadas; a caça segue o animal), retângulo de arraste. |
+| Árvores | `scripts/world/trees_view.gd` | Um `Sprite2D` por árvore (quadros de 32×32, centrados no tile e apoiados na base), sob o mesmo nó com `y_sort` dos colonos: a copa esconde quem está atrás (ao norte), e quem está na frente ou ao lado passa por cima. |
 | Dia e noite | `scripts/simulation/daylight.gd`, `scripts/world/daylight_view.gd` | Horas de luz pela fórmula do GDD e luz de 0 a 1 por tick; um `CanvasModulate` escurece só o mapa à noite (a interface não). |
 | Colonos | `scripts/colonists/colonists_view.gd` | Um `Sprite2D` por colono, interpolado entre células; deitado quando dorme, cai, repousa ou é carregado; ícone de convocado ou ferido acima da cabeça; marcador de seleção. |
 | Câmera | `scripts/world/camera_controller.gd` | Panorâmica e três níveis de zoom fixos. |

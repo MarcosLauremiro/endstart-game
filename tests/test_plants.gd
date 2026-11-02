@@ -19,7 +19,8 @@ func test_seasons_follow_the_gdd_calendar() -> void:
 func test_plant_sheets_have_a_row_per_season() -> void:
 	for id in ["plants/trees", "plants/berry_bushs", "plants/low_growing_vegetation"]:
 		expect_equal(AssetCatalog.frame_grid(id).y, Balance.SEASONS_PER_YEAR, "%s deve ter uma linha por estação" % id)
-		expect_equal(AssetCatalog.frame_size(id), Vector2i(16, 16), "%s deve ter quadros de 16×16" % id)
+		var frame := Vector2i(32, 32) if id == "plants/trees" else Vector2i(16, 16)
+		expect_equal(AssetCatalog.frame_size(id), frame, "%s deve ter quadros de %d×%d" % [id, frame.x, frame.y])
 
 
 func test_young_tree_grows_into_adult() -> void:
@@ -87,3 +88,29 @@ func test_map_has_young_and_adult_plants() -> void:
 	var seedlings := simulation.state.bushes.filter(func(b: BerryBush) -> bool: return not b.is_mature()).size()
 	expect(young_trees > 0 and young_trees < simulation.state.trees.size(), "Deve haver árvores jovens e adultas (%d jovens)" % young_trees)
 	expect(seedlings < simulation.state.bushes.size(), "A maioria dos arbustos começa crescida")
+
+
+func test_trees_view_sorts_with_colonists() -> void:
+	var simulation := Simulation.new(_SEED, 1)
+	var state := simulation.state
+	var view := TreesView.new()
+	view._ready()
+	view.sync(state)
+	expect_equal(view.sprite_count(), state.trees.size(), "Um sprite por árvore")
+	var tree: WildTree = state.trees.values()[0]
+	var sprite: Sprite2D = view._sprites[tree.id]
+	var tile := Balance.TILE_SIZE
+	var bottom := sprite.position.y + sprite.offset.y + 16.0
+	expect_equal(bottom, float(tree.cell.y * tile + tile), "A base da árvore fica na base do tile")
+	expect_equal(sprite.position.x + sprite.offset.x, tree.cell.x * tile + tile / 2.0, "Centrada no tile")
+	var colonist := state.colonists[0]
+	colonist.cell = tree.cell + Vector2i.UP
+	expect(ColonistsView.cell_center(colonist).y < sprite.position.y, "Colono atrás (ao norte) é desenhado antes: a copa o esconde")
+	colonist.cell = tree.cell + Vector2i.RIGHT
+	expect(ColonistsView.cell_center(colonist).y > sprite.position.y, "Colono ao lado, na mesma linha, fica na frente")
+	state.trees.erase(tree.id)
+	view.sync(state)
+	expect(not view._sprites.has(tree.id), "Árvore cortada perde o sprite")
+	view.clear()
+	expect_equal(view.sprite_count(), 0, "Mapa novo limpa os sprites")
+	view.free()
