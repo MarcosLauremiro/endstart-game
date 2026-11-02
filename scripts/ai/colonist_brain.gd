@@ -17,14 +17,32 @@ func decide(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Ac
 	var limit := _layer_limit(colonist)
 	var needs := colonist.needs
 
-	# 1. Reações urgentes
+	# 1. Reações urgentes: cair ferido vence tudo; depois desmaiar e fugir de saqueadores.
+	if colonist.health.is_downed():
+		if colonist.action and colonist.action.kind == Action.Kind.DOWNED:
+			return null
+		var downed := _in_place(Action.Kind.DOWNED, Action.Layer.REACTION, colonist,
+			"Caiu ferido: %d de dano, %d%% de sangue perdido" % [roundi(colonist.health.damage()), roundi(colonist.health.blood_loss)])
+		downed.title = "Caído (ferido)"
+		return downed
 	if needs.rest <= 0.0 and limit > Action.Layer.REACTION:
 		return Action.make(Action.Kind.SLEEP, Action.Layer.REACTION, colonist.cell,
 			"Desmaiou de exaustão: sono chegou a 0%")
+	if limit > Action.Layer.REACTION:
+		var flee := _flee(colonist, state)
+		if flee:
+			return flee
 
-	# 2. Necessidades críticas
+	# 2. Necessidades críticas (convocado, ele ignora: segue as ordens até ser dispensado)
 	if limit <= Action.Layer.CRITICAL_NEED:
 		return null
+	if colonist.drafted:
+		return _drafted(colonist, limit)
+	if colonist.health.needs_tending():
+		var tend := _in_place(Action.Kind.TEND_SELF, Action.Layer.CRITICAL_NEED, colonist,
+			"Sangrando (%d%% de sangue por hora): estanca os próprios ferimentos" % roundi(colonist.health.bleeding_per_hour()))
+		tend.title = "Tratar os próprios ferimentos"
+		return tend
 	if needs.food < Balance.FOOD_CRITICAL_THRESHOLD:
 		var why := "Fome em %d%%, abaixo de %d%%: crítica, interrompe outras atividades" % [
 			needs.food, Balance.FOOD_CRITICAL_THRESHOLD]
@@ -34,6 +52,13 @@ func decide(colonist: Colonist, state: WorldState, record: DecisionRecord) -> Ac
 	if needs.rest < Balance.REST_CRITICAL_THRESHOLD:
 		return _sleep(colonist, state, record, Action.Layer.CRITICAL_NEED,
 			"Sono em %d%%, abaixo de %d%%: crítico" % [needs.rest, Balance.REST_CRITICAL_THRESHOLD])
+	if colonist.health.damage() >= Balance.REST_DAMAGE:
+		var rest := _sleep(colonist, state, record, Action.Layer.CRITICAL_NEED,
+			"Ferido (%d de dano, a partir de %d): repousa até baixar de %d" % [
+				roundi(colonist.health.damage()), roundi(Balance.REST_DAMAGE), roundi(Balance.REST_UNTIL_DAMAGE)])
+		rest.kind = Action.Kind.REST
+		rest.title = "Repousar ferido" + (" na cama #%d" % rest.target_id if rest.target_id != 0 else " no chão")
+		return rest
 
 	# 3. Ordens diretas do jogador
 	if limit <= Action.Layer.ORDER:
@@ -134,6 +159,67 @@ func _sleep(colonist: Colonist, state: WorldState, record: DecisionRecord, layer
 	action.path = best_path
 	action.title = "Dormir na cama #%d" % best.id
 	return action
+
+
+## Ação parada no lugar (caído, tratar-se, segurar a posição): o caminho é só a célula atual.
+static func _in_place(kind: Action.Kind, layer: Action.Layer, colonist: Colonist, why: String) -> Action:
+	var action := Action.make(kind, layer, colonist.cell, why)
+	action.path = [colonist.cell]
+	return action
+
+
+## Convocado: cumpre a ordem do jogador (ir até um lugar, atacar alguém) ou segura a posição,
+## atacando quem chegar ao alcance da arma.
+func _drafted(colonist: Colonist, limit: int) -> Action:
+	if colonist.direct_order:
+		return colonist.direct_order
+	if limit <= Action.Layer.ORDER:
+		return null
+	var weapon := colonist.weapon()
+	var reach := "arco, alcance %d" % Combat.range_of(weapon) if Combat.is_ranged(weapon) \
+		else "corpo a corpo, vai até inimigos a %d tiles" % Balance.DRAFTED_MELEE_ENGAGE
+	var stance := _in_place(Action.Kind.FIGHT, Action.Layer.ORDER, colonist, "Convocado pelo jogador: segura a posição (%s)" % reach)
+	stance.title = "Convocado"
+	return stance
+
+
+## Fugir de saqueadores: quem não está convocado foge se um chega perto (o Covarde, de mais longe);
+## o Covarde convocado foge quando já está ferido (GDD: pode fugir em combate).
+func _flee(colonist: Colonist, state: WorldState) -> Action:
+	var coward := colonist.has_trait(Traits.COWARD)
+	if colonist.drafted and not (coward and colonist.health.damage() >= Balance.COWARD_BREAK_DAMAGE):
+		return null
+	var radius := Balance.COWARD_FLEE_RAIDER_RADIUS if coward else Balance.FLEE_RAIDER_RADIUS
+	var threat: Raider
+	var best := radius * radius
+	for raider: Raider in state.threats.raiders.values():
+		if raider.mode == Raider.Mode.FLEE:
+			continue
+		var distance := raider.cell.distance_squared_to(colonist.cell)
+		if distance <= best:
+			best = distance
+			threat = raider
+	if threat == null:
+		return null
+	var away := Vector2(colonist.cell - threat.cell)
+	if away == Vector2.ZERO:
+		away = Vector2.RIGHT
+	var target := colonist.cell + Vector2i((away.normalized() * Balance.FLEE_DISTANCE).round())
+	target = state.nearest_walkable(target.clamp(Vector2i.ZERO, state.world.size - Vector2i.ONE))
+	var path := state.navigation.find_path(colonist.cell, target)
+	if path.size() <= 1:
+		return null
+	var why := "%s a %d tiles" % [threat.display_name(), roundi(sqrt(float(best)))]
+	if colonist.drafted:
+		why = "Covarde e ferido: abandona o combate; %s" % why
+	elif coward:
+		why = "Covarde: foge de longe; %s" % why
+	else:
+		why = "Não está convocado: foge; %s" % why
+	var flee := Action.make(Action.Kind.FLEE, Action.Layer.REACTION, target, why)
+	flee.path = path
+	flee.title = "Fugir de %s" % threat.display_name().to_lower()
+	return flee
 
 
 func _layer_limit(colonist: Colonist) -> int:

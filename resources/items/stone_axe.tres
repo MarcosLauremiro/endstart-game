@@ -16,4 +16,7 @@ equip_slot = &"hand"
 work_bonus = {
 &"cut": 1.25
 }
+attack_damage = 11.0
+attack_range = 1
+attack_kind = &"cut"
 icon = "items/stone_axe"

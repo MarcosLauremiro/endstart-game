@@ -6,6 +6,9 @@ extends Node2D
 ## A arte tem 16×24: sobe 4 px para os pés ficarem na base do tile.
 const _SPRITE_OFFSET := Vector2(0, -4)
 const _SLEEP_ROTATION := PI / 2.0
+## Ícone de estado (convocado, ferido) acima da cabeça, em meio tamanho.
+const _STATUS_OFFSET := Vector2(0, -22)
+const _STATUS_SCALE := Vector2(0.5, 0.5)
 
 ## id do colono → Sprite2D
 var _sprites := {}
@@ -30,10 +33,18 @@ func sync(colonists: Array[Colonist], selected_id: int) -> void:
 			sprite = Sprite2D.new()
 			sprite.texture = AssetCatalog.texture("characters/colonists/colonist")
 			sprite.offset = _SPRITE_OFFSET
+			var status := Sprite2D.new()
+			status.name = "Status"
+			status.position = _STATUS_OFFSET
+			status.scale = _STATUS_SCALE
+			sprite.add_child(status)
 			add_child(sprite)
 			_sprites[colonist.id] = sprite
 		sprite.position = cell_center(colonist)
-		sprite.rotation = _SLEEP_ROTATION if colonist.is_sleeping() else 0.0
+		sprite.rotation = _SLEEP_ROTATION if colonist.is_lying() or colonist.carried_by != 0 else 0.0
+		var icon: Sprite2D = sprite.get_node("Status")
+		icon.texture = _status_texture(colonist)
+		icon.rotation = -sprite.rotation
 		if colonist.id == selected_id:
 			_selection.position = sprite.position
 	for id in _sprites.keys():
@@ -41,6 +52,14 @@ func sync(colonists: Array[Colonist], selected_id: int) -> void:
 			_sprites[id].queue_free()
 			_sprites.erase(id)
 	_selection.visible = selected_id != 0 and alive.has(selected_id)
+
+
+static func _status_texture(colonist: Colonist) -> Texture2D:
+	if colonist.health.is_downed() or colonist.health.is_bleeding():
+		return AssetCatalog.texture("ui/icons/status/injured")
+	if colonist.drafted:
+		return AssetCatalog.texture("ui/icons/status/drafted")
+	return null
 
 
 static func cell_center(colonist: Colonist) -> Vector2:

@@ -110,6 +110,15 @@ static func for_cell(simulation: Simulation, cell: Vector2i) -> Array[Dictionary
 static func for_colonist(simulation: Simulation, colonist: Colonist) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	var id := colonist.id
+	if colonist.drafted:
+		options.append(_option("Dispensar (V)", "Volta à rotina de trabalho", func() -> String: return simulation.set_drafted(id, false)))
+	else:
+		var draft := _option("Convocar (V)", "Larga o que faz, segura a posição e luta; botão direito num saqueador manda atacar",
+			func() -> String: return simulation.set_drafted(id, true))
+		if colonist.health.is_downed():
+			draft["enabled"] = false
+			draft["tooltip"] = "Está caído"
+		options.append(draft)
 	var eat := _option("Comer agora", "Ordem direta: come a melhor comida por perto",
 		func() -> String: return simulation.order_eat(id))
 	if colonist.needs.food >= Balance.EAT_UNTIL:

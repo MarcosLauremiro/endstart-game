@@ -3,11 +3,12 @@ extends RefCounted
 ## Tipos de trabalho da grade de prioridades (GDD: Prioridades de trabalho).
 ## Só os tipos que já têm tarefas existem aqui; os outros entram com seus marcos.
 
-enum Id { CONSTRUCT, GROW, MINE, CUT, HAUL, COOK, HUNT, CRAFT, RESEARCH }
+enum Id { CONSTRUCT, GROW, MINE, CUT, HAUL, COOK, HUNT, CRAFT, RESEARCH, EMERGENCY }
 
 ## Ordem das colunas do GDD: com prioridades iguais, vale esta ordem.
-const COLUMNS := [Id.COOK, Id.HUNT, Id.CONSTRUCT, Id.GROW, Id.MINE, Id.CUT, Id.CRAFT, Id.HAUL, Id.RESEARCH]
+const COLUMNS := [Id.EMERGENCY, Id.COOK, Id.HUNT, Id.CONSTRUCT, Id.GROW, Id.MINE, Id.CUT, Id.CRAFT, Id.HAUL, Id.RESEARCH]
 const NAMES := {
+	Id.EMERGENCY: "Emergência",
 	Id.COOK: "Cozinhar",
 	Id.HUNT: "Caçar",
 	Id.CONSTRUCT: "Construir",
@@ -29,6 +30,7 @@ const KEYS := {
 	&"craft": Id.CRAFT,
 	&"haul": Id.HAUL,
 	&"research": Id.RESEARCH,
+	&"emergency": Id.EMERGENCY,
 }
 
 

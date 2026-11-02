@@ -23,13 +23,21 @@ const _SUITES := [
 	"res://tests/test_daylight.gd",
 	"res://tests/test_storage.gd",
 	"res://tests/test_research.gd",
+	"res://tests/test_combat.gd",
 ]
 
 
 func _init() -> void:
 	var cases := 0
 	var failed_cases := 0
+	# Opcional: -- --only=combat roda só as suítes cujo caminho contém o texto.
+	var only := ""
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--only="):
+			only = argument.trim_prefix("--only=")
 	for path in _SUITES:
+		if not only.is_empty() and not path.contains(only):
+			continue
 		var suite_script: GDScript = load(path)
 		for method in suite_script.get_script_method_list():
 			var method_name: String = method["name"]

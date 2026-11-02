@@ -27,6 +27,7 @@ var _sections := {}
 var _profile: Label
 var _traits: Label
 var _doing: Label
+var _health: Label
 var _food_bar: ProgressBar
 var _rest_bar: ProgressBar
 var _mood_bar: ProgressBar
@@ -65,6 +66,7 @@ func _ready() -> void:
 	_traits = _add_label(general, UiTheme.TEXT)
 	_traits.mouse_filter = Control.MOUSE_FILTER_PASS
 	_doing = _add_label(general, UiTheme.TEXT)
+	_health = _add_label(general, UiTheme.TEXT)
 	_food_bar = _add_bar_row(general, "ui/icons/needs/hunger", "Fome")
 	_rest_bar = _add_bar_row(general, "ui/icons/needs/sleep", "Sono")
 	_mood_bar = _add_bar_row(general, "ui/icons/needs/mood", "Humor")
@@ -118,7 +120,9 @@ func _show_general(colonist: Colonist, state: WorldState) -> void:
 	_traits.tooltip_text = "\n".join(colonist.traits.map(func(t: StringName) -> String:
 		return "%s: %s" % [Traits.name_of(t), Traits.effect_of(t)]))
 	var doing := colonist.action.label() if colonist.action else "nada"
-	_doing.text = "%s — %s" % [colonist.state_name(), doing]
+	_doing.text = "%s%s — %s" % ["Convocado · " if colonist.drafted else "", colonist.state_name(), doing]
+	_health.text = health_text(colonist)
+	_health.add_theme_color_override("font_color", UiTheme.DANGER if colonist.health.is_hurt() else UiTheme.TEXT)
 	_set_bar(_food_bar, colonist.needs.food, Balance.FOOD_FREE_TIME_THRESHOLD, Balance.FOOD_CRITICAL_THRESHOLD)
 	_set_bar(_rest_bar, colonist.needs.rest, Balance.REST_FREE_TIME_THRESHOLD, Balance.REST_CRITICAL_THRESHOLD)
 	_set_bar(_mood_bar, colonist.mood.value, Balance.MOOD_UNSTABLE_BELOW, Balance.MOOD_CRISIS_BELOW)
@@ -127,6 +131,19 @@ func _show_general(colonist: Colonist, state: WorldState) -> void:
 	for thought in colonist.mood.thoughts:
 		lines.append("   %+d %s" % [roundi(thought["value"]), thought["label"]])
 	_thoughts.text = "\n".join(lines)
+
+
+## Saúde, sangue perdido e cada ferimento (GDD: Ficha do colono > Estado: saúde).
+static func health_text(colonist: Colonist) -> String:
+	var health := colonist.health
+	var text := "Saúde %d%% (%s)" % [health.percent(), health.status_text()]
+	if health.blood_loss > 0.0:
+		text += " · sangue perdido %d%%" % roundi(health.blood_loss)
+	if health.is_bleeding():
+		text += " · -%d%%/h" % roundi(health.bleeding_per_hour())
+	if not health.injuries.is_empty():
+		text += "\n   " + ", ".join(health.injuries.map(func(injury: Injury) -> String: return injury.label()))
+	return text
 
 
 static func _skills_text(colonist: Colonist) -> String:
@@ -154,6 +171,9 @@ static func _equipment_text(colonist: Colonist) -> String:
 				bonuses.append("%s ×%s" % [WorkType.name_of(WorkType.from_key(key)), str(definition.work_bonus[key]).replace(".", ",")])
 			if definition.hunt_damage > 0.0:
 				bonuses.append("caça: alcance %d, dano %d" % [definition.hunt_range, roundi(definition.hunt_damage)])
+			if definition.attack_damage > 0.0:
+				bonuses.append("combate: %s, dano %d" % ["alcance %d" % definition.attack_range if definition.attack_range > 1 else "corpo a corpo",
+					roundi(definition.attack_damage)])
 			if not bonuses.is_empty():
 				text += " (%s)" % ", ".join(bonuses)
 		lines.append("%s: %s" % [Equipment.SLOT_NAMES[slot], text])

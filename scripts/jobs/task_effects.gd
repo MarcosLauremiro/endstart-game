@@ -41,6 +41,12 @@ static func is_still_valid(task: Task, state: WorldState) -> bool:
 		Task.Kind.INVESTIGATE:
 			var room := state.ruin_room(task.target_id)
 			return not room.is_empty() and not room["investigated"]
+		Task.Kind.RESCUE:
+			var patient := state.colonist_by_id(task.target_id)
+			return patient != null and patient.health.is_downed() and not patient.is_in_bed()
+		Task.Kind.TEND:
+			var patient := state.colonist_by_id(task.target_id)
+			return patient != null and patient.health.is_downed() and patient.health.needs_tending() and patient.carried_by == 0
 	return false
 
 
@@ -96,6 +102,12 @@ static func complete(task: Task, state: WorldState, colonist: Colonist = null) -
 			Farming.reap(state, task.target_id)
 		Task.Kind.INVESTIGATE:
 			RuinExploration.investigate(state, task.target_id, colonist)
+		Task.Kind.TEND:
+			var patient := state.colonist_by_id(task.target_id)
+			if patient:
+				patient.health.tend()
+				var who := colonist.display_name if colonist else "Alguém"
+				state.post_message("%s tratou os ferimentos de %s" % [who, patient.display_name])
 	state.task_board.remove(task, Task.Status.DONE)
 	if task.kind == Task.Kind.REAP:
 		# O tile colhido volta a ser semeado (quando os itens forem levados embora).

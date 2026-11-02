@@ -14,6 +14,7 @@ const _KEY_BUILD_MENU := KEY_B
 const _KEY_STORAGE := KEY_I
 const _KEY_FULLSCREEN := KEY_F11
 const _KEY_SCHEDULE := KEY_A
+const _KEY_DRAFT := KEY_V
 ## tecla → índice em Balance.SPEED_MULTIPLIERS (como no RimWorld: 1, 2, 3)
 const _SPEED_KEYS := {KEY_1: 0, KEY_2: 1, KEY_3: 2}
 const _KEY_DEBUG_SPEED := KEY_4
@@ -127,8 +128,13 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 		if _tool != Designations.Tool.NONE:
 			_set_tool(Designations.Tool.NONE)
 		elif selected_colonist_id != 0:
-			# Botão direito numa tarefa = priorizar; em chão livre = ir até lá.
-			if simulation.task_at(cell):
+			# Botão direito num saqueador = atacar; numa tarefa = priorizar; em chão livre = ir até lá.
+			var raider := RaiderAI.raider_at(simulation.state, cell)
+			if raider == null:
+				raider = RaiderAI.raider_at(simulation.state, cell + Vector2i.DOWN)
+			if raider:
+				_hud.post_message(simulation.order_attack(selected_colonist_id, raider.id))
+			elif simulation.task_at(cell):
 				simulation.order_task(selected_colonist_id, cell)
 			else:
 				simulation.order_move(selected_colonist_id, cell)
@@ -149,6 +155,8 @@ func _handle_key(keycode: Key) -> void:
 		_hud.toggle_research_window()
 	elif keycode == _KEY_SCHEDULE:
 		_hud.toggle_schedule_window()
+	elif keycode == _KEY_DRAFT:
+		_toggle_draft()
 	elif keycode == _KEY_FULLSCREEN:
 		_toggle_fullscreen()
 	elif keycode == _KEY_BACK:
@@ -162,6 +170,14 @@ func _handle_key(keycode: Key) -> void:
 		simulation.clock.set_speed(Balance.SPEED_MULTIPLIERS[_SPEED_KEYS[keycode]])
 	elif keycode == _KEY_DEBUG_SPEED and simulation.clock.allow_debug_speed:
 		simulation.clock.set_speed(Balance.DEBUG_SPEED_MULTIPLIER)
+
+
+## V: convoca ou dispensa o colono selecionado; sem seleção, todos de uma vez.
+func _toggle_draft() -> void:
+	var colonist := simulation.state.colonist_by_id(selected_colonist_id) if selected_colonist_id != 0 else null
+	var message := simulation.set_drafted(colonist.id, not colonist.drafted) if colonist else simulation.toggle_draft_all()
+	if not message.is_empty():
+		_hud.post_message(message)
 
 
 ## F11: tela cheia ↔ janela maximizada (a janela já abre maximizada, ver project.godot).

@@ -3,7 +3,7 @@ extends RefCounted
 ## Uma unidade indivisível de trabalho no quadro. Quem reservou fica em Reservations (chave key());
 ## o progresso fica aqui, então quem voltar continua de onde parou.
 
-enum Kind { CUT, MINE, HARVEST, HAUL, CONSTRUCT, DECONSTRUCT, CRAFT, HUNT, SOW, REAP, INVESTIGATE }
+enum Kind { CUT, MINE, HARVEST, HAUL, CONSTRUCT, DECONSTRUCT, CRAFT, HUNT, SOW, REAP, INVESTIGATE, RESCUE, TEND }
 enum Status { OPEN, DONE, CANCELLED }
 
 ## GDD: normal 1; alta 2 (pedido marcado pelo jogador); crítica 3.
@@ -92,4 +92,6 @@ static func work_type_of(task_kind: Kind) -> int:
 			return WorkType.Id.GROW
 		Kind.INVESTIGATE:
 			return WorkType.Id.RESEARCH
+		Kind.RESCUE, Kind.TEND:
+			return WorkType.Id.EMERGENCY
 	return WorkType.Id.HAUL

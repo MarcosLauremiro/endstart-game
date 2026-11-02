@@ -14,7 +14,7 @@ Documento vivo. Atualizar sempre que uma decisão arquitetural mudar.
 A simulação roda em ticks fixos e guarda todo o estado da partida. A apresentação só lê esse estado e desenha.
 Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, tarefas, itens ou terreno.
 
-## Estado atual (M0 a M6 — Pesquisa e ruína)
+## Estado atual (M0 a M7 — Ameaça e combate)
 
 ### Simulação
 
@@ -83,21 +83,31 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Conhecimento | `scripts/research/research.gd` | Pontos da comunidade (P e V), gatilhos que revelam ramos, primeiras vezes, Prática por trabalho, motivo de não poder liberar, liberar, o que falta para uma estrutura ou receita. |
 | Ruína | `scripts/world/ruin.gd`, `ruin_builder.gd`, `ruin_exploration.gd` | Prédio antigo de 13×5 com 3 salas, colocado longe da chegada; investigar sala (tarefa de Pesquisar) rende Vestígio, sucata e, na última, o artefato, que revela Redescoberta. |
 
+### Ameaça e combate (M7)
+
+| Área | Arquivo | Responsabilidade |
+| --- | --- | --- |
+| Saúde | `scripts/combat/health.gd`, `injury.gd` | Ferimentos (corte, perfuração, contusão), perda de sangue, caído e morto, dor, sangramento e cura por hora, tratar. Usada por colonos e saqueadores. |
+| Combate | `scripts/combat/combat.gd` | Regras de um golpe: dano, alcance e intervalo da arma na mão (`ItemDef.attack_*`), chance de acerto, Força no corpo a corpo, ferimento causado. |
+| Socorro e morte | `scripts/combat/medical.gd` | Mantém as tarefas de Emergência (Socorrer até uma cama livre, Tratar) seguindo o paciente; morte permanente (itens no chão, humor, adaptação). |
+| Ameaça | `scripts/threat/threats.gd`, `raid.gd`, `threat_director.gd` | Estado (próximo ataque, ataque avisado ou em andamento, saqueadores, adaptação); pontos de ameaça do GDD, compra do grupo, aviso com fumaça 1,5 dia antes, chegada pela borda, fim e calma. |
+| Saqueadores | `scripts/threat/raider.gd`, `raider_ai.gd` | Dados e comportamento: saquear o contêiner ou a pilha mais perto, atacar quem chega perto ou os ataca, fugir ferido, recuo do grupo, arma no chão ao morrer. Pensam a cada 30 ticks (escalonados), andam e golpeiam a cada tick. |
+
 ### Apresentação
 
 | Área | Arquivo | Responsabilidade |
 | --- | --- | --- |
 | Mapa | `scripts/world/world_view.gd` | `TileMapLayer`; uma fonte do TileSet por tipo de terreno. |
-| Objetos | `scripts/world/objects_view.gd` | Plantações e cultivos (4 fases), árvores, arbustos, construções e bancadas, caixotes, pilhas com quantidade, animais (interpolados), designações com barra de progresso (vermelhas se bloqueadas; a caça segue o animal), retângulo de arraste. |
+| Objetos | `scripts/world/objects_view.gd` | Plantações e cultivos (4 fases), árvores, arbustos, construções e bancadas, caixotes, pilhas com quantidade, animais e saqueadores (interpolados), barras de vida de quem está ferido, fumaça do aviso de ataque, designações com barra de progresso (vermelhas se bloqueadas; a caça segue o animal), retângulo de arraste. |
 | Dia e noite | `scripts/simulation/daylight.gd`, `scripts/world/daylight_view.gd` | Horas de luz pela fórmula do GDD e luz de 0 a 1 por tick; um `CanvasModulate` escurece só o mapa à noite (a interface não). |
-| Colonos | `scripts/colonists/colonists_view.gd` | Um `Sprite2D` por colono, interpolado entre células; deitado quando dorme; marcador de seleção. |
+| Colonos | `scripts/colonists/colonists_view.gd` | Um `Sprite2D` por colono, interpolado entre células; deitado quando dorme, cai, repousa ou é carregado; ícone de convocado ou ferido acima da cabeça; marcador de seleção. |
 | Câmera | `scripts/world/camera_controller.gd` | Panorâmica e três níveis de zoom fixos. |
 | Catálogo de arte | `scripts/assets/asset_catalog.gd` | Lista única de assets: caminho, tamanho, uso. Fallback provisório. |
 | Arte provisória | `scripts/assets/placeholder_painter.gd`, `tools/generate_placeholder_assets.gd` | Provisórios no tamanho final; o gerador nunca sobrescreve. |
 | Tema | `scripts/ui/ui_theme.gd` | Paleta "rust punk" do GDD, molduras 9-slice, barras, fonte pixel Dogica Pixel sem suavização, escala da interface e tamanho da fonte. |
 | Recursos | `scripts/ui/resource_bar.gd` | Topo esquerdo: comida em dias, madeira, pedra, carne crua, vegetais, frutas — somados dos itens reais. |
-| Tempo | `scripts/ui/time_panel.gd` | Topo direito: dia, hora, pausa e velocidades. |
-| Ficha | `scripts/ui/inspect_panel.gd` | Canto inferior esquerdo, em abas. Geral: histórias, Força, agenda agora, traços (efeitos na dica), o que faz, fome, sono, humor e pensamentos. Habilidades: nível, afinidade, título, % para o próximo nível e velocidade. Equipamento: Camisa, Calça, Mão (com bônus) e carga. Por quê: motivo real, melhores tarefas, decisões recentes. |
+| Tempo | `scripts/ui/time_panel.gd` | Topo direito: dia, hora, pausa e velocidades; em vermelho, quanto falta para o ataque avisado ou quantos saqueadores estão no mapa. |
+| Ficha | `scripts/ui/inspect_panel.gd` | Canto inferior esquerdo, em abas. Geral: histórias, Força, agenda agora, traços (efeitos na dica), o que faz (e se está convocado), saúde com ferimentos e sangramento, fome, sono, humor e pensamentos. Habilidades: nível, afinidade, título, % para o próximo nível e velocidade. Equipamento: Camisa, Calça, Mão (com bônus) e carga. Por quê: motivo real, melhores tarefas, decisões recentes. |
 | Ordens | `scripts/ui/bottom_bar.gd` | Base: construir, cortar (C), minerar (M), colher (H), caçar (K), plantação (P), desmontar (D), cancelar (X), Trabalho e Armazém. |
 | Trabalho | `scripts/ui/work_priority_window.gd` | Grade de prioridades 1–4/desligado por colono e tipo (dica com a habilidade, nível e afinidade); caça automática por espécie. |
 | Pesquisa | `scripts/ui/research_window.gd` | Pontos, ramos revelados com custo, o que libera e Liberar (ou o motivo); ramos escondidos como "???" com a dica (R). Construções e receitas travadas aparecem desligadas no menu e no painel da bancada. |
@@ -106,16 +116,18 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Tile | `scripts/ui/tile_info.gd`, `scripts/ui/tile_panel.gd` | Clique num tile sem colono: terreno (movimento, fertilidade, construção do GDD), plantas, toco, caixote com conteúdo e reservas, pilha, tarefa com progresso/reserva/bloqueio e o motivo de cada colono fazer ou não (mesmo seletor da IA, em modo consulta). Atualiza 4× por segundo. |
 | Construir | `scripts/ui/build_menu.gd` | Menu com custo e tempo de cada estrutura (B). Prévia verde/vermelha na colocação; plantas aparecem em azul translúcido. |
 | Armazém | `scripts/ui/storage_panel.gd` | Totais por item (contêineres, chão, mãos), comida em dias, busca, contêineres com ocupação; clicar centraliza a câmera (I). |
-| Opções | `scripts/ui/context_actions.gd`, `scripts/ui/action_bar.gd` | Botões do que foi clicado, no topo do painel do tile ou do colono. Árvore: cortar; planta: colher; rocha: minerar; obra: cancelar (devolve o material); construção, contêiner ou bancada: desmontar; animal: caçar (predador desligado, com motivo); plantação: plantar cenoura, trigo ou cogumelo, remover; chão livre: criar plantação; colono: comer agora, dormir agora, cancelar ordem. Marcado vira "cancelar". |
+| Opções | `scripts/ui/context_actions.gd`, `scripts/ui/action_bar.gd` | Botões do que foi clicado, no topo do painel do tile ou do colono. Árvore: cortar; planta: colher; rocha: minerar; obra: cancelar (devolve o material); construção, contêiner ou bancada: desmontar; animal: caçar (predador desligado, com motivo); plantação: plantar cenoura, trigo ou cogumelo, remover; chão livre: criar plantação; colono: convocar ou dispensar, comer agora, dormir agora, cancelar ordem. Marcado vira "cancelar". |
 | Mensagens | `scripts/ui/message_log.gd` | Canto inferior direito: mensagens que somem sozinhas. |
-| Entrada | `scenes/main/main.gd` + `main.tscn` | Liga tudo e traduz mouse e teclado em comandos. |
+| Entrada | `scenes/main/main.gd` + `main.tscn` | Liga tudo e traduz mouse e teclado em comandos. V convoca o selecionado (sem seleção, todos); botão direito num saqueador manda atacar. |
 
 ### Ciclo de um tick
 
 ```
 Simulation.step()
-  ├─ a cada hora: plantas silvestres e cultivos crescem; tarefas de semear e colher são criadas
-  ├─ a cada 30 ticks: reservas sem avanço há 30 s expiram; colono sem ação não segura reserva
+  ├─ a cada hora: plantas silvestres e cultivos crescem; tarefas de semear e colher são criadas;
+  │    ferimentos sangram e curam; ThreatDirector avisa ou traz o ataque
+  ├─ a cada 30 ticks: reservas sem avanço há 30 s expiram; colono sem ação não segura reserva;
+  │    Medical.sync cria, segue e tira as tarefas de Emergência
   └─ para cada colono:
 	   ├─ Needs.tick(dormindo?)
 	   ├─ se for a vez dele (tick + offset) % 30 == 0, ou force_think:
@@ -123,6 +135,8 @@ Simulation.step()
 	   │    ActionRunner.start → reserva → caminho → INDO ou EXECUTANDO
 	   └─ ActionRunner.step → mover / executar / concluir
   └─ Wildlife.tick: animais pensam a cada 60 ticks (escalonados) e andam; uma vez por dia, migração
+  └─ RaiderAI.tick: saqueadores pensam, golpeiam e andam; fim do ataque quando nenhum resta
+  └─ mortos (dano ou sangue no limite) saem da partida
 ```
 
 ### Fluxo de uma tarefa
@@ -133,9 +147,9 @@ Simulation.step()
 
 | Camada | O que existe hoje |
 | --- | --- |
-| 1. Reação | Desmaio: sono em 0% → dorme onde está, sem poder ser interrompido. |
-| 2. Necessidade crítica | Fome < 15% → comer; sono < 8% → dormir no chão. Interrompe o trabalho. |
-| 3. Ordem direta | Mover ou priorizar uma tarefa. Interrompida por 1 e 2, fica guardada e é retomada. |
+| 1. Reação | Caído (vence tudo, até outra reação; nada o interrompe). Desmaio: sono em 0% → dorme onde está. Fugir de saqueador a 8 tiles (Covarde: 12) se não está convocado; Covarde convocado foge com 25 de dano. |
+| 2. Necessidade crítica | Sangrando → estanca os próprios ferimentos; fome < 15% → comer; sono < 8% → dormir; 30 de dano ou mais → repousar na cama até 15. Interrompe o trabalho. O convocado pula esta camada. |
+| 3. Ordem direta | Mover, priorizar uma tarefa, atacar um saqueador; convocado sem ordem segura a posição e luta. Uma ordem nova substitui a anterior. Interrompida por 1 e 2, fica guardada e é retomada. |
 | 4. Agenda | Bloco Dormir com sono < 90% → dorme; fim do bloco Trabalhar interrompe o trabalho (Esforçado termina a tarefa). Trabalho só no bloco Trabalhar. |
 | 5. Trabalho | Quadro de tarefas. Preguiçoso pausa 15 min a cada 2 h de trabalho. |
 | 6. Tempo livre | Sem tarefa possível: fome < 30% → comer; sono < 20% → dormir; senão vagar ou ficar ocioso. |
@@ -210,6 +224,12 @@ Simulation.step()
 - **Mesas com materiais do MVP:** Mesa de estudos 20 madeira e 5 fibra (o GDD pede couro); Mesa de análise 15 madeira e 5 sucata (o GDD pede vidro).
 - **Curioso:** o efeito provisório do M5 (vagar mais longe) saiu; ficou o do GDD.
 - **Atalhos:** R abre a Pesquisa; o mapa novo passou para F5 e só em build de desenvolvimento.
+- **Combate do MVP** (números provisórios, registrados no GDD): saúde 100, caído com 60 de dano ou 50% de sangue, morto com 100 ou 100%; sangramento 0,5%/h por ponto de dano sem tratar; cura 0,5/h, 2/h tratado, ×1,5 na cama. Acerto, dano e armas na tabela do GDD (Combate no MVP). O arco não gasta flechas no MVP.
+- **Ataques do MVP:** IA BALANÇA fixa; primeiro ataque no dia 6, depois a cada 5 a 9 dias; aviso 1,5 dia antes. Os pontos seguem a fórmula do GDD e, no MVP, a riqueza fica abaixo de 10.000 (P\_riqueza 0): os ataques têm 1 a 2 saqueadores com 2 a 5 colonos.
+- **Saqueadores com objetivo:** vão ao saque e só atacam quem chega a 7 tiles ou os ataca; sem isso, colonos que fogem eram perseguidos pelo mapa inteiro e o ataque não acontecia.
+- **Emergência** é um tipo de trabalho novo (primeira coluna, prioridade 1 por padrão) para Socorrer e Tratar. Não há habilidade de Medicina no MVP: tratar sempre funciona e leva 30 min.
+- **Morte:** o colono sai de `state.colonists`; quem guarda o id (saqueador, tarefa, carregador) confere com `colonist_by_id`. Sem corpo nem funeral no MVP.
+- **Testes:** `test_runner.gd -- --only=texto` roda só as suítes cujo caminho contém o texto.
 - **Crescimento provisório** (o GDD não define): árvore leva 15 dias para ficar adulta e, jovem, rende 5 de madeira em metade do tempo de corte; toco some em 10 dias; arbusto muda leva 5 dias; planta de fibra leva 3 dias e rende 5 fibras. No início, 25% das árvores e 20% dos arbustos são jovens.
 
 ## Plano de testes
@@ -236,6 +256,7 @@ godot --headless --path . -s res://tests/test_runner.gd
 | `test_daylight.gd` | Horas de luz por estação (12, 15 e 9 h), noite, dia e meia-luz no pôr do sol. |
 | `test_storage.gd` | Toda categoria com nome, categorias de alguns itens, pátio só com recursos básicos, filtro tira a comida e ela vai para o outro caixote, Guardar prioriza a pilha, sem lugar diz o motivo e avisa sozinho. |
 | `test_research.gd` | **Aceite do M6** (um colono investiga as 3 salas depois de uma ordem; o artefato revela Redescoberta e o Vestígio libera a Mesa de análise), ruína alcançável com 3 salas e 1 artefato, árvore do MVP e ramos escondidos, Prática por trabalho e primeira vez, Curioso +25%, travas de construção e receita, liberar na Mesa de estudos, primeira caça revela Defesa e armas, Curioso prefere tarefas com artefatos, analisar o artefato rende 10 V. |
+| `test_combat.gd` | **Aceite do M7** (3 colonos com lanças e convocados enfrentam 2 saqueadores: ninguém morre, os saqueadores morrem ou fogem e alguém sai ferido; sem preparo, levam itens), pontos de ameaça do exemplo do GDD, compra do grupo, calma, aviso com fumaça 1,5 dia antes e chegada, quem não está convocado foge e o convocado luta (e treina Corpo a corpo), caído sem socorro morre de perda de sangue (morte permanente, itens no chão, humor, adaptação), socorro até a cama e tratamento com recuperação, ferido de pé estanca o próprio sangramento, Covarde foge de mais longe. |
 | `test_ui_theme.gd` | Escala da interface por tamanho de tela e fonte sempre na grade de 8 px; escala inteira da janela. |
 | `test_plants.gd` | Calendário das estações, uma linha de arte por estação, árvore jovem cresce, corte deixa toco que some, muda não dá frutas, colheita de fibra rende e volta a crescer, mapa com plantas jovens e adultas. |
 | `test_navigation.gd` | Desvio de obstáculo, destino bloqueado, custo da água rasa, mapa conectado pelos vaus, corredor bloqueado divide regiões, regiões incrementais iguais a um recálculo completo. |
@@ -251,19 +272,19 @@ godot --headless --path . -s res://tools/generate_placeholder_assets.gd
 
 ## Ordem de implementação (próximos marcos)
 
-1. **M7 — Ameaça e combate.**
-2. **M8 — Salvar/carregar, painéis, balanceamento, testes de partida completa.**
+1. **M8 — Salvar/carregar, painéis, balanceamento, testes de partida completa.**
 
 ## Limitações conhecidas
 
-- Fome em 0% derruba o humor, mas ainda não fere: saúde entra no M7.
+- Fome em 0% derruba o humor, mas ainda não fere (a saúde do M7 vem só de combate).
+- Caídos não comem; a recuperação leva horas, então no MVP isso não chega a ser um problema.
+- Saqueadores não destroem construções nem sequestram; não há cobertura nem defesas construídas.
 - Estruturas não giram: a cama é sempre vertical (1×2) e a mesa horizontal (2×1).
 - Os quatro níveis de compreensão dos artefatos (Desconhecido a Reproduzível) ainda não existem: analisar só rende Vestígio. Sem provas nas pesquisas (nenhuma das 6 pede).
 - Não há detecção de cômodos nem teto: qualidade de sala e beleza ficam para depois do MVP.
 - O colono só percebe que o caminho foi bloqueado quando chega no trecho bloqueado.
 - A busca de comida e de tarefas calcula caminho só para as mais próximas em linha reta (6 por tipo); uma opção mais longe em linha reta mas com caminho mais curto pode ser ignorada.
 - O painel do tile ainda não mostra temperatura nem beleza: esses sistemas não existem no MVP atual.
-- A grade de Trabalho ainda não tem a coluna Pesquisar (M6).
 - Comida não estraga e o abate não suja a cozinha: deterioração, limpeza e intoxicação ficam para depois do MVP.
 - Qualidade dos itens (ruim a obra-prima) ainda não existe: a habilidade só muda a velocidade.
 - Sem crises nem inspirações de humor (Fase 1 do GDD); sem lazer, convívio, Estudo e Ritual na agenda.

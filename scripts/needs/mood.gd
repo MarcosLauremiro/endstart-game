@@ -53,6 +53,9 @@ func refresh(colonist: Colonist, tick_now: int) -> void:
 		_add("Exausto", Balance.EXHAUSTED_MOOD)
 	elif needs.rest < Balance.REST_FREE_TIME_THRESHOLD:
 		_add("Cansado", Balance.TIRED_MOOD)
+	var damage := colonist.health.damage()
+	if damage >= 1.0:
+		_add("Com dor", roundf(damage * Balance.PAIN_MOOD_PER_DAMAGE))
 	if colonist.has_trait(Traits.OPTIMIST):
 		_add("Otimista", Balance.OPTIMIST_MOOD)
 	if colonist.has_trait(Traits.PESSIMIST):

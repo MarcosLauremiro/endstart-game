@@ -84,8 +84,12 @@ func test_colonist_orders() -> void:
 	var simulation := Simulation.new(_SEED, 1)
 	var colonist := simulation.state.colonists[0]
 	var options := ContextActions.for_colonist(simulation, colonist)
-	expect_equal(_labels(options), ["Comer agora", "Dormir agora"], "Opções do colono")
-	expect(not options[0]["enabled"] and not options[1]["enabled"], "Satisfeito e descansado: as duas desligadas")
+	expect_equal(_labels(options), ["Convocar (V)", "Comer agora", "Dormir agora"], "Opções do colono")
+	expect(not options[1]["enabled"] and not options[2]["enabled"], "Satisfeito e descansado: comer e dormir desligados")
+	_run(options, "Convocar (V)")
+	expect(colonist.drafted, "Convocar pela ficha")
+	_run(ContextActions.for_colonist(simulation, colonist), "Dispensar (V)")
+	expect(not colonist.drafted, "E dispensar")
 	colonist.needs.rest = 50.0
 	_run(ContextActions.for_colonist(simulation, colonist), "Dormir agora")
 	SimHelpers.run_until(simulation, func() -> bool: return colonist.is_sleeping(), 2000)

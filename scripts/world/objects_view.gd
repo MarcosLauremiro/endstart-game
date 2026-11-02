@@ -33,7 +33,12 @@ const _DESIGNATION_ICONS := {
 	Task.Kind.INVESTIGATE: "ui/icons/tabs/research",
 }
 ## Tarefas que não marcam o tile com ícone nem com vermelho quando esperam (a própria arte mostra).
-const _SILENT_TASKS := [Task.Kind.HAUL, Task.Kind.SOW, Task.Kind.REAP, Task.Kind.CRAFT]
+const _SILENT_TASKS := [Task.Kind.HAUL, Task.Kind.SOW, Task.Kind.REAP, Task.Kind.CRAFT, Task.Kind.RESCUE, Task.Kind.TEND]
+## Barra de vida sob quem está ferido; fumaça cinza do aviso de ataque.
+const _HEALTH_BAR_HEIGHT := 2
+const _HEALTH_BAR_BACK := Color(0.1, 0.05, 0.05, 0.8)
+const _HEALTH_BAR_FILL := Color(0.9, 0.3, 0.3)
+const _SMOKE := Color(0.6, 0.6, 0.62, 0.7)
 const _ZONE_FILL := Color(0.48, 0.79, 0.44, 0.12)
 const _ZONE_BORDER := Color(0.48, 0.79, 0.44, 0.45)
 ## Planta de construção: a arte da estrutura em azul translúcido; prévia válida em verde, inválida em vermelho.
@@ -106,7 +111,10 @@ func _draw() -> void:
 		draw_string_outline(font, origin + Vector2(1, tile - 1), str(stack.count), HORIZONTAL_ALIGNMENT_LEFT, -1, _COUNT_FONT_SIZE, 2, UiTheme.PANEL_BACKGROUND)
 		draw_string(font, origin + Vector2(1, tile - 1), str(stack.count), HORIZONTAL_ALIGNMENT_LEFT, -1, _COUNT_FONT_SIZE, UiTheme.TEXT)
 	_draw_animals(tile)
+	_draw_raiders(tile)
 	_draw_designations(tile)
+	_draw_colonist_health(tile)
+	_draw_smoke(tile)
 	_draw_preview()
 	if _has_selected_cell:
 		draw_texture(AssetCatalog.texture("ui/selection/bracket"), Vector2(_selected_cell * tile))
@@ -159,6 +167,41 @@ func _draw_animals(tile: int) -> void:
 		var at := Vector2(animal.cell).lerp(Vector2(animal.next_cell()), animal.move_progress) * tile
 		var position := at + Vector2((tile - texture.get_width()) / 2.0, tile - texture.get_height())
 		draw_texture(texture, position.round())
+
+
+## Saqueadores na posição interpolada, com a barra de vida quando feridos.
+func _draw_raiders(tile: int) -> void:
+	for raider: Raider in _state.threats.raiders.values():
+		var texture := AssetCatalog.texture(raider.asset())
+		var at := Vector2(raider.cell).lerp(Vector2(raider.next_cell()), raider.move_progress) * tile
+		var position := at + Vector2((tile - texture.get_width()) / 2.0, tile - texture.get_height())
+		draw_texture(texture, position.round())
+		_draw_health_bar(at, raider.health, tile)
+
+
+func _draw_colonist_health(tile: int) -> void:
+	for colonist in _state.colonists:
+		var at := Vector2(colonist.cell).lerp(Vector2(colonist.next_cell()), colonist.move_progress) * tile
+		_draw_health_bar(at, colonist.health, tile)
+
+
+func _draw_health_bar(at: Vector2, health: Health, tile: int) -> void:
+	if not health.is_hurt():
+		return
+	var origin := (at + Vector2(0, tile)).round()
+	draw_rect(Rect2(origin, Vector2(tile, _HEALTH_BAR_HEIGHT)), _HEALTH_BAR_BACK)
+	draw_rect(Rect2(origin, Vector2(tile * health.percent() / 100.0, _HEALTH_BAR_HEIGHT)), _HEALTH_BAR_FILL)
+
+
+## Aviso de ataque (GDD: sinais antes da ameaça): uma coluna de fumaça perto da borda.
+func _draw_smoke(tile: int) -> void:
+	var raid := _state.threats.raid
+	if raid == null or raid.phase != Raid.Phase.WARNED:
+		return
+	var base := Vector2(raid.smoke_cell * tile) + Vector2(tile / 2.0, tile)
+	var drift := sin(_state.clock.tick / 40.0) * 2.0
+	for i in 4:
+		draw_circle(base + Vector2(drift * i, -6.0 * i), 4.0 + i, _SMOKE)
 
 
 func _draw_frame(asset_id: String, column: int, row: int, cell: Vector2i) -> void:

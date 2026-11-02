@@ -39,6 +39,7 @@ static func create(id: int, cell: Vector2i, rng: RandomNumberGenerator, taken_na
 	_roll_affinities(colonist, rng)
 	for work_type in WorkType.COLUMNS:
 		colonist.work_priorities[work_type] = Balance.DEFAULT_WORK_PRIORITY
+	colonist.work_priorities[WorkType.Id.EMERGENCY] = Balance.DEFAULT_EMERGENCY_PRIORITY
 	colonist.equipment.equip(&"tunic")
 	colonist.equipment.equip(&"trousers")
 	return colonist

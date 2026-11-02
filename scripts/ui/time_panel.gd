@@ -6,7 +6,9 @@ extends PanelContainer
 const _SPEED_NAMES := ["Normal", "Rápida", "Muito rápida"]
 
 var _clock: GameClock
+var _state: WorldState
 var _date_label: Label
+var _threat_label: Label
 var _pause_button: Button
 ## multiplicador de velocidade → botão
 var _speed_buttons := {}
@@ -18,6 +20,9 @@ func _ready() -> void:
 	_date_label = Label.new()
 	_date_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	row.add_child(_date_label)
+	_threat_label = Label.new()
+	_threat_label.add_theme_color_override("font_color", UiTheme.DANGER)
+	row.add_child(_threat_label)
 
 	_pause_button = _make_button("ui/icons/time/pause", "Pausar (Espaço)")
 	_pause_button.pressed.connect(func() -> void: _clock.toggle_pause())
@@ -31,8 +36,9 @@ func _ready() -> void:
 		_speed_buttons[speed] = button
 
 
-func bind(clock: GameClock, world_seed: int) -> void:
+func bind(clock: GameClock, world_seed: int, state: WorldState = null) -> void:
 	_clock = clock
+	_state = state
 	_date_label.tooltip_text = "Seed %d" % world_seed
 
 
@@ -41,9 +47,20 @@ func refresh() -> void:
 	if not _clock.paused and not _speed_buttons.has(_clock.speed):
 		text += "  %d×" % _clock.speed
 	_date_label.text = text
+	_threat_label.text = threat_text(_state) if _state else ""
 	_pause_button.set_pressed_no_signal(_clock.paused)
 	for speed in _speed_buttons:
 		_speed_buttons[speed].set_pressed_no_signal(not _clock.paused and _clock.speed == speed)
+
+
+## "Ataque em 20 h (leste)" depois do aviso; "Ataque! 3 saqueadores" durante.
+static func threat_text(state: WorldState) -> String:
+	var raid := state.threats.raid
+	if raid == null:
+		return ""
+	if raid.phase == Raid.Phase.WARNED:
+		return "Ataque em %s (%s)" % [ThreatDirector.time_text(raid.arrival_tick - state.clock.tick), raid.side_name()]
+	return "Ataque! %d saqueador(es)" % state.threats.raiders.size()
 
 
 func _make_button(icon_id: String, tooltip: String) -> Button:

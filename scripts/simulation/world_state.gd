@@ -53,6 +53,7 @@ var zone_by_cell := {}
 var crops := {}
 var crops_by_cell := {}
 var research := Research.new()
+var threats := Threats.new()
 var ruins: Array[Ruin] = []
 ## Último tick do aviso "sem lugar para guardar", por item.
 var _no_storage_alerts := {}

@@ -28,6 +28,11 @@ var path: Array[Vector2i] = []
 var move_progress: float = 0.0
 var needs := Needs.new()
 var mood := Mood.new()
+var health := Health.new()
+## Convocado para o combate (GDD: ordens diretas): não trabalha, segura a posição e luta.
+var drafted: bool = false
+## Quem o carrega para a cama (socorro), ou 0.
+var carried_by: int = 0
 var state: State = State.IDLE
 var action: Action
 ## Ordem do jogador ainda não cumprida. Sobrevive a interrupções, para ser retomada depois.
@@ -62,6 +67,25 @@ func is_sleeping() -> bool:
 func is_sleeping_in_bed() -> bool:
 	return is_sleeping() and action.target_id != 0
 
+
+## Deitado: dormindo, caído ou repousando ferido (o sono se recupera e a arte fica deitada).
+func is_lying() -> bool:
+	if action == null or state != State.EXECUTING:
+		return false
+	return action.kind == Action.Kind.SLEEP or action.kind == Action.Kind.DOWNED or action.kind == Action.Kind.REST
+
+
+## Deitado numa cama reservada (cura mais rápido e descansa como na cama).
+func is_in_bed() -> bool:
+	return is_lying() and action.target_id != 0
+
+
+func weapon() -> StringName:
+	return equipment.hand()
+
+
+func melee_level() -> int:
+	return skills[Skills.Id.MELEE].level
 
 func has_trait(trait_id: StringName) -> bool:
 	return traits.has(trait_id)
@@ -105,7 +129,7 @@ func work_speed(work_type: int) -> float:
 	if WorkType.uses_strength(work_type):
 		speed *= 1.0 + Balance.ATTRIBUTE_STEP * (strength - Balance.ATTRIBUTE_AVERAGE)
 	speed *= tool_bonus(work_type)
-	return speed
+	return speed * health.pain_factor()
 
 
 ## Bônus da ferramenta na mão para o tipo de trabalho (GDD: ferramentas na mão).
@@ -137,6 +161,11 @@ func learn(work_type: int, ticks: int) -> int:
 	var skill_id := Skills.for_work(work_type)
 	if skill_id < 0:
 		return -1
+	return learn_skill(skill_id, ticks)
+
+
+## XP direto numa habilidade (o combate treina Corpo a corpo sem ser um tipo de trabalho).
+func learn_skill(skill_id: int, ticks: int) -> int:
 	var state_of: SkillState = skills[skill_id]
 	var amount: float = Balance.SKILL_XP_PER_TICK * ticks * Skills.AFFINITY_XP[state_of.affinity] * _age_xp_factor() * mood.xp_factor()
 	for _t in ticks:

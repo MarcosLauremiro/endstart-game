@@ -3,7 +3,7 @@ extends RefCounted
 ## Comportamento dos animais (GDD: Fauna). Presas pastam e fogem de colonos e predadores por perto;
 ## o predador caça presas de tempos em tempos. Abaixo da população da espécie, outros animais
 ## migram pelas bordas do mapa, uma vez por dia. Animais pensam escalonados, como os colonos.
-## No MVP o predador ainda não ataca colonos: combate e ferimentos entram no M7.
+## No MVP o predador não ataca colonos: a ameaça do MVP são só os saqueadores (GDD).
 
 const _NO_CELL := Vector2i(-1, -1)
 const _SPAWN_ATTEMPTS := 200
@@ -42,7 +42,7 @@ static func tick(state: WorldState) -> void:
 		_migrate(state)
 
 
-## Marca o animal para caça. Predadores não: sem combate (M7), caçá-los é perigoso demais.
+## Marca o animal para caça. Predadores não: criaturas ficam fora do combate do MVP.
 static func designate_hunt(state: WorldState, animal: Animal) -> bool:
 	if animal.def.is_predator or state.task_board.hunt_for(animal.id):
 		return false

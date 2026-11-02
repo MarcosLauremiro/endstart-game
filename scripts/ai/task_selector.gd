@@ -129,6 +129,13 @@ func evaluate(colonist: Colonist, task: Task, state: WorldState, record_block: b
 				return _no("árvore no local: aguardando o corte")
 			if task.kind == Task.Kind.CRAFT and state.workbenches[task.target_id].job.paused:
 				return _no("o pedido em andamento está pausado")
+			if task.target_id == colonist.id and (task.kind == Task.Kind.RESCUE or task.kind == Task.Kind.TEND):
+				return _no("é o próprio paciente")
+			if task.kind == Task.Kind.RESCUE:
+				var bed := Medical.free_bed(state, task.cell)
+				if bed == null:
+					return _no("não há cama livre")
+				result["bed"] = bed
 			if _stands_on_target(task):
 				path = state.navigation.find_path(colonist.cell, task.cell)
 			else:
@@ -186,11 +193,19 @@ func make_action(colonist: Colonist, task: Task, evaluation: Dictionary, layer: 
 			var goal := task.label() if action.bill == null else "%s (%s)" % [task.label(), action.bill.recipe.display_name]
 			action.title = "Levar %s para %s" % [Defs.item(action.item_id).display_name.to_lower(), goal]
 		_:
-			var kind := Action.Kind.HUNT if task.kind == Task.Kind.HUNT else Action.Kind.WORK
+			var kind := Action.Kind.WORK
+			if task.kind == Task.Kind.HUNT:
+				kind = Action.Kind.HUNT
+			elif task.kind == Task.Kind.RESCUE:
+				kind = Action.Kind.RESCUE
 			action = Action.make(kind, layer, task.cell, "")
 			action.adjacent = not _stands_on_target(task)
 			action.target_id = task.target_id
 			action.title = task.label()
+			if task.kind == Task.Kind.RESCUE:
+				var bed: Structure = evaluation["bed"]
+				action.destination_id = bed.id
+				action.title = "%s (cama #%d)" % [task.label(), bed.id]
 			if task.kind == Task.Kind.CRAFT:
 				action.title = "%s: %s" % [task.label(), state.workbenches[task.target_id].job.recipe.display_name]
 	action.task_id = task.id

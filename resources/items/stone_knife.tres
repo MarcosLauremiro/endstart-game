@@ -17,4 +17,7 @@ work_bonus = {
 &"cook": 1.1,
 &"hunt": 1.1
 }
+attack_damage = 8.0
+attack_range = 1
+attack_kind = &"cut"
 icon = "items/stone_knife"

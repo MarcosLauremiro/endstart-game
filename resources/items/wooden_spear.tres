@@ -15,4 +15,7 @@ tags = Array[StringName]([])
 equip_slot = &"hand"
 hunt_range = 6
 hunt_damage = 14.0
+attack_damage = 13.0
+attack_range = 1
+attack_kind = &"stab"
 icon = "items/wooden_spear"

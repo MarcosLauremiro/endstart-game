@@ -56,13 +56,19 @@ func step() -> void:
 		Farming.grow_hour(state)
 		for colonist in state.colonists:
 			colonist.mood.hour_passed()
+			colonist.health.hour_passed(colonist.is_in_bed())
+			if colonist.health.is_downed():
+				colonist.force_think = true
+		ThreatDirector.hour_passed(state)
 	if tick % Balance.TICKS_PER_DAY == 0:
 		_end_day()
+		ThreatDirector.day_passed(state)
 	if tick % Balance.THINK_INTERVAL_TICKS == 0:
 		_expire_stale_reservations()
 		_release_orphan_reservations()
+		Medical.sync(state)
 	for colonist in state.colonists:
-		colonist.needs.tick(colonist.is_sleeping(), colonist.is_sleeping_in_bed(), colonist.hunger_factor())
+		colonist.needs.tick(colonist.is_lying(), colonist.is_in_bed(), colonist.hunger_factor())
 		colonist.mood.tick()
 		var thinking_turn := (tick + colonist.think_offset) % Balance.THINK_INTERVAL_TICKS == 0
 		if thinking_turn:
@@ -71,7 +77,67 @@ func step() -> void:
 			_think(colonist)
 		_runner.step(colonist, state)
 	Wildlife.tick(state)
+	RaiderAI.tick(state)
+	_bury_the_dead()
 	ticked.emit(tick)
+
+
+## Convoca ou dispensa o colono (GDD: convocar colonos). Convocado, ele larga o que fazia,
+## segura a posição e luta; dispensado, volta à rotina. Devolve a mensagem.
+func set_drafted(colonist_id: int, drafted: bool) -> String:
+	var colonist := state.colonist_by_id(colonist_id)
+	if colonist == null or colonist.drafted == drafted:
+		return ""
+	if drafted and colonist.health.is_downed():
+		return "%s está caído e não pode lutar" % colonist.display_name
+	colonist.drafted = drafted
+	colonist.direct_order = null
+	if colonist.action and colonist.action.kind != Action.Kind.DOWNED:
+		_runner.abort(colonist, state, "convocado para o combate" if drafted else "dispensado do combate")
+	colonist.force_think = true
+	var weapon := colonist.weapon()
+	var armed := " (sem arma: luta com as mãos)" if Combat.damage_of(weapon) <= Balance.UNARMED_ATTACK_DAMAGE else " (%s)" % Defs.item(weapon).display_name.to_lower()
+	return "%s convocado%s" % [colonist.display_name, armed] if drafted else "%s dispensado" % colonist.display_name
+
+
+## Convoca todos se algum está livre; senão dispensa todos (atalho V sem ninguém selecionado).
+func toggle_draft_all() -> String:
+	var any_free := false
+	for colonist in state.colonists:
+		if not colonist.drafted and not colonist.health.is_downed():
+			any_free = true
+	var count := 0
+	for colonist in state.colonists:
+		if not set_drafted(colonist.id, any_free).is_empty():
+			count += 1
+	return "%d colono(s) %s" % [count, "convocados" if any_free else "dispensados"]
+
+
+## Ordem de atacar um saqueador (convoca o colono, se preciso).
+func order_attack(colonist_id: int, raider_id: int) -> String:
+	var colonist := state.colonist_by_id(colonist_id)
+	var raider: Raider = state.threats.raiders.get(raider_id)
+	if colonist == null or raider == null:
+		return ""
+	if not colonist.drafted:
+		var drafted := set_drafted(colonist_id, true)
+		if not colonist.drafted:
+			return drafted
+	var order := Action.make(Action.Kind.FIGHT, Action.Layer.ORDER, raider.cell, "Ordem do jogador: atacar %s" % raider.display_name().to_lower())
+	order.target_id = raider.id
+	order.path = [colonist.cell]
+	order.title = "Atacar %s" % raider.display_name().to_lower()
+	_give_order(colonist, order)
+	return "%s vai atacar %s" % [colonist.display_name, raider.display_name().to_lower()]
+
+
+## Morte permanente de quem chegou ao limite de dano ou de sangue perdido.
+func _bury_the_dead() -> void:
+	for colonist in state.colonists.duplicate():
+		if colonist.health.is_dead():
+			if colonist.action:
+				_runner.abort(colonist, state, "morreu")
+			Medical.bury(state, colonist)
 
 
 ## Ordem de mover (camada 3). Retorna false, com mensagem, se o destino for impossível.
@@ -374,6 +440,9 @@ func set_work_priority(colonist_id: int, work_type: int, priority: int) -> void:
 
 func _give_order(colonist: Colonist, order: Action) -> void:
 	colonist.direct_order = order
+	# Uma ordem nova substitui a que estava sendo cumprida (e a posição do convocado).
+	if colonist.action and colonist.action.layer == Action.Layer.ORDER and colonist.action != order:
+		_runner.abort(colonist, state, "nova ordem do jogador")
 	colonist.force_think = true
 
 

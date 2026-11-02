@@ -36,6 +36,11 @@ const CATEGORY_NAMES := {
 ## Arma de caça na mão: alcance em tiles e dano por acerto (0 = não serve para caçar).
 @export var hunt_range: int = 0
 @export var hunt_damage: float = 0.0
+## Arma de combate na mão: dano por golpe, alcance em tiles (1 = corpo a corpo) e o ferimento que
+## causa ("cut", "stab" ou "blunt"). Dano 0 = não serve para lutar (luta de mãos vazias).
+@export var attack_damage: float = 0.0
+@export var attack_range: int = 1
+@export var attack_kind: StringName = &"blunt"
 ## Id do ícone no AssetCatalog.
 @export var icon: String
 

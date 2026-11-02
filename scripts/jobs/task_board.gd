@@ -22,6 +22,9 @@ var _craft_by_bench := {}
 var _hunt_by_animal := {}
 ## id da sala da ruína → Task de Investigar
 var _investigate_by_room := {}
+## id do colono caído → Task de Socorrer / de Tratar
+var _rescue_by_patient := {}
+var _tend_by_patient := {}
 
 
 ## work_type = -1 usa o tipo padrão do tipo de tarefa (bancadas informam o seu).
@@ -89,6 +92,14 @@ func investigation_for(room_id: int) -> Task:
 	return _investigate_by_room.get(room_id)
 
 
+func rescue_for(patient_id: int) -> Task:
+	return _rescue_by_patient.get(patient_id)
+
+
+func tend_for(patient_id: int) -> Task:
+	return _tend_by_patient.get(patient_id)
+
+
 func all_tasks() -> Array:
 	return _by_id.values()
 
@@ -111,6 +122,10 @@ func _index(task: Task) -> Dictionary:
 			return _hunt_by_animal
 		Task.Kind.INVESTIGATE:
 			return _investigate_by_room
+		Task.Kind.RESCUE:
+			return _rescue_by_patient
+		Task.Kind.TEND:
+			return _tend_by_patient
 	return _designation_by_cell
 
 

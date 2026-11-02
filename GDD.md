@@ -426,7 +426,7 @@ O humor vai de 0 a 100. Ele tende ao **humor-alvo** = 50 + soma dos pensamentos 
 - **Crises menores:** comer compulsivamente, isolar-se, recusar trabalho por um dia.
 - **Crises maiores:** brigas, sabotagem, destruir relíquias (Devoto), mexer em artefatos proibidos (Obcecado), tentar fugir.
 - **Inspirações:** um dia de XP ×2, trabalho com qualidade garantida acima do normal, ou ideia de pesquisa.
-- **Pensamentos do MVP:** fome, sono, Otimista e Pessimista, dormir no chão (por 12 h) e o sentimento pelo trabalho: interesse +1 por hora (até +6), paixão +2 (até +10), aversão −2 (até −10), que some devagar sem trabalhar na habilidade.
+- **Pensamentos do MVP:** fome, sono, Otimista e Pessimista, dormir no chão (por 12 h), dor (−1 a cada 10 de dano), a morte de alguém da comunidade (−8 por 3 dias) e o sentimento pelo trabalho: interesse +1 por hora (até +6), paixão +2 (até +10), aversão −2 (até −10), que some devagar sem trabalhar na habilidade.
 
 ### Agenda
 
@@ -446,6 +446,8 @@ O **calendário** da colônia mostra o ano de 60 dias e, para cada colono:
 Uma grade como a do RimWorld: uma linha por colono, uma coluna por tipo de trabalho, prioridade de 1 (mais alta) a 4, ou desligado. Com prioridades iguais, vale a ordem das colunas.
 
 Tipos de trabalho: Emergência, Medicina, Repouso, Cuidar, Vigia, Rádio, Animais, Cozinhar, Caçar, Construir, Cultivar, Minerar, Cortar plantas, Metalurgia, Artesanato, Mecânica, Carregar, Limpar, Pesquisar, Ensinar.
+
+**No MVP:** Emergência (socorrer e tratar caídos, sem habilidade, prioridade 1 por padrão), Cozinhar, Caçar, Construir, Cultivar, Minerar, Cortar plantas, Artesanato, Carregar e Pesquisar.
 
 - A alocação em minas é feita à parte: o colono alocado trabalha lá nas horas de trabalho.
 - A partir da vila, chefes de equipe podem ajustar as prioridades da sua área sozinhos.
@@ -548,6 +550,8 @@ Três regras guiam tudo:
 | 4. Agenda | Conforme o bloco da hora | Dormir, Lazer, Estudo, Ritual |
 | 5. Trabalho | No bloco Trabalho ou Livre | Pega uma tarefa do quadro |
 | 6. Tempo livre | Quando não há tarefa | Comer com fome abaixo de 30%, organizar pilhas, conversar, descansar |
+
+**No MVP:** as reações são cair ferido (vence tudo, até outra reação), desmaiar de exaustão e fugir de saqueadores; as necessidades críticas incluem estancar o próprio sangramento e repousar ferido. O colono convocado pula as necessidades críticas e só segue as ordens.
 
 ### Ciclo de cada colono
 
@@ -1642,6 +1646,40 @@ No RimWorld, ataques surpresa podem destruir uma colônia de uma vez. Aqui, o ob
 - Defesas construídas, inspiradas no Factorio: muralhas, torres, armadilhas e, para culturas tecnológicas, linhas automáticas de abastecimento de munição.
 - Cada cultura luta de um jeito: Enraizados com arcos, lanças e animais; Remendadores com armas improvisadas; Herdeiros com armas antigas e máquinas.
 
+**Combate no MVP:**
+
+- **Convocar (V):** o colono convocado larga o que fazia e segura a posição. Com arma de corpo a corpo, vai até inimigos a até 6 tiles; com arco, atira só de onde está. Botão direito num saqueador manda atacá-lo; em chão livre, ir até lá. V sem ninguém selecionado convoca (ou dispensa) todos.
+- **Quem não está convocado foge** de saqueadores a até 8 tiles (o Covarde, de 12), correndo 12 tiles. O Covarde convocado abandona o combate com 25 de dano.
+- **Acerto:** corpo a corpo 55% + 3,5% por nível de Corpo a corpo; à distância 80% − 4% por tile + 2% por nível; sempre entre 25% e 95%. O dano varia ±20%, e a Força muda o dano corpo a corpo em 6% por ponto. Cada golpe treina Corpo a corpo.
+
+| Arma | Dano | Alcance | Golpe a cada | Ferimento |
+| --- | --- | --- | --- | --- |
+| Mãos vazias | 5 | Corpo a corpo | 1 s | Contusão |
+| Faca de pedra | 8 | Corpo a corpo | 1 s | Corte |
+| Machado de pedra | 11 | Corpo a corpo | 1 s | Corte |
+| Lança de madeira | 13 | Corpo a corpo | 1 s | Perfuração |
+| Arco | 10 | 12 tiles | 2 s | Perfuração |
+
+No MVP o arco não gasta flechas.
+
+### Ferimentos, socorro e morte (MVP)
+
+- Cada golpe que acerta vira um **ferimento** (corte, perfuração ou contusão) com o dano causado. Cortes e perfurações **sangram** até serem tratados: 0,5% de sangue por hora para cada ponto de dano.
+- **Caído** com 60 de dano ou 50% de sangue perdido; **morto** com 100 de dano ou 100% de sangue perdido. A dor tira até 50% da velocidade de trabalho e de movimento.
+- **Cura por hora** de cada ferimento: 0,5 sem tratar, 2 tratado, ×1,5 deitado numa cama. Sem sangrar, o sangue volta 4% por hora.
+- De pé e sangrando, o colono **estanca os próprios ferimentos** (45 min). Com 30 de dano ou mais, **repousa** numa cama até baixar de 15.
+- Quem cai gera tarefas de **Emergência**: **Socorrer** (levar até uma cama livre) e **Tratar** (30 min, estanca o sangramento). Sem cama livre, é tratado no chão.
+- **Morte permanente:** o colono sai da partida, o que vestia e carregava fica no chão, a comunidade sente (−8 de humor por 3 dias) e o M\_adaptação cai. Corpos, túmulos e funerais ficam para depois do MVP.
+
+### Saqueadores do MVP
+
+- **Quando:** o primeiro ataque chega no dia 6; depois, a cada 5 a 9 dias (média 7, BALANÇA), sempre depois da calma do ataque anterior. Chegam entre 8 h e 18 h.
+- **Aviso:** 1,5 dia antes, uma coluna de **fumaça no horizonte** aparece perto da borda por onde vão chegar, com uma mensagem; o painel de tempo mostra quanto falta.
+- **Grupo:** os pontos de ameaça (ver Balanceamento) compram saqueadores com lança (50) e arqueiros (65, 35% de chance a cada compra quando os pontos dão). Sempre vem ao menos um.
+- **Objetivo:** vão saquear o contêiner ou a pilha mais perto, levam até 25 kg do que vale mais por kg e fogem pela borda de onde vieram. No caminho, atacam quem chega a 7 tiles (o arqueiro, ao alcance do arco) ou quem os ataca, e não perseguem quem foge para longe. Caídos não são atacados.
+- **Recuo:** cada um foge com 50 de dano; o grupo inteiro recua quando metade já saiu do combate (morto, fugido ou com o saque) ou depois de 12 h no mapa. Morto, o saqueador deixa a arma no chão.
+- **Depois:** a calma do GDD (2 + 10 × perdidos ÷ total dias) adia o próximo ataque, e o primeiro ataque revela o ramo Defesa e armas.
+
 ## Objetivos e finais
 
 O objetivo principal é encontrar **O Arquivo**, um cofre de conhecimento da antiga civilização. Ele revela a verdade sobre a IA e leva à decisão final sobre o destino do mundo. Outros finais existem para quem prefere outro caminho.
@@ -1936,7 +1974,7 @@ Mostra o que estiver selecionado: colono, animal, bancada, contêiner, planta, c
 - **Construção:** resistência, materiais faltando, quem está trabalhando.
 - **Tile:** terreno, fertilidade, temperatura, beleza.
 
-**Opções do que foi clicado:** no topo do painel aparecem botões com o que dá para fazer ali: cortar uma árvore, colher, minerar, desmontar uma construção, cancelar uma obra, caçar um animal, guardar uma pilha, filtrar um contêiner por categoria, escolher o cultivo da plantação, criar uma plantação no chão livre ou investigar uma ruína. No colono: comer agora, dormir agora, largar o item da mão e cancelar a ordem. O que já está marcado vira "cancelar". A lista começa pequena e cresce com o jogo.
+**Opções do que foi clicado:** no topo do painel aparecem botões com o que dá para fazer ali: cortar uma árvore, colher, minerar, desmontar uma construção, cancelar uma obra, caçar um animal, guardar uma pilha, filtrar um contêiner por categoria, escolher o cultivo da plantação, criar uma plantação no chão livre ou investigar uma ruína. No colono: convocar ou dispensar, comer agora, dormir agora, largar o item da mão e cancelar a ordem. No MVP, a saúde (ferimentos, sangue perdido e sangramento por hora) fica na aba Geral, e o painel do tile mostra os saqueadores que estão nele. O que já está marcado vira "cancelar". A lista começa pequena e cresce com o jogo.
 
 Selecionar vários colonos mostra um resumo do grupo e as ordens em comum.
 
@@ -1955,7 +1993,7 @@ Selecionar vários colonos mostra um resumo do grupo e as ordens em comum.
 | Comunidade | Porte e requisitos, triângulo de tendência cultural, valores, relações com clãs |
 | Bancada | Fila de pedidos com condições |
 
-**Atalhos do MVP:** Espaço pausa; 1, 2 e 3 mudam a velocidade; B Construir; C Cortar; M Minerar; H Colher; K Caçar; P Plantação; D Desmontar; X Cancelar; W Trabalho; A Agenda; I Armazém; R Pesquisa; Esc fecha a janela ou solta a ferramenta; F11 tela cheia. Em build de desenvolvimento: 4 acelera para 15× e F5 gera um mapa novo.
+**Atalhos do MVP:** Espaço pausa; 1, 2 e 3 mudam a velocidade; B Construir; C Cortar; M Minerar; H Colher; K Caçar; P Plantação; D Desmontar; X Cancelar; W Trabalho; A Agenda; I Armazém; R Pesquisa; V Convocar (sem seleção: todos); Esc fecha a janela ou solta a ferramenta; F11 tela cheia. Botão direito com um colono selecionado: num saqueador, atacar; numa tarefa, priorizar; no chão, ir até lá. Em build de desenvolvimento: 4 acelera para 15× e F5 gera um mapa novo.
 
 ### Cartas de evento
 

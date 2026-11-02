@@ -3,7 +3,7 @@ extends RefCounted
 ## Uma atividade que o colono decidiu fazer, com a camada de decisão que a originou.
 ## A camada define quem interrompe quem (GDD: Camadas de decisão).
 
-enum Kind { MOVE, EAT, SLEEP, WANDER, IDLE, WORK, HAUL, BREAK, DELIVER, HUNT, EQUIP }
+enum Kind { MOVE, EAT, SLEEP, WANDER, IDLE, WORK, HAUL, BREAK, DELIVER, HUNT, EQUIP, FIGHT, FLEE, DOWNED, REST, TEND_SELF, RESCUE }
 ## Ordem do GDD: número menor vence.
 enum Layer { REACTION = 1, CRITICAL_NEED = 2, ORDER = 3, SCHEDULE = 4, WORK = 5, FREE_TIME = 6 }
 ## De onde vem o item de uma ação (comida para EAT, material para DELIVER, ferramenta para EQUIP).
@@ -70,6 +70,16 @@ func label() -> String:
 			return "Ocioso"
 		Kind.BREAK:
 			return "Pausa"
+		Kind.FIGHT:
+			return "Convocado: segura a posição"
+		Kind.FLEE:
+			return "Fugir"
+		Kind.DOWNED:
+			return "Caído"
+		Kind.REST:
+			return "Repousar"
+		Kind.TEND_SELF:
+			return "Tratar os próprios ferimentos"
 	return "?"
 
 
@@ -84,6 +94,9 @@ func same_goal(other: Action) -> bool:
 
 
 func interruptible_by(other: Action) -> bool:
+	# Cair ferido interrompe tudo, até outra reação (fugir); nada interrompe quem está caído.
+	if other.kind == Kind.DOWNED or kind == Kind.DOWNED:
+		return other.kind == Kind.DOWNED and kind != Kind.DOWNED
 	if other.layer < layer:
 		return true
 	return is_filler() and not other.is_filler()

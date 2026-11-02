@@ -19,7 +19,12 @@ static func describe(simulation: Simulation, cell: Vector2i) -> PackedStringArra
 	_describe_objects(state, cell, lines)
 	for colonist in state.colonists:
 		if colonist.cell == cell:
-			lines.append("Aqui está %s" % colonist.display_name)
+			var how := " (%s)" % colonist.health.status_text().to_lower() if colonist.health.is_hurt() else ""
+			lines.append("Aqui está %s%s" % [colonist.display_name, how])
+	for raider: Raider in state.threats.raiders.values():
+		if raider.cell == cell:
+			lines.append("%s · %s · saúde %d%% · %s" % [raider.display_name(), raider.mode_name(), raider.health.percent(),
+				Defs.item(raider.weapon).display_name.to_lower()])
 	var task := simulation.task_at(cell)
 	if task:
 		_describe_task(simulation, task, lines)

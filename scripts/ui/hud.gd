@@ -113,7 +113,7 @@ func _ready() -> void:
 
 func bind(simulation: Simulation) -> void:
 	_simulation = simulation
-	_time_panel.bind(simulation.clock, simulation.world_seed)
+	_time_panel.bind(simulation.clock, simulation.world_seed, simulation.state)
 	_work_window.bind(simulation)
 	_schedule_window.bind(simulation)
 	_research_window.bind(simulation)

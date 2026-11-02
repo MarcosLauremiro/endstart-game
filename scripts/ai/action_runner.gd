@@ -43,11 +43,19 @@ func keys_of(colonist: Colonist) -> Array[String]:
 		return keys
 	if not action.reservation_key.is_empty():
 		keys.append(action.reservation_key)
-	if action.kind == Action.Kind.SLEEP and action.target_id != 0:
+	if _uses_bed(action):
 		keys.append(Reservations.bed_key(action.target_id))
+	if action.kind == Action.Kind.RESCUE and action.destination_id != 0:
+		keys.append(Reservations.bed_key(action.destination_id))
 	if action.kind == Action.Kind.EAT and action.item_source == Action.ItemSource.BUSH:
 		keys.append(Reservations.bush_key(action.target_id))
 	return keys
+
+
+## Dormir, repousar ou ficar caído numa cama: a cama é o alvo da ação.
+static func _uses_bed(action: Action) -> bool:
+	var lying := action.kind == Action.Kind.SLEEP or action.kind == Action.Kind.REST or action.kind == Action.Kind.DOWNED
+	return lying and action.target_id != 0
 
 
 ## Marca avanço só nas reservas da ação atual: uma reserva esquecida em outro lugar continua envelhecendo.
@@ -74,13 +82,15 @@ func _reserve(colonist: Colonist, action: Action, state: WorldState) -> String:
 					action.count = stack.reserve_take(colonist.id, action.count) if stack else 0
 					if action.count <= 0:
 						return "a comida da pilha já foi reservada"
-		Action.Kind.SLEEP:
+		Action.Kind.SLEEP, Action.Kind.REST:
 			if action.target_id != 0 and not state.reservations.try_reserve(Reservations.bed_key(action.target_id), colonist.id, tick):
 				return "a cama foi ocupada por outro"
-		Action.Kind.WORK, Action.Kind.HUNT:
+		Action.Kind.WORK, Action.Kind.HUNT, Action.Kind.RESCUE:
 			var task := state.task_board.get_task(action.task_id)
 			if task == null or not state.reservations.try_reserve(action.reservation_key, colonist.id, tick):
 				return "a tarefa foi reservada por outro"
+			if action.kind == Action.Kind.RESCUE and not state.reservations.try_reserve(Reservations.bed_key(action.destination_id), colonist.id, tick):
+				return "a cama foi ocupada por outro"
 			if task.kind == Task.Kind.CRAFT:
 				var bench: Workbench = state.workbenches.get(task.target_id)
 				if bench == null or not bench.has_all_ingredients():
@@ -184,7 +194,7 @@ func _move(colonist: Colonist, state: WorldState) -> void:
 	var step := next - colonist.cell
 	var length := _DIAGONAL_LENGTH if step.x != 0 and step.y != 0 else 1.0
 	var factor := state.navigation.speed_factor(next)
-	colonist.move_progress += Balance.MOVE_TILES_PER_TICK * factor * colonist.load_move_factor() / length
+	colonist.move_progress += Balance.MOVE_TILES_PER_TICK * factor * colonist.load_move_factor() * colonist.health.pain_factor() / length
 	_touch(colonist, state)
 	if colonist.move_progress < 1.0:
 		return
@@ -194,6 +204,13 @@ func _move(colonist: Colonist, state: WorldState) -> void:
 	if colonist.action.kind == Action.Kind.HUNT:
 		_hunter_step(colonist, state)
 		return
+	if colonist.action.kind == Action.Kind.FIGHT:
+		_fighter_step(colonist, state)
+		return
+	if colonist.action.kind == Action.Kind.RESCUE and colonist.action.phase == 1:
+		var patient := state.colonist_by_id(colonist.action.target_id)
+		if patient:
+			patient.cell = colonist.cell
 	if colonist.path.is_empty():
 		colonist.state = Colonist.State.EXECUTING
 
@@ -235,6 +252,121 @@ func _execute(colonist: Colonist, state: WorldState) -> void:
 			_hunt(colonist, state)
 		Action.Kind.EQUIP:
 			_equip(colonist, state)
+		Action.Kind.FLEE:
+			colonist.state = Colonist.State.FINISHING
+		Action.Kind.DOWNED:
+			_touch(colonist, state)
+			if not colonist.health.is_downed():
+				state.post_message("%s se levantou" % colonist.display_name)
+				colonist.state = Colonist.State.FINISHING
+		Action.Kind.REST:
+			_touch(colonist, state)
+			if colonist.health.damage() < Balance.REST_UNTIL_DAMAGE:
+				colonist.state = Colonist.State.FINISHING
+		Action.Kind.TEND_SELF:
+			action.progress_ticks += 1
+			if action.progress_ticks >= Balance.TEND_SELF_TICKS:
+				colonist.health.tend()
+				state.post_message("%s estancou os próprios ferimentos" % colonist.display_name)
+				colonist.state = Colonist.State.FINISHING
+		Action.Kind.FIGHT:
+			_fight(colonist, state)
+		Action.Kind.RESCUE:
+			_rescue(colonist, state)
+
+
+## Convocado: ataca o alvo da ordem ou o saqueador mais perto ao alcance. Corpo a corpo, vai até
+## quem estiver a até 6 tiles; com arco, só atira de onde está (a menos que a ordem seja atacar alguém).
+func _fight(colonist: Colonist, state: WorldState) -> void:
+	var action := colonist.action
+	var raider := _fight_target(colonist, state)
+	if raider == null:
+		if action.target_id != 0:
+			colonist.state = Colonist.State.FINISHING
+		return
+	var weapon := colonist.weapon()
+	if not Combat.in_reach(weapon, colonist.cell, raider.cell):
+		_chase_raider(colonist, state, raider)
+		return
+	action.progress_ticks += 1
+	if action.progress_ticks < Combat.cooldown_of(weapon):
+		return
+	action.progress_ticks = 0
+	var damage := Combat.strike(state, weapon, colonist.melee_level(), colonist.strength, colonist.cell, raider.cell, raider.health)
+	_learn_skill(colonist, Skills.Id.MELEE, Balance.COMBAT_XP_TICKS, state)
+	if damage > 0.0 and raider.mode != Raider.Mode.FLEE:
+		raider.target_id = colonist.id
+
+
+## O alvo da ordem (se ainda está no mapa) ou o saqueador mais perto que dá para atacar daqui.
+func _fight_target(colonist: Colonist, state: WorldState) -> Raider:
+	var raiders := state.threats.raiders
+	var action := colonist.action
+	if action.target_id != 0:
+		return raiders.get(action.target_id)
+	var weapon := colonist.weapon()
+	var reach := Combat.range_of(weapon) if Combat.is_ranged(weapon) else Balance.DRAFTED_MELEE_ENGAGE
+	var best: Raider
+	var best_distance := reach * reach
+	for raider: Raider in raiders.values():
+		var distance := raider.cell.distance_squared_to(colonist.cell)
+		if distance <= best_distance:
+			best = raider
+			best_distance = distance
+	return best
+
+
+func _chase_raider(colonist: Colonist, state: WorldState, raider: Raider) -> void:
+	var path := state.navigation.find_path(colonist.cell, raider.cell)
+	if path.size() <= 1:
+		return
+	colonist.action.target_cell = raider.cell
+	colonist.path = path.slice(1)
+	colonist.move_progress = 0.0
+	colonist.state = Colonist.State.MOVING
+
+
+## A cada tile andado atrás do saqueador: no alcance, para e luta; se ele se afastou, refaz o caminho.
+func _fighter_step(colonist: Colonist, state: WorldState) -> void:
+	var raider := _fight_target(colonist, state)
+	if raider == null or Combat.in_reach(colonist.weapon(), colonist.cell, raider.cell):
+		colonist.path.clear()
+		colonist.state = Colonist.State.EXECUTING
+		return
+	if colonist.path.is_empty() or raider.cell.distance_squared_to(colonist.action.target_cell) > Balance.HUNT_REPATH_DRIFT_SQUARED:
+		_chase_raider(colonist, state, raider)
+
+
+## Socorrer: ao lado do caído, levanta-o (etapa 0) e leva até a cama reservada (etapa 1).
+func _rescue(colonist: Colonist, state: WorldState) -> void:
+	var action := colonist.action
+	var task := state.task_board.get_task(action.task_id)
+	var patient := state.colonist_by_id(action.target_id)
+	var bed: Structure = state.structures.get(action.destination_id)
+	if task == null or patient == null or bed == null or not TaskEffects.is_still_valid(task, state):
+		_fail(colonist, state, "o socorro não é mais necessário")
+		return
+	if action.phase == 0:
+		if patient.carried_by != 0 and patient.carried_by != colonist.id:
+			_fail(colonist, state, "%s já está sendo carregado" % patient.display_name)
+			return
+		patient.carried_by = colonist.id
+		action.phase = 1
+		action.target_cell = bed.origin
+		action.adjacent = false
+		_travel(colonist, action, state, [])
+		return
+	# Na cama: o paciente fica com a reserva dela.
+	patient.cell = bed.origin
+	patient.carried_by = 0
+	state.reservations.release(Reservations.bed_key(bed.id), colonist.id)
+	if patient.action and patient.action.kind == Action.Kind.DOWNED:
+		patient.action.target_id = bed.id
+		patient.action.title = "Caído (na cama #%d)" % bed.id
+		state.reservations.try_reserve(Reservations.bed_key(bed.id), patient.id, state.clock.tick)
+	state.task_board.remove(task, Task.Status.DONE)
+	state.post_message("%s levou %s para a cama" % [colonist.display_name, patient.display_name])
+	colonist.state = Colonist.State.FINISHING
 
 
 func _wait(colonist: Colonist, duration: int) -> void:
@@ -321,7 +453,14 @@ func _work(colonist: Colonist, state: WorldState) -> void:
 
 ## XP do trabalho; ao subir de nível, avisa no registro.
 func _learn(colonist: Colonist, work_type: int, ticks: int, state: WorldState) -> void:
-	var raised := colonist.learn(work_type, ticks)
+	_announce_level(colonist, colonist.learn(work_type, ticks), state)
+
+
+func _learn_skill(colonist: Colonist, skill_id: int, ticks: int, state: WorldState) -> void:
+	_announce_level(colonist, colonist.learn_skill(skill_id, ticks), state)
+
+
+func _announce_level(colonist: Colonist, raised: int, state: WorldState) -> void:
 	if raised >= 0:
 		var level := colonist.skill(raised).level
 		state.post_message("%s subiu para o nível %d em %s (%s)" % [
@@ -531,6 +670,11 @@ func _close(colonist: Colonist, state: WorldState, outcome: String) -> void:
 	if colonist.carrying_count > 0:
 		state.drop_items(colonist.cell, colonist.carrying_item, colonist.carrying_count)
 		colonist.clear_carry()
+	# Interrompido carregando alguém: o paciente fica no chão onde estava.
+	if action and action.kind == Action.Kind.RESCUE:
+		var patient := state.colonist_by_id(action.target_id)
+		if patient and patient.carried_by == colonist.id:
+			patient.carried_by = 0
 	colonist.action = null
 	colonist.path.clear()
 	colonist.move_progress = 0.0
