@@ -13,7 +13,8 @@ var damage: float
 var tended: bool = false
 
 
-func _init(new_kind: Kind, new_damage: float) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_kind: Kind = Kind.CUT, new_damage: float = 0.0) -> void:
 	kind = new_kind
 	damage = new_damage
 

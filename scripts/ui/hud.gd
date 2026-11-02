@@ -10,6 +10,15 @@ signal structure_selected(def: StructureDef)
 signal container_focused(cell: Vector2i)
 ## Clique num nome da lista de vários colonos selecionados.
 signal colonist_chosen(colonist_id: int)
+## Pedidos do Menu, que a cena principal executa.
+signal save_requested(save_name: String)
+signal load_requested(save_name: String)
+signal new_game_requested
+## Clique num alerta (AlertsPanel).
+signal alert_chosen(cell: Vector2i, colonist_id: int)
+## Clique num colono da barra do topo: selecionar e levar a câmera até ele.
+signal colonist_focused(colonist_id: int)
+signal quit_requested
 
 ## O menu de construção abre logo acima da barra de baixo.
 const _ABOVE_BOTTOM_BAR := 40
@@ -29,6 +38,11 @@ var _research_window: ResearchWindow
 var _build_menu: BuildMenu
 var _storage_panel: StoragePanel
 var _workbench_panel: WorkbenchPanel
+var _menu_window: MenuWindow
+var _alerts_panel: AlertsPanel
+var _colonist_bar: ColonistBar
+## Se o jogo já estava pausado quando o Menu abriu (ao fechar, volta como estava).
+var _paused_before_menu := false
 var _simulation: Simulation
 var _theme: Theme
 var _root: Control
@@ -46,6 +60,11 @@ func _ready() -> void:
 	_resource_bar = ResourceBar.new()
 	_root.add_child(_resource_bar)
 	_pin(_resource_bar, 0.0, 0.0)
+
+	_colonist_bar = ColonistBar.new()
+	_root.add_child(_colonist_bar)
+	_pin(_colonist_bar, 0.5, 0.0)
+	_colonist_bar.colonist_focused.connect(func(id: int) -> void: colonist_focused.emit(id))
 
 	_time_panel = TimePanel.new()
 	_root.add_child(_time_panel)
@@ -80,6 +99,7 @@ func _ready() -> void:
 	_bottom_bar.storage_panel_toggled.connect(toggle_storage_panel)
 	_bottom_bar.schedule_window_toggled.connect(toggle_schedule_window)
 	_bottom_bar.research_window_toggled.connect(toggle_research_window)
+	_bottom_bar.menu_toggled.connect(toggle_menu)
 
 	_work_window = WorkPriorityWindow.new()
 	_work_window.visible = false
@@ -119,6 +139,20 @@ func _ready() -> void:
 	_workbench_panel.offset_top += _BELOW_TIME_PANEL
 	_workbench_panel.offset_bottom += _BELOW_TIME_PANEL
 
+	_alerts_panel = AlertsPanel.new()
+	_root.add_child(_alerts_panel)
+	_pin(_alerts_panel, 1.0, 0.5)
+	_alerts_panel.alert_chosen.connect(func(cell: Vector2i, id: int) -> void: alert_chosen.emit(cell, id))
+
+	_menu_window = MenuWindow.new()
+	_menu_window.visible = false
+	_root.add_child(_menu_window)
+	_pin(_menu_window, 0.5, 0.5)
+	_menu_window.save_requested.connect(func(save_name: String) -> void: save_requested.emit(save_name))
+	_menu_window.load_requested.connect(func(save_name: String) -> void: load_requested.emit(save_name))
+	_menu_window.new_game_requested.connect(func() -> void: new_game_requested.emit())
+	_menu_window.quit_requested.connect(func() -> void: quit_requested.emit())
+
 
 func bind(simulation: Simulation) -> void:
 	_simulation = simulation
@@ -129,6 +163,7 @@ func bind(simulation: Simulation) -> void:
 	_build_menu.bind(simulation)
 	_storage_panel.bind(simulation)
 	_workbench_panel.bind(simulation)
+	_menu_window.bind(simulation)
 	simulation.message_posted.connect(_message_log.add_message)
 
 
@@ -141,6 +176,16 @@ func refresh(selected_id: int, tile: Vector2i, has_tile: bool, tool: Designation
 	_resource_bar.refresh(_simulation.state)
 	_time_panel.refresh()
 	_bottom_bar.show_tool(tool, building or _build_menu.visible)
+	var selected: Array[int] = []
+	if group.size() > 1:
+		selected.assign(group)
+	elif selected_id != 0:
+		selected.append(selected_id)
+	_colonist_bar.refresh(_simulation.state, selected)
+	# Alertas na lateral direita; o Armazém abre no mesmo lugar e os cobre.
+	_alerts_panel.visible = not _storage_panel.visible
+	if _alerts_panel.visible:
+		_alerts_panel.refresh(_simulation.state)
 	if _storage_panel.visible:
 		_storage_panel.refresh()
 	if _research_window.visible:
@@ -204,8 +249,34 @@ func toggle_storage_panel() -> void:
 	_storage_panel.visible = not _storage_panel.visible
 
 
+## Abre ou fecha o Menu. Aberto, o jogo pausa; fechado, volta como estava.
+func toggle_menu() -> void:
+	set_menu_open(not _menu_window.visible)
+
+
+func set_menu_open(open: bool) -> void:
+	if open == _menu_window.visible:
+		return
+	_menu_window.visible = open
+	var clock := _simulation.clock
+	if open:
+		_paused_before_menu = clock.paused
+		if not clock.paused:
+			clock.toggle_pause()
+		_menu_window.refresh()
+	elif clock.paused != _paused_before_menu:
+		clock.toggle_pause()
+
+
+func is_menu_open() -> bool:
+	return _menu_window.visible
+
+
 ## Fecha a janela aberta de cima (Esc). Devolve se havia alguma.
 func close_top_window() -> bool:
+	if _menu_window.visible:
+		set_menu_open(false)
+		return true
 	for window in [_build_menu, _storage_panel, _research_window, _schedule_window, _work_window]:
 		if window.visible:
 			window.visible = false

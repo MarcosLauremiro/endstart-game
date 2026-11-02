@@ -17,14 +17,14 @@ var _brain := ColonistBrain.new()
 var _runner := ActionRunner.new()
 
 
-func _init(new_world_seed: int, colonist_count: int = Balance.STARTING_COLONISTS) -> void:
+## loaded: estado vindo de um arquivo salvo (Simulation.from_state); sem ele, gera uma partida nova.
+func _init(new_world_seed: int = 0, colonist_count: int = Balance.STARTING_COLONISTS, loaded: WorldState = null) -> void:
+	if loaded:
+		_attach(loaded)
+		return
 	world_seed = new_world_seed
-	state = WorldState.new(WorldGenerator.generate(world_seed, Balance.MAP_SIZE), world_seed)
-	world = state.world
-	clock = state.clock
+	_attach(WorldState.new(WorldGenerator.generate(world_seed, Balance.MAP_SIZE), world_seed))
 	clock.tick = Balance.START_HOUR * Balance.TICKS_PER_HOUR
-	# Conexão direta ao sinal, sem lambda: uma lambda guardaria a Simulation dentro do estado (ciclo).
-	state.message_posted.connect(message_posted.emit)
 	WorldPopulator.place_berry_bushes(state)
 	WorldPopulator.place_trees(state)
 	WorldPopulator.place_fiber_plants(state)
@@ -38,6 +38,20 @@ func _init(new_world_seed: int, colonist_count: int = Balance.STARTING_COLONISTS
 	Wildlife.populate(state)
 	# Regiões de navegação prontas antes do primeiro tick, não durante o jogo.
 	state.navigation.prepare()
+
+
+## Partida carregada (SaveGame): continua do ponto exato em que foi salva.
+static func from_state(loaded: WorldState) -> Simulation:
+	return Simulation.new(loaded.world_seed, 0, loaded)
+
+
+func _attach(new_state: WorldState) -> void:
+	state = new_state
+	world_seed = state.world_seed
+	world = state.world
+	clock = state.clock
+	# Conexão direta ao sinal, sem lambda: uma lambda guardaria a Simulation dentro do estado (ciclo).
+	state.message_posted.connect(message_posted.emit)
 
 
 ## Executa os ticks devidos para o tempo real decorrido neste quadro.

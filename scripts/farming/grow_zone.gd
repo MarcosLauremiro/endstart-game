@@ -9,6 +9,7 @@ var crop: CropDef
 var cells := {}
 
 
-func _init(new_id: int, new_crop: CropDef) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_id: int = 0, new_crop: CropDef = null) -> void:
 	id = new_id
 	crop = new_crop

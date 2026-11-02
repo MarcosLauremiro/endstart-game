@@ -256,7 +256,7 @@ func _execute(colonist: Colonist, state: WorldState) -> void:
 			colonist.state = Colonist.State.FINISHING
 		Action.Kind.DOWNED:
 			_touch(colonist, state)
-			if not colonist.health.is_downed():
+			if not colonist.health.is_downed() and not colonist.health.is_dead():
 				state.post_message("%s se levantou" % colonist.display_name)
 				colonist.state = Colonist.State.FINISHING
 		Action.Kind.REST:
@@ -311,6 +311,15 @@ func _fight_target(colonist: Colonist, state: WorldState) -> Raider:
 	for raider: Raider in raiders.values():
 		var distance := raider.cell.distance_squared_to(colonist.cell)
 		if distance <= best_distance:
+			best = raider
+			best_distance = distance
+	if best:
+		return best
+	# Ninguém por perto, mas alguém atira nele de longe (arqueiro): vai para cima de quem o ataca.
+	best_distance = Balance.RAIDER_SIGHT * Balance.RAIDER_SIGHT
+	for raider: Raider in raiders.values():
+		var distance := raider.cell.distance_squared_to(colonist.cell)
+		if raider.target_id == colonist.id and raider.mode == Raider.Mode.ATTACK and distance <= best_distance:
 			best = raider
 			best_distance = distance
 	return best

@@ -20,10 +20,12 @@ var done: int = 0
 var paused: bool = false
 
 
-func _init(new_id: int, new_recipe: RecipeDef) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_id: int = 0, new_recipe: RecipeDef = null) -> void:
 	id = new_id
 	recipe = new_recipe
-	target = recipe.default_target
+	if recipe:
+		target = recipe.default_target
 
 
 ## Por que o pedido não deve rodar agora, ou "" se deve.

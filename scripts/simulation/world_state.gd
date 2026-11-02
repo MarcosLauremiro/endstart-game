@@ -60,9 +60,12 @@ var _no_storage_alerts := {}
 var _next_id: int = 1
 
 
-func _init(new_world: WorldData, new_world_seed: int) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_world: WorldData = null, new_world_seed: int = 0) -> void:
 	world = new_world
 	world_seed = new_world_seed
+	if world == null:
+		return
 	navigation = NavigationGrid.new(world)
 	rng.seed = hash([new_world_seed, "simulation"])
 

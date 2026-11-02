@@ -11,7 +11,8 @@ var count: int
 var _takes := {}
 
 
-func _init(new_id: int, new_cell: Vector2i, new_item: StringName, new_count: int) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_id: int = 0, new_cell := Vector2i.ZERO, new_item: StringName = &"", new_count: int = 0) -> void:
 	id = new_id
 	cell = new_cell
 	item = new_item

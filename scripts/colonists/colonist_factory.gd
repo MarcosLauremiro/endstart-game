@@ -3,7 +3,8 @@ extends RefCounted
 ## Gera colonos seguindo o GDD (Geração e raridade), no escopo do MVP:
 ## 1) idade 16–70, a maioria entre 20 e 45; 2) infância e vida adulta; 3) Força (curva normal);
 ## 4) habilidades 0–3 + bônus das histórias + 1 a cada 10 anos nas da vida adulta;
-## 5) de 1 a 3 interesses ou paixões e de 0 a 2 aversões; 6) de 1 a 3 traços; 7) teto de 70 na soma.
+## 5) de 1 a 3 interesses ou paixões e de 0 a 2 aversões; 6) de 1 a 3 traços; 7) teto de 70 na soma;
+## 8) aparência pela idade (ColonistLooks), com gerador próprio para não mudar o resto do sorteio.
 ## Cultura de origem, incapacidades e fobias ficam fora do MVP.
 
 const _NAMES := [
@@ -40,6 +41,7 @@ static func create(id: int, cell: Vector2i, rng: RandomNumberGenerator, taken_na
 	for work_type in WorkType.COLUMNS:
 		colonist.work_priorities[work_type] = Balance.DEFAULT_WORK_PRIORITY
 	colonist.work_priorities[WorkType.Id.EMERGENCY] = Balance.DEFAULT_EMERGENCY_PRIORITY
+	colonist.appearance = ColonistLooks.generate(ColonistLooks.rng_for(rng, id), colonist.age)
 	colonist.equipment.equip(&"tunic")
 	colonist.equipment.equip(&"trousers")
 	return colonist

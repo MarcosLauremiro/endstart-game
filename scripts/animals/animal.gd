@@ -25,11 +25,12 @@ var hours_since_meal: int = 0
 var think_offset: int = 0
 
 
-func _init(new_id: int, new_def: AnimalDef, new_cell: Vector2i) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_id: int = 0, new_def: AnimalDef = null, new_cell := Vector2i.ZERO) -> void:
 	id = new_id
 	def = new_def
 	cell = new_cell
-	health = def.max_health
+	health = def.max_health if def else 0.0
 	think_offset = new_id % Balance.ANIMAL_THINK_TICKS
 
 

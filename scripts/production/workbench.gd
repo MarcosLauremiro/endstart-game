@@ -17,9 +17,10 @@ var staged: Array[Dictionary] = []
 var _incoming := {}
 
 
-func _init(new_structure: Structure) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_structure: Structure = null) -> void:
 	structure = new_structure
-	id = structure.id
+	id = structure.id if structure else 0
 
 
 func def() -> StructureDef:

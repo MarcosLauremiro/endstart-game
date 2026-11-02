@@ -11,5 +11,6 @@ var rejected: PackedStringArray = []
 var outcome: String = ""
 
 
-func _init(at_tick: int) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(at_tick: int = 0) -> void:
 	tick = at_tick

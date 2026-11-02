@@ -182,6 +182,7 @@ static func _equipment_text(colonist: Colonist) -> String:
 	var ratio := colonist.load_kg() / colonist.carry_capacity_kg()
 	lines.append("Carga: %.1f / %.0f kg (%d%%)%s" % [colonist.load_kg(), colonist.carry_capacity_kg(), roundi(ratio * 100),
 		" · mais lento" if colonist.load_move_factor() < 1.0 else ""])
+	lines.append("Aparência: %s" % ColonistLooks.describe(colonist.appearance))
 	return "\n".join(lines)
 
 

@@ -10,7 +10,8 @@ var size: Vector2i
 var _cells: PackedByteArray
 
 
-func _init(new_size: Vector2i) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_size := Vector2i.ONE) -> void:
 	assert(new_size.x > 0 and new_size.y > 0, "Tamanho de mapa inválido: %s" % new_size)
 	size = new_size
 	_cells.resize(size.x * size.y)

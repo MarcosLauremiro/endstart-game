@@ -9,6 +9,7 @@ signal work_window_toggled
 signal storage_panel_toggled
 signal schedule_window_toggled
 signal research_window_toggled
+signal menu_toggled
 
 ## ferramenta → [ícone, atalho]
 const _TOOLS := {
@@ -53,6 +54,10 @@ func _ready() -> void:
 	var storage := _make_button("ui/icons/tabs/storage", "Armazém: estoque e contêineres (I)")
 	storage.pressed.connect(func() -> void: storage_panel_toggled.emit())
 	row.add_child(storage)
+	row.add_child(VSeparator.new())
+	var menu := _make_button("ui/icons/tabs/menu", "Menu: salvar, carregar e sair (Esc)")
+	menu.pressed.connect(func() -> void: menu_toggled.emit())
+	row.add_child(menu)
 
 
 func show_tool(active: Designations.Tool, building: bool) -> void:

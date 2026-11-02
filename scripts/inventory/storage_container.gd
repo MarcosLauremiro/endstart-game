@@ -19,10 +19,13 @@ var _takes := {}
 var _incoming := {}
 
 
-func _init(new_id: int, new_def: ContainerDef, new_cell: Vector2i) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_id: int = 0, new_def: ContainerDef = null, new_cell := Vector2i.ZERO) -> void:
 	id = new_id
 	def = new_def
 	cell = new_cell
+	if def == null:
+		return
 	for _i in def.slot_count:
 		slots.append({"item": &"", "count": 0, "pending": 0})
 	for category in ItemDef.CATEGORY_NAMES:

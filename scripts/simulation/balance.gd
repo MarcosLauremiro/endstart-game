@@ -301,7 +301,7 @@ const DOWNED_DAMAGE := 60.0
 const DOWNED_BLOOD_LOSS := 50.0
 const MAX_BLOOD_LOSS := 100.0
 ## Cada ponto de dano de um ferimento que sangra (sem tratar) tira 0,5% de sangue por hora.
-const BLEED_PER_DAMAGE_HOUR := 0.5
+const BLEED_PER_DAMAGE_HOUR := 0.25
 ## Sem sangrar, o sangue volta 4% por hora.
 const BLOOD_RECOVERY_PER_HOUR := 4.0
 ## Cura por hora de cada ferimento: sem tratar, tratado; deitado numa cama, ×1,5.

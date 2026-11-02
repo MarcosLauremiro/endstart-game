@@ -21,6 +21,8 @@ var skills := {}
 var work_priorities := {}
 var schedule := Schedule.new()
 var equipment := Equipment.new()
+## Pele, cabelo e roupa no desenho (ColonistLooks).
+var appearance := ColonistAppearance.new()
 var cell: Vector2i
 ## Próximas células do caminho (sem a atual).
 var path: Array[Vector2i] = []

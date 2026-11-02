@@ -25,6 +25,10 @@ const _SUITES := [
 	"res://tests/test_research.gd",
 	"res://tests/test_combat.gd",
 	"res://tests/test_multi_select.gd",
+	"res://tests/test_save_game.gd",
+	"res://tests/test_alerts.gd",
+	"res://tests/test_full_game.gd",
+	"res://tests/test_colonist_looks.gd",
 ]
 
 

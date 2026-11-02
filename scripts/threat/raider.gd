@@ -35,11 +35,12 @@ var counted_as: StringName = &""
 var think_offset: int = 0
 
 
-func _init(new_id: int, new_kind: StringName, new_cell: Vector2i) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_id: int = 0, new_kind: StringName = &"", new_cell := Vector2i.ZERO) -> void:
 	id = new_id
 	kind = new_kind
 	cell = new_cell
-	weapon = KINDS[kind]["weapon"]
+	weapon = KINDS[kind]["weapon"] if KINDS.has(kind) else &""
 	think_offset = new_id % Balance.RAIDER_THINK_TICKS
 
 

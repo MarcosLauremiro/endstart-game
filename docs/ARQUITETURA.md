@@ -14,7 +14,7 @@ Documento vivo. Atualizar sempre que uma decisão arquitetural mudar.
 A simulação roda em ticks fixos e guarda todo o estado da partida. A apresentação só lê esse estado e desenha.
 Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, tarefas, itens ou terreno.
 
-## Estado atual (M0 a M7 — Ameaça e combate)
+## Estado atual (M0 a M8 — Fechamento do MVP)
 
 ### Simulação
 
@@ -93,6 +93,12 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Ameaça | `scripts/threat/threats.gd`, `raid.gd`, `threat_director.gd` | Estado (próximo ataque, ataque avisado ou em andamento, saqueadores, adaptação); pontos de ameaça do GDD, compra do grupo, aviso com fumaça 1,5 dia antes, chegada pela borda, fim e calma. |
 | Saqueadores | `scripts/threat/raider.gd`, `raider_ai.gd` | Dados e comportamento: saquear o contêiner ou a pilha mais perto, atacar quem chega perto ou os ataca, fugir ferido, recuo do grupo, arma no chão ao morrer. Pensam a cada 30 ticks (escalonados), andam e golpeiam a cada tick. |
 
+### Salvar e carregar (M8)
+
+| Área | Arquivo | Responsabilidade |
+| --- | --- | --- |
+| Salvamento | `scripts/simulation/save_game.gd` | Serializa o grafo de objetos do `WorldState` pelas variáveis de script (`PROPERTY_USAGE_SCRIPT_VARIABLE`): cada objeto vira um registro `{script, props}`, referências viram `{"__ref": índice}` (objetos compartilhados continuam um só), definições `.tres` viram o caminho e o `RandomNumberGenerator` vira semente e estado. Grava com `store_var` comprimido (ZSTD) em `user://saves/<nome>.save`, com cabeçalho (versão, dia, hora, colonos, data). Ganchos: `save_skip()` e `after_load()` (a `NavigationGrid` não salva o `AStarGrid2D` e o refaz). `Simulation.from_state` continua a partida carregada. |
+
 ### Apresentação
 
 | Área | Arquivo | Responsabilidade |
@@ -101,7 +107,7 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Objetos | `scripts/world/objects_view.gd` | Plantações e cultivos (4 fases), tocos, arbustos, construções e bancadas, caixotes, pilhas com quantidade, animais e saqueadores (interpolados), e, numa camada por cima de árvores e colonos (z 2): barras de vida de quem está ferido, fumaça do aviso de ataque, designações com barra de progresso (vermelhas se bloqueadas; a caça segue o animal), retângulo de arraste. |
 | Árvores | `scripts/world/trees_view.gd` | Um `Sprite2D` por árvore (quadros de 32×32, centrados no tile e apoiados na base), sob o mesmo nó com `y_sort` dos colonos: a copa esconde quem está atrás (ao norte), e quem está na frente ou ao lado passa por cima. |
 | Dia e noite | `scripts/simulation/daylight.gd`, `scripts/world/daylight_view.gd` | Horas de luz pela fórmula do GDD e luz de 0 a 1 por tick; um `CanvasModulate` escurece só o mapa à noite (a interface não). |
-| Colonos | `scripts/colonists/colonists_view.gd` | Um `Sprite2D` por colono, interpolado entre células; deitado quando dorme, cai, repousa ou é carregado; ícone de convocado ou ferido acima da cabeça; marcador de seleção. |
+| Colonos | `scripts/colonists/colonists_view.gd`, `colonist_looks.gd`, `colonist_appearance.gd`, `shaders/palette_swap.gdshader` | Um `Node2D` por colono com 4 camadas (corpo tingido pela pele, roupa de baixo, de cima e cabelo), todas no mesmo quadro: lado do passo (lembra o último quando para) e caminhada de 8 quadros pelo tick. Cabelo e roupa trocam a rampa indexada de 4 cores com um `ShaderMaterial` por cor (dividido entre colonos). `ColonistLooks` tem as tabelas, o gerador pela idade, os recortes e a mesma composição na CPU (retrato da barra e testes). A aparência é dado do colono e vai para o arquivo salvo. Interpolado entre células; deitado quando dorme, cai, repousa ou é carregado; ícone de convocado ou ferido acima da cabeça; marcador de seleção. |
 | Câmera | `scripts/world/camera_controller.gd` | Panorâmica e três níveis de zoom fixos. |
 | Catálogo de arte | `scripts/assets/asset_catalog.gd` | Lista única de assets: caminho, tamanho, uso. Fallback provisório. |
 | Arte provisória | `scripts/assets/placeholder_painter.gd`, `tools/generate_placeholder_assets.gd` | Provisórios no tamanho final; o gerador nunca sobrescreve. |
@@ -119,6 +125,9 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 | Armazém | `scripts/ui/storage_panel.gd` | Totais por item (contêineres, chão, mãos), comida em dias, busca, contêineres com ocupação; clicar centraliza a câmera (I). |
 | Opções | `scripts/ui/context_actions.gd`, `scripts/ui/action_bar.gd` | Botões do que foi clicado, no topo do painel do tile ou do colono. Árvore: cortar; planta: colher; rocha: minerar; obra: cancelar (devolve o material); construção, contêiner ou bancada: desmontar; animal: caçar (predador desligado, com motivo); plantação: plantar cenoura, trigo ou cogumelo, remover; chão livre: criar plantação; colono: convocar ou dispensar, comer agora, dormir agora, cancelar ordem. Marcado vira "cancelar". |
 | Mensagens | `scripts/ui/message_log.gd` | Canto inferior direito: mensagens que somem sozinhas. |
+| Alertas | `scripts/ui/alerts.gd`, `scripts/ui/alerts_panel.gd` | Lateral direita: um alerta por tipo (ataque, caído, sangrando, aviso de ataque com os armados, faminto, pouca comida, em crise, exausto, sem cama, item sem lugar), até 5 por urgência e "+N alertas"; clicar leva a câmera ao problema e seleciona o colono. O Armazém os cobre enquanto aberto. |
+| Barra de colonos | `scripts/ui/colonist_bar.gd` | Topo centro: retrato e nome de cada colono (vermelho caído ou sangrando, laranja convocado); a dica diz estado, o que faz e por quê; clicar seleciona e leva a câmera. |
+| Menu | `scripts/ui/menu_window.gd` | Esc sem nada selecionado ou botão Menu: pausa; salvar com nome, lista de partidas com Carregar e Apagar (segundo clique confirma), Mapa novo e Sair. Ctrl+S salva rápido; salvamento automático às 6h de cada dia novo. |
 | Entrada | `scenes/main/main.gd` + `main.tscn` | Liga tudo e traduz mouse e teclado em comandos. V convoca o selecionado ou o grupo (sem seleção, todos); botão direito num saqueador manda atacar. Arrastar sem ferramenta seleciona vários colonos ou uma área (o clique comum acontece ao soltar). |
 | Seleção múltipla | `scripts/ui/multi_select.gd`, `scripts/ui/selection_panel.gd` | Colonos no retângulo; senão as árvores, rochas e plantas dele (marca em cada uma, só Cortar, Minerar e Colher, saem da seleção quando somem); senão a área inteira, com as opções juntas por rótulo (a chave `key` das ContextActions evita repetir um alvo de vários tiles); resumo do que há na área; convocar, cancelar e mandar o grupo (tiles espalhados em volta do destino). O painel recalcula áreas grandes (mais de 1.500 tiles) só quando a seleção muda ou uma opção é usada. |
 
@@ -260,6 +269,10 @@ godot --headless --path . -s res://tests/test_runner.gd
 | `test_multi_select.gd` | Colonos no retângulo, convocar e dispensar o grupo, mover espalha cada um num tile, cancelar ordens, árvores e rochas do retângulo só com Cortar, Minerar e Colher (Cortar em todas e depois cancelar), construção de 4 tiles conta uma vez, tiles espalhados andáveis, painel com a lista do grupo e o resumo da área, plurais. |
 | `test_research.gd` | **Aceite do M6** (um colono investiga as 3 salas depois de uma ordem; o artefato revela Redescoberta e o Vestígio libera a Mesa de análise), ruína alcançável com 3 salas e 1 artefato, árvore do MVP e ramos escondidos, Prática por trabalho e primeira vez, Curioso +25%, travas de construção e receita, liberar na Mesa de estudos, primeira caça revela Defesa e armas, Curioso prefere tarefas com artefatos, analisar o artefato rende 10 V. |
 | `test_combat.gd` | **Aceite do M7** (3 colonos com lanças e convocados enfrentam 2 saqueadores: ninguém morre, os saqueadores morrem ou fogem e alguém sai ferido; sem preparo, levam itens), pontos de ameaça do exemplo do GDD, compra do grupo, calma, aviso com fumaça 1,5 dia antes e chegada, quem não está convocado foge e o convocado luta (e treina Corpo a corpo), caído sem socorro morre de perda de sangue (morte permanente, itens no chão, humor, adaptação), socorro até a cama e tratamento com recuperação, ferido de pé estanca o próprio sangramento, Covarde foge de mais longe. |
+| `test_save_game.gd` | Partida carregada continua idêntica à original por 20 mil ticks (e a comparação percebe uma diferença mínima), salvar no meio de um ataque, objetos compartilhados continuam um só, definições voltam como o mesmo recurso, navegação refeita, gravar, listar, carregar e apagar o arquivo. |
+| `test_alerts.gd` | Caído antes de faminto, vários colonos numa linha, aviso de ataque com os armados e a fumaça, ataque em andamento no topo, sem cama, pouca comida, item sem lugar, painel com 5 e "+N alertas", barra de colonos com o porquê. |
+| `test_full_game.gd` | 2 dias com o jogador automático e 3 colonos: ninguém morre, camas, fogueira, bancada e mesa de estudos prontas, ainda há madeira e refeições, nenhum tick passa de 50 ms, salvar no meio continua igual. |
+| `test_colonist_looks.gd` | Cabelo e cor pela idade em todas as idades, variedade (todas as peles, cabelos, cores e peças aparecem), mesma pose em todas as camadas nas 4 direções, troca de cor sem mover pixels, mesma seed dá a mesma aparência e ela vai para o arquivo salvo, a camada do mapa vira com o passo, continua virada parada e esconde a roupa tirada. |
 | `test_ui_theme.gd` | Escala da interface por tamanho de tela e fonte sempre na grade de 8 px; escala inteira da janela. |
 | `test_plants.gd` | Calendário das estações, uma linha de arte por estação, árvore jovem cresce, corte deixa toco que some, muda não dá frutas, colheita de fibra rende e volta a crescer, mapa com plantas jovens e adultas. |
 | `test_navigation.gd` | Desvio de obstáculo, destino bloqueado, custo da água rasa, mapa conectado pelos vaus, corredor bloqueado divide regiões, regiões incrementais iguais a um recálculo completo. |
@@ -273,9 +286,21 @@ Depois de adicionar entradas ao catálogo, gere os provisórios que faltam:
 godot --headless --path . -s res://tools/generate_placeholder_assets.gd
 ```
 
+## Partida completa
+
+```bash
+godot --headless --path . -s res://tests/full_game.gd -- --days=30 --colonists=5 --seed=12345 [--player]
+```
+
+Roda a partida headless e imprime um resumo por dia (colonos, fome, humor, comida guardada, madeira, refeições, camas, alertas) e, no fim, o tempo por tick (média, p99, pior), o que isso custa a 3× num quadro de 60 fps e as mensagens marcantes. `--player` liga o `FullGamePlayer` (`tests/full_game_player.gd`), que faz o que um jogador faria pela API da simulação: fogueira, bancadas, mesa de estudos e camas perto da chegada, corte, mineração, plantação, caça automática, pesquisas, pedidos e convocar no ataque.
+
 ## Ordem de implementação (próximos marcos)
 
-1. **M8 — Salvar/carregar, painéis, balanceamento, testes de partida completa.**
+**Resultado da partida de 30 dias (seed 12345, 5 colonos, M8):** sem jogador, os 5 sobrevivem com as refeições iniciais e frutas do mato, e os saqueadores levam itens sem resistência. Com o jogador automático, os 5 sobrevivem aos 4 ataques (no terceiro, 3 colonos caem e são socorridos), a comida guardada sobe para 50 dias e 5 pesquisas são liberadas. Tempo por tick: média 0,09 ms, p99 0,3 ms, pior 4,2 ms (11 ticks acima de 2 ms, todos na virada da hora); a 3×, 1,6% de um quadro de 60 fps.
+
+**Ajustes de balanceamento do M8:** sangramento de 0,5% para 0,25% de sangue por hora por ponto de dano (um caído morria em 1,5 h, antes do socorro); o convocado sem alcance vai para cima de quem atira nele de longe (um arqueiro sozinho matava 4 colonos convocados que só seguravam a posição); a mensagem "se levantou" não sai mais quando o colono morre.
+
+O MVP (M0 a M8) está completo. O próximo passo é testar com jogadores e trocar a arte provisória.
 
 ## Limitações conhecidas
 
@@ -295,7 +320,7 @@ godot --headless --path . -s res://tools/generate_placeholder_assets.gd
 - A caça não testa linha de visão; o caçador atira através de árvores.
 - Bancadas não têm níveis, anexos, ligação com contêineres nem ambiente (luz, limpeza, temperatura): fora do MVP pelo GDD.
 - Uma só cultura (hortaliças) e sem estações no crescimento, conforme o escopo do MVP.
-- Sem salvamento: o estado ainda não é serializado (os dados já usam ids estáveis, sem referência a nós).
+- O arquivo salvo depende dos nomes dos campos e dos caminhos dos scripts: renomear um campo ou mover um script quebra saves antigos (a versão do arquivo recusa os incompatíveis, sem migração).
 - Árvores, arbustos e plantas de fibra já usam a arte final; o resto ainda é provisório. Os números das pilhas no chão ainda usam a fonte padrão (a Determination em 12 px não cabe num tile).
 - Estações não afetam a simulação (só a arte), conforme o escopo do MVP.
 - Árvores e arbustos não se espalham sozinhos: o mapa só perde árvores com o corte.

@@ -7,7 +7,8 @@ var cell: Vector2i
 var growth_hours: int = Balance.TREE_GROWTH_HOURS
 
 
-func _init(new_id: int, new_cell: Vector2i) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_id: int = 0, new_cell := Vector2i.ZERO) -> void:
 	id = new_id
 	cell = new_cell
 

@@ -12,7 +12,8 @@ var delivered := {}
 var _incoming := {}
 
 
-func _init(new_id: int, new_def: StructureDef, new_origin: Vector2i) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_id: int = 0, new_def: StructureDef = null, new_origin := Vector2i.ZERO) -> void:
 	id = new_id
 	def = new_def
 	origin = new_origin

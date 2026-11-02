@@ -332,6 +332,7 @@ Cada colono tem uma **infância** e uma **vida adulta**. Elas dão bônus de hab
 5. **Afinidades:** de 1 a 3 interesses ou paixões, de 0 a 2 aversões.
 6. **Traços:** de 1 a 3.
 7. **Teto:** a soma de todos os níveis não passa de 70. Se passar, as habilidades menores são reduzidas.
+8. **Aparência:** tom de pele (7), estilo de cabelo (20), cor do cabelo (7), peça de cima (camisa, regata, casaco ou top) e de baixo (calça, short ou saia), cada uma numa de 7 cores. O cabelo segue a idade: espetado, moicano, tigela, rabos laterais e dois coques só até 30–35 anos; os longos até 45; o rabo de cavalo até 50; o volumoso até 60; o calvo só a partir de 45. A cor também: grisalho a partir dos 40 (20%), mais comum dos 50 (50% grisalho, 10% branco) e quase certo dos 60 (40% grisalho, 45% branco). A aparência usa um gerador próprio, derivado da seed e do colono, então não muda o resto do sorteio.
 
 Com essas regras, a chance aproximada de cada perfil ao gerar um colono é:
 
@@ -1339,6 +1340,8 @@ Os níveis de zoom devem cair sempre em números inteiros de pixels da tela por 
 | Quarto pequeno | 4×4 por dentro | — |
 | Salão comum | 8×8 por dentro | — |
 
+**Colono em camadas:** o colono é montado de três folhas do Aseprite em `assets/characters/colonists/` (exportadas para PNG por `tools/export_characters.sh`). `character_base` é o corpo branco de contorno preto, em quadros de 16×24: a linha 0 tem o quadro parado de frente, e as linhas 1 a 4 têm a caminhada de 8 quadros de frente, de costas, para a esquerda e para a direita. `hair` (20 estilos) e `clothing` (4 peças de cima e 3 de baixo) têm uma linha por estilo ou peça, com os mesmos 33 quadros em sequência (parado e as 4 caminhadas). Como o mesmo quadro vale para todas as camadas, elas nunca desalinham. A ordem de desenho é corpo, roupa de baixo, roupa de cima e cabelo. A pele tinge o branco do corpo. Cabelo e roupa são desenhados numa rampa indexada de 4 cores (marrom no cabelo, azul na roupa) que o jogo troca pela rampa escolhida. A roupa só aparece com a peça vestida. Parado de lado ou de costas, o colono usa o primeiro quadro da caminhada daquela direção. A caminhada roda a 10 quadros por segundo na velocidade normal. O retrato na barra de colonos é o próprio colono parado de frente.
+
 ### Como fazer no Godot
 
 1. **Project Settings > Display > Window:** Viewport 640×360; para testes, Window Override 1920×1080.
@@ -1650,7 +1653,7 @@ No RimWorld, ataques surpresa podem destruir uma colônia de uma vez. Aqui, o ob
 
 **Combate no MVP:**
 
-- **Convocar (V):** o colono convocado larga o que fazia e segura a posição. Com arma de corpo a corpo, vai até inimigos a até 6 tiles; com arco, atira só de onde está. Botão direito num saqueador manda atacá-lo; em chão livre, ir até lá. V sem ninguém selecionado convoca (ou dispensa) todos.
+- **Convocar (V):** o colono convocado larga o que fazia e segura a posição. Com arma de corpo a corpo, vai até inimigos a até 6 tiles; com arco, atira só de onde está. Se alguém atira nele de mais longe (arqueiro), vai para cima de quem atira. Botão direito num saqueador manda atacá-lo; em chão livre, ir até lá. V sem ninguém selecionado convoca (ou dispensa) todos.
 - **Quem não está convocado foge** de saqueadores a até 8 tiles (o Covarde, de 12), correndo 12 tiles. O Covarde convocado abandona o combate com 25 de dano.
 - **Acerto:** corpo a corpo 55% + 3,5% por nível de Corpo a corpo; à distância 80% − 4% por tile + 2% por nível; sempre entre 25% e 95%. O dano varia ±20%, e a Força muda o dano corpo a corpo em 6% por ponto. Cada golpe treina Corpo a corpo.
 
@@ -1666,7 +1669,7 @@ No MVP o arco não gasta flechas.
 
 ### Ferimentos, socorro e morte (MVP)
 
-- Cada golpe que acerta vira um **ferimento** (corte, perfuração ou contusão) com o dano causado. Cortes e perfurações **sangram** até serem tratados: 0,5% de sangue por hora para cada ponto de dano.
+- Cada golpe que acerta vira um **ferimento** (corte, perfuração ou contusão) com o dano causado. Cortes e perfurações **sangram** até serem tratados: 0,25% de sangue por hora para cada ponto de dano (com 60 de dano, um caído leva umas 3 h para morrer, tempo de alguém socorrer).
 - **Caído** com 60 de dano ou 50% de sangue perdido; **morto** com 100 de dano ou 100% de sangue perdido. A dor tira até 50% da velocidade de trabalho e de movimento.
 - **Cura por hora** de cada ferimento: 0,5 sem tratar, 2 tratado, ×1,5 deitado numa cama. Sem sangrar, o sangue volta 4% por hora.
 - De pé e sangrando, o colono **estanca os próprios ferimentos** (45 min). Com 30 de dano ou mais, **repousa** numa cama até baixar de 15.
@@ -1966,6 +1969,25 @@ A organização da informação segue o RimWorld, porque funciona: mapa no centr
 
 **Abas da barra inferior:** Construir, Ordens, Trabalho, Agenda, Colonos, Armazém, Pesquisa, Rádio, Mundo, Diário, Comunidade e Menu. Rádio, Mundo e Comunidade só aparecem quando o sistema é liberado.
 
+**Barra de colonos no MVP:** um botão por colono com retrato e nome; o nome fica vermelho quando está caído ou sangrando e laranja quando está convocado. A dica mostra o estado, o que está fazendo e por quê. Clicar seleciona o colono e leva a câmera até ele.
+
+**Alertas do MVP**, do mais urgente ao menos urgente (um por tipo; vários colonos com o mesmo problema ficam na mesma linha):
+
+| Alerta | Quando | Clique leva a |
+| --- | --- | --- |
+| Ataque! (perigo) | Saqueadores no mapa | Um saqueador |
+| Caído (perigo) | Colono caído | O colono |
+| Sangrando (perigo) | De pé e sangrando | O colono |
+| Ataque em… | Aviso de ataque; a dica diz quantos colonos estão armados | A fumaça |
+| Faminto (perigo) | Fome abaixo de 15% | O colono |
+| Pouca comida | Comida guardada para menos de 1 dia da comunidade | — |
+| Em crise | Humor em crise ou crise extrema | O colono |
+| Exausto | Sono abaixo de 8% e acordado | O colono |
+| Sem cama | Menos camas que colonos | — |
+| Sem lugar | Pilha no chão que nenhum contêiner com espaço aceita | A pilha |
+
+O Armazém abre no mesmo lugar dos alertas e os cobre enquanto está aberto.
+
 ### Painel de inspeção
 
 Mostra o que estiver selecionado: colono, animal, bancada, contêiner, planta, construção ou tile.
@@ -1997,7 +2019,7 @@ Selecionar vários colonos mostra um resumo do grupo e as ordens em comum.
 | Comunidade | Porte e requisitos, triângulo de tendência cultural, valores, relações com clãs |
 | Bancada | Fila de pedidos com condições |
 
-**Atalhos do MVP:** Espaço pausa; 1, 2 e 3 mudam a velocidade; B Construir; C Cortar; M Minerar; H Colher; K Caçar; P Plantação; D Desmontar; X Cancelar; W Trabalho; A Agenda; I Armazém; R Pesquisa; V Convocar (sem seleção: todos); Esc fecha a janela ou solta a ferramenta; F11 tela cheia. Botão direito com um colono selecionado: num saqueador, atacar; numa tarefa, priorizar; no chão, ir até lá. Arrastar sem ferramenta seleciona vários colonos, as árvores, rochas e plantas (Cortar, Minerar, Colher) ou uma área. Em build de desenvolvimento: 4 acelera para 15× e F5 gera um mapa novo.
+**Atalhos do MVP:** Espaço pausa; 1, 2 e 3 mudam a velocidade; B Construir; C Cortar; M Minerar; H Colher; K Caçar; P Plantação; D Desmontar; X Cancelar; W Trabalho; A Agenda; I Armazém; R Pesquisa; V Convocar (sem seleção: todos); Esc fecha a janela, solta a ferramenta ou a seleção e, sem nada disso, abre o Menu; Ctrl+S salva rápido; F11 tela cheia. Botão direito com um colono selecionado: num saqueador, atacar; numa tarefa, priorizar; no chão, ir até lá. Arrastar sem ferramenta seleciona vários colonos, as árvores, rochas e plantas (Cortar, Minerar, Colher) ou uma área. Em build de desenvolvimento: 4 acelera para 15× e F5 gera um mapa novo.
 
 ### Cartas de evento
 
@@ -2084,6 +2106,7 @@ A regra principal é separar a simulação da apresentação. A simulação roda
 - **IA dos colonos:** Utility AI, em que cada tarefa recebe uma pontuação com base em necessidades, habilidades e prioridades, e o colono escolhe a maior.
 - **Dados:** itens, construções, traços e tecnologias definidos como `Resource` (`.tres`), para adicionar conteúdo sem mexer em código.
 - **Salvamento:** livre, como no RimWorld, podendo salvar e voltar a qualquer momento. O estado da simulação é serializado inteiro; nada visual é salvo.
+  - **No MVP:** o Menu (Esc sem nada selecionado, ou o botão Menu na barra de baixo) pausa o jogo, salva com um nome (sugere "Dia 5, 13h") e lista as partidas salvas, da mais recente para a mais antiga, com dia, hora, colonos e data na dica. Cada uma tem Carregar e Apagar (apagar pede um segundo clique). Também tem Mapa novo e Sair do jogo. Ctrl+S salva rápido na partida "rapido", e o jogo salva sozinho às 6h de cada dia novo na partida "automatico". A partida carregada começa pausada. Carregar continua exatamente do mesmo ponto: a partida carregada e a original seguem iguais tick a tick.
 
 ### Sistemas principais
 

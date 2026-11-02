@@ -9,7 +9,8 @@ var from_adult: bool
 var age_hours: int = 0
 
 
-func _init(new_id: int, new_cell: Vector2i, adult: bool) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(new_id: int = 0, new_cell := Vector2i.ZERO, adult: bool = false) -> void:
 	id = new_id
 	cell = new_cell
 	from_adult = adult

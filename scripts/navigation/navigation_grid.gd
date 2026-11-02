@@ -28,18 +28,43 @@ var _regions_dirty := true
 var _next_region := 0
 
 
-func _init(world: WorldData) -> void:
+## Argumentos opcionais: o carregamento (SaveGame) cria a instância vazia e preenche os campos.
+func _init(world: WorldData = null) -> void:
 	_world = world
-	_grid.region = Rect2i(Vector2i.ZERO, world.size)
+	if world == null:
+		return
+	_setup_grid()
+	for y in world.size.y:
+		for x in world.size.x:
+			refresh_cell(Vector2i(x, y))
+	_ensure_regions()
+
+
+## O AStarGrid2D não vai para o arquivo salvo: é refeito do terreno, das células bloqueadas e dos
+## pisos. As regiões salvas continuam valendo (SaveGame).
+func save_skip() -> PackedStringArray:
+	return ["_grid"]
+
+
+func after_load() -> void:
+	_grid = AStarGrid2D.new()
+	_setup_grid()
+	for y in _world.size.y:
+		for x in _world.size.x:
+			var cell := Vector2i(x, y)
+			var factor := Terrain.move_factor(_world.get_terrain(cell))
+			_grid.set_point_solid(cell, factor <= 0.0 or _blocked.has(cell))
+			if factor > 0.0:
+				_grid.set_point_weight_scale(cell, 1.0 / (factor * _floor_factor.get(cell, 1.0)))
+
+
+func _setup_grid() -> void:
+	_grid.region = Rect2i(Vector2i.ZERO, _world.size)
 	_grid.cell_size = Vector2.ONE
 	_grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	_grid.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	_grid.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	_grid.update()
-	for y in world.size.y:
-		for x in world.size.x:
-			refresh_cell(Vector2i(x, y))
-	_ensure_regions()
 
 
 ## Reaplica a passagem de uma célula. Chamar sempre que terreno ou objeto sólido mudar.

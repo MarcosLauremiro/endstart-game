@@ -15,6 +15,9 @@ const _KEY_STORAGE := KEY_I
 const _KEY_FULLSCREEN := KEY_F11
 const _KEY_SCHEDULE := KEY_A
 const _KEY_DRAFT := KEY_V
+## Com Ctrl: salvamento rápido.
+const _KEY_QUICK_SAVE := KEY_S
+const _QUICK_SAVE_NAME := "rapido"
 ## tecla → índice em Balance.SPEED_MULTIPLIERS (como no RimWorld: 1, 2, 3)
 const _SPEED_KEYS := {KEY_1: 0, KEY_2: 1, KEY_3: 2}
 const _KEY_DEBUG_SPEED := KEY_4
@@ -51,6 +54,8 @@ var _tool: Designations.Tool = Designations.Tool.NONE
 ## Estrutura escolhida no menu de construção (null = não está construindo).
 var _build_def: StructureDef
 var _drag_start := _NO_DRAG
+## Último dia com salvamento automático (às 6h de cada dia novo).
+var _autosaved_day := 0
 
 
 func _ready() -> void:
@@ -80,12 +85,37 @@ func _ready() -> void:
 	_hud.colonist_chosen.connect(func(id: int) -> void:
 		_clear_selection()
 		selected_colonist_id = id)
+	_hud.alert_chosen.connect(func(cell: Vector2i, colonist_id: int) -> void:
+		if colonist_id != 0 and simulation.state.colonist_by_id(colonist_id):
+			_clear_selection()
+			selected_colonist_id = colonist_id
+			_camera.focus(simulation.state.colonist_by_id(colonist_id).cell)
+		elif cell != Alerts.NO_CELL:
+			_camera.focus(cell)
+			_select_at(cell))
+	_hud.colonist_focused.connect(func(id: int) -> void:
+		var colonist := simulation.state.colonist_by_id(id)
+		if colonist:
+			_clear_selection()
+			selected_colonist_id = id
+			_camera.focus(colonist.cell))
+	_hud.save_requested.connect(_save)
+	_hud.load_requested.connect(_load)
+	_hud.new_game_requested.connect(func() -> void:
+		_hud.set_menu_open(false)
+		start_new_game(_random_seed()))
+	_hud.quit_requested.connect(func() -> void: get_tree().quit())
 	start_new_game(_read_seed_argument())
 
 
 func start_new_game(world_seed: int) -> void:
-	simulation = Simulation.new(world_seed)
+	_start(Simulation.new(world_seed))
+
+
+func _start(new_simulation: Simulation) -> void:
+	simulation = new_simulation
 	simulation.clock.allow_debug_speed = OS.is_debug_build()
+	_autosaved_day = simulation.clock.day()
 	_clear_selection()
 	_set_tool(Designations.Tool.NONE)
 	_world_view.show_world(simulation.world)
@@ -98,6 +128,7 @@ func start_new_game(world_seed: int) -> void:
 
 func _process(delta: float) -> void:
 	simulation.advance(delta)
+	_autosave()
 	# Arraste de seleção solto em cima da interface: o botão já não está apertado, então desiste.
 	if _selecting() and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_drag_start = _NO_DRAG
@@ -115,7 +146,7 @@ func _refresh_views() -> void:
 	_prune_resources()
 	_objects_view.set_selected_area(selected_area, selected_resources)
 	_trees_view.sync(simulation.state)
-	_colonists_view.sync(simulation.state.colonists, _selected_ids())
+	_colonists_view.sync(simulation.state.colonists, _selected_ids(), simulation.clock.tick)
 	_hud.refresh(selected_colonist_id, selected_cell, has_selected_cell, _tool, _build_def != null, selected_group, selected_area, selected_resources)
 
 
@@ -123,7 +154,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event)
 	elif event is InputEventKey and event.pressed and not event.echo:
-		_handle_key(event.keycode)
+		if event.keycode == _KEY_QUICK_SAVE and event.ctrl_pressed:
+			_save(_QUICK_SAVE_NAME)
+		else:
+			_handle_key(event.keycode)
 
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
@@ -196,14 +230,46 @@ func _handle_key(keycode: Key) -> void:
 	elif keycode == _KEY_BACK:
 		if _tool != Designations.Tool.NONE or _build_def:
 			_set_tool(Designations.Tool.NONE)
-		elif not _hud.close_top_window():
+		elif _hud.close_top_window():
+			pass
+		elif selected_colonist_id != 0 or has_selected_cell or not selected_group.is_empty() or selected_area.has_area():
 			_clear_selection()
+		else:
+			_hud.toggle_menu()
 	elif _TOOL_KEYS.has(keycode):
 		_toggle_tool(_TOOL_KEYS[keycode])
 	elif _SPEED_KEYS.has(keycode):
 		simulation.clock.set_speed(Balance.SPEED_MULTIPLIERS[_SPEED_KEYS[keycode]])
 	elif keycode == _KEY_DEBUG_SPEED and simulation.clock.allow_debug_speed:
 		simulation.clock.set_speed(Balance.DEBUG_SPEED_MULTIPLIER)
+
+
+func _save(save_name: String) -> void:
+	var error := SaveGame.save(simulation, save_name)
+	_hud.post_message("Partida salva: %s" % save_name if error == OK else "Não deu para salvar %s (erro %d)" % [save_name, error])
+
+
+## Carrega a partida; ela começa pausada (Espaço continua).
+func _load(save_name: String) -> void:
+	var loaded := SaveGame.load_simulation(save_name)
+	if loaded == null:
+		_hud.post_message("Não deu para carregar %s: arquivo de outra versão ou corrompido" % save_name)
+		return
+	_hud.set_menu_open(false)
+	if not loaded.clock.paused:
+		loaded.clock.toggle_pause()
+	_start(loaded)
+	_hud.post_message("Partida carregada: %s (pausada; Espaço continua)" % save_name)
+
+
+## Salvamento automático às 6h de cada dia novo, no arquivo "automatico".
+func _autosave() -> void:
+	var clock := simulation.clock
+	if clock.day() > _autosaved_day and clock.hour() >= Balance.START_HOUR:
+		_autosaved_day = clock.day()
+		var error := SaveGame.save(simulation, SaveGame.AUTOSAVE_NAME)
+		if error != OK:
+			_hud.post_message("Salvamento automático falhou (erro %d)" % error)
 
 
 ## V: convoca ou dispensa o colono selecionado (ou o grupo); sem seleção, todos de uma vez.
