@@ -12,12 +12,18 @@ Gerado por `tools/generate_placeholder_assets.gd` a partir de `scripts/assets/as
 
 | Arquivo | Tamanho (px) | Quadros | Uso |
 | --- | --- | --- | --- |
-| `grass.png` | 16×16 | — | Terreno: grama |
-| `dirt.png` | 16×16 | — | Terreno: solo |
-| `tall_grass.png` | 16×16 | — | Terreno: grama alta |
-| `shallow_water.png` | 16×16 | — | Terreno: água rasa |
-| `deep_water.png` | 16×16 | — | Terreno: água funda |
-| `rock.png` | 16×16 | — | Terreno: rocha (montanha, minerável) |
+| `grass_variants.png` | 96×480 | 6 × 30 de 16×16 | Chão: 10 gramas sobre a terra comum (a 2ª é a grama padrão; a 3ª é a grama alta) |
+| `dirt_variants.png` | 96×480 | 6 × 30 de 16×16 | Chão: grama sobre 10 terras (a 1ª é o solo e o chão embaixo da rocha) |
+| `water_variants.png` | 96×480 | 6 × 30 de 16×16 | Chão: grama sobre 10 águas (a 4ª é a água rasa, a 2ª a funda) |
+| `sand_variants.png` | 96×384 | 6 × 24 de 16×16 | Chão: grama sobre 8 areias (fora do MVP) |
+| `mud_swamp_variants.png` | 96×336 | 6 × 21 de 16×16 | Chão: grama sobre 7 lamas e solos de pântano (fora do MVP) |
+| `snow_ice_variants.png` | 96×432 | 6 × 27 de 16×16 | Chão: grama sobre 9 neves e gelos (fora do MVP) |
+| `stone_variants.png` | 96×384 | 6 × 24 de 16×16 | Chão: grama sobre 8 pedras e cascalhos (fora do MVP) |
+| `special_variants.png` | 96×384 | 6 × 24 de 16×16 | Chão: grama sobre 8 terrenos especiais: musgo, fungos, vulcânico, cinzas, radioativo... (fora do MVP) |
+| `rock_walls.png` | 256×320 | 16 × 20 de 16×16 | Paredes de montanha: 13 materiais em blocos de 4×5 (16 tiles pelos vizinhos N/L/S/O, chão de caverna, sombra, entulho). Usa a 8ª (parede natural) |
+| `ore_deposits.png` | 112×128 | 7 × 8 de 16×16 | Minérios (fora do MVP). Linhas: ferro, cobre, ouro, prata, carvão, cristais, quartzo, enxofre. Colunas: escondido, exposto, rico, espalhado, meio extraído, esgotado, pilha |
+| `mining_props.png` | 128×64 | 8 × 4 de 16×16 | Mineração (fora do MVP): estágios da rocha, entulho, trilhos, carrinhos; entrada de caverna e vigas em 32×32 |
+| `ground_overlays.png` | 128×160 | 8 × 10 de 16×16 | Detalhes sobre o chão (fora do MVP): 30 de 16×16 (pedrinhas, flores, folhas, pegadas, poças...) e 10 de 32×32 |
 
 ## assets/tiles/floors/
 
@@ -57,7 +63,7 @@ Gerado por `tools/generate_placeholder_assets.gd` a partir de `scripts/assets/as
 
 | Arquivo | Tamanho (px) | Quadros | Uso |
 | --- | --- | --- | --- |
-| `trees.png` | 64×64 | 4 × 4 de 16×16 | Árvore. Colunas: toco da jovem, toco da adulta, jovem, adulta. Linhas: primavera, verão, outono, inverno |
+| `trees.png` | 128×128 | 4 × 4 de 32×32 | Árvore em quadros de 32×32 (maior que o colono), apoiada no tile pela base. Colunas: toco da jovem, toco da adulta, jovem, adulta. Linhas: primavera, verão, outono, inverno |
 | `berry_bushs.png` | 48×64 | 3 × 4 de 16×16 | Arbusto de frutas. Colunas: muda, sem frutas, com frutas. Linhas: estações |
 | `low_growing_vegetation.png` | 32×64 | 2 × 4 de 16×16 | Planta de fibra. Colunas: pequena, crescida (colhível). Linhas: estações |
 | `Wheatfield.png` | 64×16 | 4 × 1 de 16×16 | Trigo na plantação. Colunas: 4 fases de crescimento, a última é madura |
@@ -116,7 +122,10 @@ Gerado por `tools/generate_placeholder_assets.gd` a partir de `scripts/assets/as
 
 | Arquivo | Tamanho (px) | Quadros | Uso |
 | --- | --- | --- | --- |
-| `colonist.png` | 16×24 | — | Colono (corpo; a cabeça passa do tile) |
+| `colonist.png` | 16×24 | — | Colono provisório (fora de uso: o colono é montado das três folhas abaixo) |
+| `character_base.png` | 128×120 | 8 × 5 de 16×24 | Corpo do colono (branco, tingido pela pele). Linha 0: parado de frente; linhas 1-4: caminhada de 8 quadros de frente, costas, esquerda e direita. Fonte: character_base.aseprite |
+| `hair.png` | 528×480 | 33 × 20 de 16×24 | Cabelos: uma linha por estilo (20), 33 quadros na ordem parado de frente + caminhadas de frente, costas, esquerda e direita. Rampa indexada de 4 marrons. Fonte: hair.aseprite |
+| `clothing.png` | 528×168 | 33 × 7 de 16×24 | Roupas: camisa, regata, casaco, top, calça, short e saia, mesmos 33 quadros do cabelo. Rampa indexada de 4 azuis. Fonte: clothing.aseprite |
 
 ## assets/characters/animals/
 

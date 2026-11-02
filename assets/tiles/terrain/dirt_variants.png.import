@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dbxwweg8u2nwq"
-path="res://.godot/imported/tall_grass.png-053b7f4042db1cfe58d74ecba31b4603.ctex"
+uid="uid://dns86k8ro0n4k"
+path="res://.godot/imported/dirt_variants.png-d1f49dcb31745623c0b724f1f217ccf9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/terrain/tall_grass.png"
-dest_files=["res://.godot/imported/tall_grass.png-053b7f4042db1cfe58d74ecba31b4603.ctex"]
+source_file="res://assets/tiles/terrain/dirt_variants.png"
+dest_files=["res://.godot/imported/dirt_variants.png-d1f49dcb31745623c0b724f1f217ccf9.ctex"]
 
 [params]
 

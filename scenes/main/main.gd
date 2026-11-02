@@ -140,6 +140,7 @@ func _refresh_views() -> void:
 	_objects_view.set_drag_area(_drag_area(_mouse_cell()) if dragging_area else Rect2i())
 	_refresh_build_preview()
 	_objects_view.refresh()
+	_world_view.sync(simulation.world)
 	_daylight.show_light(Daylight.light_at(simulation.clock.tick))
 	_objects_view.set_selected_cell(selected_cell, has_selected_cell)
 	_prune_group()

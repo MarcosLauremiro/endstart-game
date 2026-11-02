@@ -28,8 +28,9 @@ func test_sprite_sheets_split_into_whole_frames() -> void:
 
 func test_every_terrain_kind_has_a_tile() -> void:
 	for kind in Terrain.Kind.size():
-		var id: String = WorldView.TERRAIN_ASSETS.get(kind, "")
-		expect(AssetCatalog.ENTRIES.has(id), "Terreno %s sem asset no catálogo" % Terrain.display_name(kind))
+		var art: Array = TerrainTiles.KIND_ART.get(kind, [])
+		expect(not art.is_empty() and AssetCatalog.ENTRIES.has("tiles/terrain/" + art[0]),
+			"Terreno %s sem arte no catálogo" % Terrain.display_name(kind))
 
 
 func test_placeholder_matches_catalog_size() -> void:

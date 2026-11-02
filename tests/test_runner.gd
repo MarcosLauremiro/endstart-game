@@ -29,6 +29,7 @@ const _SUITES := [
 	"res://tests/test_alerts.gd",
 	"res://tests/test_full_game.gd",
 	"res://tests/test_colonist_looks.gd",
+	"res://tests/test_terrain_tiles.gd",
 ]
 
 

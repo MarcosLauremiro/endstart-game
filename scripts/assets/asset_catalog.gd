@@ -13,12 +13,32 @@ const FONT_DIR := "res://assets/ui/fonts/"
 ## "frames" (colunas × linhas) marca uma folha de sprites; cada quadro tem tamanho ÷ frames.
 const ENTRIES := {
 	# --- Terreno (TileMapLayer Terreno) ---
-	"tiles/terrain/grass": {"size": Vector2i(16, 16), "color": "4f7a3a", "use": "Terreno: grama", "draw": "speckle"},
-	"tiles/terrain/dirt": {"size": Vector2i(16, 16), "color": "7a5c3a", "use": "Terreno: solo", "draw": "speckle"},
-	"tiles/terrain/tall_grass": {"size": Vector2i(16, 16), "color": "3f6a2e", "use": "Terreno: grama alta", "draw": "speckle"},
-	"tiles/terrain/shallow_water": {"size": Vector2i(16, 16), "color": "3b7f99", "use": "Terreno: água rasa", "draw": "speckle"},
-	"tiles/terrain/deep_water": {"size": Vector2i(16, 16), "color": "1f4f6b", "use": "Terreno: água funda", "draw": "speckle"},
-	"tiles/terrain/rock": {"size": Vector2i(16, 16), "color": "6b6b6b", "use": "Terreno: rocha (montanha, minerável)", "draw": "speckle"},
+	# Folhas de chão: cada variante é um bloco de 6×3 tiles (96×48) com as 16 combinações de cantos
+	# da grade dupla, grama por cima do terreno da folha (ver TerrainTiles).
+	"tiles/terrain/grass_variants": {"size": Vector2i(96, 480), "frames": Vector2i(6, 30), "color": "468135",
+		"use": "Chão: 10 gramas sobre a terra comum (a 2ª é a grama padrão; a 3ª é a grama alta)"},
+	"tiles/terrain/dirt_variants": {"size": Vector2i(96, 480), "frames": Vector2i(6, 30), "color": "745b48",
+		"use": "Chão: grama sobre 10 terras (a 1ª é o solo e o chão embaixo da rocha)"},
+	"tiles/terrain/water_variants": {"size": Vector2i(96, 480), "frames": Vector2i(6, 30), "color": "497a9e",
+		"use": "Chão: grama sobre 10 águas (a 4ª é a água rasa, a 2ª a funda)"},
+	"tiles/terrain/sand_variants": {"size": Vector2i(96, 384), "frames": Vector2i(6, 24), "color": "e0cea7",
+		"use": "Chão: grama sobre 8 areias (fora do MVP)"},
+	"tiles/terrain/mud_swamp_variants": {"size": Vector2i(96, 336), "frames": Vector2i(6, 21), "color": "6e5139",
+		"use": "Chão: grama sobre 7 lamas e solos de pântano (fora do MVP)"},
+	"tiles/terrain/snow_ice_variants": {"size": Vector2i(96, 432), "frames": Vector2i(6, 27), "color": "dee5ed",
+		"use": "Chão: grama sobre 9 neves e gelos (fora do MVP)"},
+	"tiles/terrain/stone_variants": {"size": Vector2i(96, 384), "frames": Vector2i(6, 24), "color": "95958f",
+		"use": "Chão: grama sobre 8 pedras e cascalhos (fora do MVP)"},
+	"tiles/terrain/special_variants": {"size": Vector2i(96, 384), "frames": Vector2i(6, 24), "color": "5d8539",
+		"use": "Chão: grama sobre 8 terrenos especiais: musgo, fungos, vulcânico, cinzas, radioativo... (fora do MVP)"},
+	"tiles/terrain/rock_walls": {"size": Vector2i(256, 320), "frames": Vector2i(16, 20), "color": "6b6b6b",
+		"use": "Paredes de montanha: 13 materiais em blocos de 4×5 (16 tiles pelos vizinhos N/L/S/O, chão de caverna, sombra, entulho). Usa a 8ª (parede natural)"},
+	"tiles/terrain/ore_deposits": {"size": Vector2i(112, 128), "frames": Vector2i(7, 8), "color": "b0623a",
+		"use": "Minérios (fora do MVP). Linhas: ferro, cobre, ouro, prata, carvão, cristais, quartzo, enxofre. Colunas: escondido, exposto, rico, espalhado, meio extraído, esgotado, pilha"},
+	"tiles/terrain/mining_props": {"size": Vector2i(128, 64), "frames": Vector2i(8, 4), "color": "6a6a6a",
+		"use": "Mineração (fora do MVP): estágios da rocha, entulho, trilhos, carrinhos; entrada de caverna e vigas em 32×32"},
+	"tiles/terrain/ground_overlays": {"size": Vector2i(128, 160), "frames": Vector2i(8, 10), "color": "8a9a6a",
+		"use": "Detalhes sobre o chão (fora do MVP): 30 de 16×16 (pedrinhas, flores, folhas, pegadas, poças...) e 10 de 32×32"},
 	# --- Pisos ---
 	"tiles/floors/wood_floor": {"size": Vector2i(16, 16), "color": "9a6b3f", "use": "Piso de madeira", "draw": "speckle"},
 	# --- Estruturas (1 tile de base; paredes e portas sobem 8 px acima do tile) ---

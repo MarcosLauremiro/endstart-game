@@ -7,6 +7,8 @@ const _FNV_PRIME := 16777619
 const _MASK_32 := 0xFFFFFFFF
 
 var size: Vector2i
+## Sobe a cada mudança de terreno; a WorldView só redesenha quando ele muda.
+var revision := 0
 var _cells: PackedByteArray
 
 
@@ -30,6 +32,12 @@ func set_terrain(cell: Vector2i, kind: int) -> void:
 	assert(contains(cell), "Célula fora do mapa: %s" % cell)
 	assert(Terrain.is_valid(kind), "Terreno inválido: %d" % kind)
 	_cells[_index(cell)] = kind
+	revision += 1
+
+
+## Todas as células, linha a linha (só leitura: o array é copiado ao ser alterado).
+func cells() -> PackedByteArray:
+	return _cells
 
 
 ## Impressão digital do terreno (FNV-1a de 32 bits). Estável entre execuções; usada nos testes de seed.

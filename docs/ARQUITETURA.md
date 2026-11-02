@@ -103,7 +103,7 @@ Nada visual é fonte de verdade: nós da cena nunca guardam dados de colonos, ta
 
 | Área | Arquivo | Responsabilidade |
 | --- | --- | --- |
-| Mapa | `scripts/world/world_view.gd` | `TileMapLayer`; uma fonte do TileSet por tipo de terreno. |
+| Mapa | `scripts/world/world_view.gd`, `scripts/world/terrain_tiles.gd` | Chão em grade dupla: uma `TileMapLayer` por tipo de terreno, deslocada meio tile, na ordem de cima para baixo; o terreno mais baixo do tile é preenchido e os de cima desenham a borda (desenhada na folha quando o par existe, senão a silhueta da grama recortando o preenchimento). `TerrainTiles` monta o atlas uma vez a partir das folhas `*_variants`. Paredes de montanha por célula pelos 4 vizinhos, com sombra embaixo da face. `WorldData.revision` avisa mudanças e `sync` redesenha só as células alteradas (rocha escavada). |
 | Objetos | `scripts/world/objects_view.gd` | Plantações e cultivos (4 fases), tocos, arbustos, construções e bancadas, caixotes, pilhas com quantidade, animais e saqueadores (interpolados), e, numa camada por cima de árvores e colonos (z 2): barras de vida de quem está ferido, fumaça do aviso de ataque, designações com barra de progresso (vermelhas se bloqueadas; a caça segue o animal), retângulo de arraste. |
 | Árvores | `scripts/world/trees_view.gd` | Um `Sprite2D` por árvore (quadros de 32×32, centrados no tile e apoiados na base), sob o mesmo nó com `y_sort` dos colonos: a copa esconde quem está atrás (ao norte), e quem está na frente ou ao lado passa por cima. |
 | Dia e noite | `scripts/simulation/daylight.gd`, `scripts/world/daylight_view.gd` | Horas de luz pela fórmula do GDD e luz de 0 a 1 por tick; um `CanvasModulate` escurece só o mapa à noite (a interface não). |
@@ -257,6 +257,7 @@ godot --headless --path . -s res://tests/test_runner.gd
 | `test_game_clock.gd` | Pausa, velocidades, acúmulo entre quadros, limite por quadro, independência do FPS, dia/hora. |
 | `test_world_generator.gd` | Tamanho 128×128, validade dos tiles, reprodutibilidade por seed, rio de borda a borda, montanha. |
 | `test_simulation.gd` | Avanço por tempo real, sinal `ticked`, pausa, mundo reproduzível. |
+| `test_terrain_tiles.gd` | Toda folha de chão segue o bloco 6×3 (cantos sem costura), pares desenhados à mão, atlas com borda para todo terreno, vértice com o terreno de baixo inteiro e a borda dos de cima, paredes pelos vizinhos, sombra, rocha escavada redesenhada e mapa real desenhado rápido. |
 | `test_asset_catalog.gd` | Todo asset existe com o tamanho do catálogo; folhas de sprites dividem em quadros inteiros; todo terreno tem tile. |
 | `test_tile_info.gd` | Terreno com valores do GDD, conteúdo real do caixote, motivo de cada colono para a tarefa do tile, consulta sem alterar a simulação. |
 | `test_construction.gd` | **Aceite do M3** (3 colonos erguem um cômodo 5×5 com porta e cama sozinhos, madeira gasta = custo exato, dá para entrar pela porta, colono com sono usa a cama), regras de colocação com motivo, parede com material exato, equipe mais rápida na cama, falta de material com motivo, cancelar devolve tudo, desmontar devolve metade e larga o conteúdo, pátio só aceita materiais, piso acelera, árvore no local é cortada antes, colono sai do lugar da parede, cama recupera 15/h. |
