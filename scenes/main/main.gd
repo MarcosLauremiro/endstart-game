@@ -8,6 +8,10 @@ const _KEY_PAUSE := KEY_SPACE
 ## Mapa novo é atalho de desenvolvimento.
 const _KEY_NEW_MAP := KEY_F5
 const _KEY_RESEARCH := KEY_R
+## No modo de construção a mesma tecla gira a construção (a Pesquisa fica para fora do modo).
+const _KEY_ROTATE := KEY_R
+## Atalhos que não valem no modo de construção: janelas, convocar e ferramentas de ordem.
+const _BUILD_MODE_BLOCKED_KEYS: Array[Key] = [KEY_R, KEY_W, KEY_B, KEY_I, KEY_A, KEY_V]
 const _KEY_BACK := KEY_ESCAPE
 const _KEY_WORK_WINDOW := KEY_W
 const _KEY_BUILD_MENU := KEY_B
@@ -54,6 +58,8 @@ var _hud: Hud
 var _tool: Designations.Tool = Designations.Tool.NONE
 ## Estrutura escolhida no menu de construção (null = não está construindo).
 var _build_def: StructureDef
+## Direção da construção no modo de construir (0 a 3, sentido horário).
+var _build_rotation := 0
 var _drag_start := _NO_DRAG
 ## Último dia com salvamento automático (às 6h de cada dia novo).
 var _autosaved_day := 0
@@ -218,6 +224,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 
 
 func _handle_key(keycode: Key) -> void:
+	if _build_def and keycode == _KEY_ROTATE:
+		_rotate_build()
+		return
+	if _build_def and (_BUILD_MODE_BLOCKED_KEYS.has(keycode) or _TOOL_KEYS.has(keycode)):
+		return
 	if keycode == _KEY_PAUSE:
 		simulation.clock.toggle_pause()
 	elif keycode == _KEY_NEW_MAP and OS.is_debug_build():
@@ -387,9 +398,18 @@ func _set_tool(tool: Designations.Tool) -> void:
 	_drag_start = _NO_DRAG
 
 
-func _start_building(def: StructureDef) -> void:
+func _start_building(def: StructureDef, rotation := 0) -> void:
 	_set_tool(Designations.Tool.NONE)
 	_build_def = def
+	_build_rotation = rotation if def.rotatable else 0
+
+
+## R no modo de construção: gira 90 graus no sentido horário o que gira (bancadas, mesas, cama).
+func _rotate_build() -> void:
+	if not _build_def.rotatable:
+		_hud.post_message("%s não gira" % _build_def.display_name)
+		return
+	_build_rotation = (_build_rotation + 1) % 4
 
 
 ## Botão do meio numa construção: entra no modo de construir a mesma (mesmo tipo e material).
@@ -403,8 +423,8 @@ func _copy_structure_at(cell: Vector2i) -> void:
 	if not problem.is_empty():
 		_hud.post_message("%s: %s" % [def.display_name, problem])
 		return
-	_start_building(def)
-	_hud.post_message("Copiado: %s (clique para colocar, botão direito cancela)" % def.display_name)
+	_start_building(def, Construction.rotation_at(simulation.state, cell))
+	_hud.post_message("Copiado: %s (clique para colocar, R gira, botão direito cancela)" % def.display_name)
 
 
 ## Origens das plantas para o arraste atual: um ponto, a área cheia ou o contorno.
@@ -423,7 +443,7 @@ func _build_origins(end: Vector2i) -> Array[Vector2i]:
 
 
 func _place(origins: Array[Vector2i]) -> void:
-	var result := simulation.place_structures(_build_def, origins)
+	var result := simulation.place_structures(_build_def, origins, _build_rotation)
 	var placed: int = result["placed"]
 	var refused := origins.size() - placed
 	if refused == 0:
@@ -439,11 +459,11 @@ func _refresh_build_preview() -> void:
 	var valid: Array[Vector2i] = []
 	var invalid: Array[Vector2i] = []
 	for origin in _build_origins(_mouse_cell()):
-		if simulation.placement_problem(_build_def, origin).is_empty():
+		if simulation.placement_problem(_build_def, origin, _build_rotation).is_empty():
 			valid.append(origin)
 		else:
 			invalid.append(origin)
-	_objects_view.set_build_preview(_build_def, valid, invalid)
+	_objects_view.set_build_preview(_build_def, valid, invalid, _build_rotation)
 
 
 func _apply_tool(area: Rect2i) -> void:

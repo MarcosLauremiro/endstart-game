@@ -5,11 +5,11 @@ extends RefCounted
 
 
 ## Motivo de não poder colocar a estrutura com origem na célula, ou "" se pode.
-static func placement_problem(state: WorldState, def: StructureDef, origin: Vector2i) -> String:
+static func placement_problem(state: WorldState, def: StructureDef, origin: Vector2i, rotation := 0) -> String:
 	var unavailable := availability_problem(state, def)
 	if not unavailable.is_empty():
 		return unavailable
-	for cell in def.cells_at(origin):
+	for cell in def.cells_at(origin, rotation):
 		if not state.world.contains(cell):
 			return "fora do mapa"
 		var kind := state.world.get_terrain(cell)
@@ -53,17 +53,26 @@ static func def_at(state: WorldState, cell: Vector2i) -> StructureDef:
 	return null
 
 
+## Direção da construção do tile (a cópia pelo botão do meio sai virada igual).
+static func rotation_at(state: WorldState, cell: Vector2i) -> int:
+	var structure: Structure = state.buildings_by_cell.get(cell)
+	if structure:
+		return structure.rotation
+	var site := state.site_at(cell, StructureDef.Layer.BUILDING)
+	return site.rotation if site else 0
+
+
 ## Coloca a planta e cria a tarefa de Construir. Árvores no local são marcadas para corte.
-static func place(state: WorldState, def: StructureDef, origin: Vector2i) -> ConstructionSite:
-	if not placement_problem(state, def, origin).is_empty():
+static func place(state: WorldState, def: StructureDef, origin: Vector2i, rotation := 0) -> ConstructionSite:
+	if not placement_problem(state, def, origin, rotation).is_empty():
 		return null
-	var site := ConstructionSite.new(state.next_id(), def, origin)
+	var site := ConstructionSite.new(state.next_id(), def, origin, rotation)
 	state.add_site(site)
 	var task := state.task_board.create(Task.Kind.CONSTRUCT, origin, site.id, def.work_ticks(), state.clock.tick)
 	task.max_workers = def.max_workers
 	task.title = "Construir %s (%d, %d)" % [def.display_name, origin.x, origin.y]
 	if def.layer == StructureDef.Layer.BUILDING:
-		Designations.apply(state, Designations.Tool.CUT, Rect2i(origin, def.footprint))
+		Designations.apply(state, Designations.Tool.CUT, Rect2i(origin, site.footprint()))
 	return site
 
 
@@ -98,7 +107,7 @@ static func complete(state: WorldState, site: ConstructionSite) -> void:
 	if def.container_def != &"":
 		state.add_container(def.container_def, site.origin)
 	else:
-		var structure := Structure.new(state.next_id(), def, site.origin)
+		var structure := Structure.new(state.next_id(), def, site.origin, site.rotation)
 		state.add_structure(structure)
 		if def.is_workbench():
 			_open_workbench(state, structure)

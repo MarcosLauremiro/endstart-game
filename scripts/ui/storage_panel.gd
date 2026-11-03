@@ -24,6 +24,7 @@ func _ready() -> void:
 	title.text = "Armazém (I)"
 	title.add_theme_color_override("font_color", UiTheme.COMMUNITY)
 	column.add_child(title)
+	WindowDrag.attach(self, title)
 	_search = LineEdit.new()
 	_search.placeholder_text = "Buscar item…"
 	_search.text_changed.connect(func(_text: String) -> void: _next_refresh_msec = 0)

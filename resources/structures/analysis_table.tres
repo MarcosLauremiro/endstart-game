@@ -24,3 +24,4 @@ bench_work = &"research"
 bench_speed = 1.0
 buildable = true
 asset = "workstations/analysis_table"
+rotatable = true

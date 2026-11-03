@@ -27,6 +27,7 @@ func _ready() -> void:
 	title.text = "Agenda (A) — escolha o bloco e clique ou arraste nas horas"
 	title.add_theme_color_override("font_color", UiTheme.COMMUNITY)
 	column.add_child(title)
+	WindowDrag.attach(self, title)
 	var brushes := HBoxContainer.new()
 	column.add_child(brushes)
 	for block in _BLOCK_COLORS:

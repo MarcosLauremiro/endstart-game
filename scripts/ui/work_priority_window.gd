@@ -21,6 +21,7 @@ func _ready() -> void:
 	title.text = "Trabalho — prioridade 1 é a mais alta; com prioridades iguais vale a ordem das colunas"
 	title.add_theme_color_override("font_color", UiTheme.COMMUNITY)
 	column.add_child(title)
+	WindowDrag.attach(self, title)
 	_grid = GridContainer.new()
 	_grid.columns = 1 + WorkType.COLUMNS.size()
 	column.add_child(_grid)

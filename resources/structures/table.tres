@@ -20,3 +20,4 @@ hit_points = 100
 is_bed = false
 container_def = &""
 asset = "structures/table"
+rotatable = true

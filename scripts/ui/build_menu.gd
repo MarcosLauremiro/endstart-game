@@ -62,4 +62,4 @@ static func _placement_hint(def: StructureDef) -> String:
 			return "Arraste para cobrir uma área"
 		StructureDef.Placement.OUTLINE:
 			return "Arraste para fazer o contorno de um cômodo (ou uma linha)"
-	return "Clique para colocar (ocupa %d×%d)" % [def.footprint.x, def.footprint.y]
+	return "Clique para colocar (ocupa %d×%d)%s" % [def.footprint.x, def.footprint.y, "; R gira" if def.rotatable else ""]

@@ -62,6 +62,7 @@ var _has_selected_cell := false
 var _preview_def: StructureDef
 var _preview_valid: Array[Vector2i] = []
 var _preview_invalid: Array[Vector2i] = []
+var _preview_rotation := 0
 
 
 func _ready() -> void:
@@ -91,8 +92,9 @@ func set_selected_cell(cell: Vector2i, has_cell: bool) -> void:
 
 
 ## Prévia da colocação: origens válidas e inválidas da estrutura escolhida (def null = sem prévia).
-func set_build_preview(def: StructureDef, valid: Array[Vector2i], invalid: Array[Vector2i]) -> void:
+func set_build_preview(def: StructureDef, valid: Array[Vector2i], invalid: Array[Vector2i], rotation := 0) -> void:
 	_preview_def = def
+	_preview_rotation = rotation
 	_preview_valid = valid
 	_preview_invalid = invalid
 
@@ -160,16 +162,24 @@ func _draw_layer(layer: StructureDef.Layer) -> void:
 				_draw_built(structure.def, structure.origin, Color.WHITE)
 	for site in _state.sites.values():
 		if site.def.layer == layer:
-			_draw_built(site.def, site.origin, _BLUEPRINT_TINT)
+			_draw_built(site.def, site.origin, _BLUEPRINT_TINT, self, {}, site.rotation)
 
 
 ## A arte fica alinhada pela base do footprint: paredes de 16×24 sobem 8 px acima do tile.
 ## Paredes escolhem o quadro pelos vizinhos (StructureArt); `extra` são células da prévia.
-func _draw_built(def: StructureDef, origin: Vector2i, tint: Color, canvas: CanvasItem = self, extra := {}) -> void:
+## Girada, a arte gira em volta do centro do footprint já girado.
+func _draw_built(def: StructureDef, origin: Vector2i, tint: Color, canvas: CanvasItem = self, extra := {}, rotation := 0) -> void:
 	var region := StructureArt.region(_state, def, origin, extra)
 	var tile := Balance.TILE_SIZE
-	var position := Vector2(origin * tile) + Vector2(0, def.footprint.y * tile - region.size.y)
-	canvas.draw_texture_rect_region(AssetCatalog.texture(def.asset), Rect2(position, region.size), region, tint)
+	var texture := AssetCatalog.texture(def.asset)
+	if rotation == 0:
+		var position := Vector2(origin * tile) + Vector2(0, def.footprint.y * tile - region.size.y)
+		canvas.draw_texture_rect_region(texture, Rect2(position, region.size), region, tint)
+		return
+	var center := Vector2(origin * tile) + Vector2(def.footprint_for(rotation) * tile) / 2.0
+	canvas.draw_set_transform(center, rotation * PI / 2.0)
+	canvas.draw_texture_rect_region(texture, Rect2(-region.size / 2.0, region.size), region, tint)
+	canvas.draw_set_transform(Vector2.ZERO)
 
 
 func _draw_preview() -> void:
@@ -180,10 +190,10 @@ func _draw_preview() -> void:
 		for origin in _preview_valid:
 			extra[origin] = true
 	for origin in _preview_valid:
-		_draw_built(_preview_def, origin, _PREVIEW_TINT, _overlay, extra)
+		_draw_built(_preview_def, origin, _PREVIEW_TINT, _overlay, extra, _preview_rotation)
 	var tile := Balance.TILE_SIZE
 	for origin in _preview_invalid:
-		_overlay.draw_rect(Rect2(Vector2(origin * tile), Vector2(_preview_def.footprint * tile)), _INVALID_FILL)
+		_overlay.draw_rect(Rect2(Vector2(origin * tile), Vector2(_preview_def.footprint_for(_preview_rotation) * tile)), _INVALID_FILL)
 
 
 ## Tiles das plantações: fundo verde claro com borda, sob as plantas.

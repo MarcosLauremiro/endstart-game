@@ -33,7 +33,8 @@ func work_type() -> int:
 
 ## Onde o operador trabalha e entrega: ao lado do meio da bancada.
 func work_cell() -> Vector2i:
-	return structure.origin + Vector2i(structure.def.footprint.x / 2, structure.def.footprint.y / 2)
+	var size := structure.footprint()
+	return structure.origin + Vector2i(size.x / 2, size.y / 2)
 
 
 func delivery_cell() -> Vector2i:

@@ -24,3 +24,4 @@ bench_work = &""
 bench_speed = 1.0
 buildable = true
 asset = "workstations/study_desk"
+rotatable = true

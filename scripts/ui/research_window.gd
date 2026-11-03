@@ -21,6 +21,7 @@ func _ready() -> void:
 	title.text = "Pesquisa (R) — ações geram pontos; com uma Mesa de estudos, a pesquisa é liberada na hora"
 	title.add_theme_color_override("font_color", UiTheme.ANCIENT)
 	column.add_child(title)
+	WindowDrag.attach(self, title)
 	_points = Label.new()
 	column.add_child(_points)
 	_list = VBoxContainer.new()

@@ -38,13 +38,22 @@ enum Placement { SINGLE, AREA, OUTLINE }
 @export var wall_tiles: bool = false
 ## Paredes vizinhas se ligam a esta (paredes, portas e as peças da ruína).
 @export var joins_walls: bool = false
+## Gira no modo de construção (R): bancadas, mesas, cama. A arte desenhada é a direção 0.
+@export var rotatable: bool = false
+
+
+## Tamanho na direção (0 a 3, de 90 em 90 graus no sentido horário): de lado, largura e
+## altura trocam.
+func footprint_for(rotation: int) -> Vector2i:
+	return Vector2i(footprint.y, footprint.x) if rotatable and rotation % 2 == 1 else footprint
 
 
 ## Tiles ocupados a partir da célula de origem (canto superior esquerdo).
-func cells_at(origin: Vector2i) -> Array[Vector2i]:
+func cells_at(origin: Vector2i, rotation := 0) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
-	for y in footprint.y:
-		for x in footprint.x:
+	var size := footprint_for(rotation)
+	for y in size.y:
+		for x in size.x:
 			result.append(origin + Vector2i(x, y))
 	return result
 

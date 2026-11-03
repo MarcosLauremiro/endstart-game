@@ -336,18 +336,18 @@ func task_at(cell: Vector2i) -> Task:
 
 
 ## Motivo de não poder construir ali, ou "" se pode.
-func placement_problem(def: StructureDef, origin: Vector2i) -> String:
-	return Construction.placement_problem(state, def, origin)
+func placement_problem(def: StructureDef, origin: Vector2i, rotation := 0) -> String:
+	return Construction.placement_problem(state, def, origin, rotation)
 
 
 ## Coloca plantas de construção. Devolve quantas entraram e o primeiro motivo de recusa (se houver).
-func place_structures(def: StructureDef, origins: Array[Vector2i]) -> Dictionary:
+func place_structures(def: StructureDef, origins: Array[Vector2i], rotation := 0) -> Dictionary:
 	var placed := 0
 	var problem := ""
 	for origin in origins:
-		var why := Construction.placement_problem(state, def, origin)
+		var why := Construction.placement_problem(state, def, origin, rotation)
 		if why.is_empty():
-			Construction.place(state, def, origin)
+			Construction.place(state, def, origin, rotation)
 			placed += 1
 		elif problem.is_empty():
 			problem = why
