@@ -1,7 +1,8 @@
 class_name ObjectsView
 extends Node2D
-## Desenha o que está sobre o terreno: plantações, tocos, arbustos, construções, bancadas,
-## caixotes, pilhas no chão e animais. As árvores ficam no TreesView, ordenadas com os colonos.
+## Desenha o que está sobre o terreno: pisos, plantações, tocos, arbustos, plantas de construção,
+## pilhas no chão e animais. Árvores (TreesView) e construções prontas e contêineres
+## (StructuresView) ficam ordenados pela altura junto com os colonos.
 ## Numa camada por cima de árvores e colonos (_overlay): designações com o progresso das tarefas,
 ## barras de vida, fumaça, prévia de construção, seleção e o arraste das ordens.
 ## Só lê o WorldState; nada aqui é fonte de verdade.
@@ -121,8 +122,6 @@ func _draw() -> void:
 			column = _BUSH_WITH_BERRIES if bush.portions > 0 else _BUSH_EMPTY
 		_draw_frame(_BUSHES, column, season, bush.cell)
 	_draw_layer(StructureDef.Layer.BUILDING)
-	for container in _state.containers.values():
-		_draw_built(container.def.asset, container.cell, container.def.footprint, Color.WHITE)
 	var font := UiTheme.pixel_font()
 	for stack in _state.stacks.values():
 		var origin := Vector2(stack.cell * tile)
@@ -153,29 +152,35 @@ func _draw_overlay() -> void:
 		_overlay.draw_rect(area, _DRAG_BORDER, false, 1.0)
 
 
-## Estruturas prontas e plantas de construção de uma camada (pisos por baixo de tudo).
+## Pisos prontos (as outras construções prontas ficam no StructuresView) e plantas de construção.
 func _draw_layer(layer: StructureDef.Layer) -> void:
-	for structure in _state.structures.values():
-		if structure.def.layer == layer:
-			_draw_built(structure.def.asset, structure.origin, structure.def.footprint, Color.WHITE)
+	if layer == StructureDef.Layer.FLOOR:
+		for structure in _state.structures.values():
+			if structure.def.layer == layer:
+				_draw_built(structure.def, structure.origin, Color.WHITE)
 	for site in _state.sites.values():
 		if site.def.layer == layer:
-			_draw_built(site.def.asset, site.origin, site.def.footprint, _BLUEPRINT_TINT)
+			_draw_built(site.def, site.origin, _BLUEPRINT_TINT)
 
 
 ## A arte fica alinhada pela base do footprint: paredes de 16×24 sobem 8 px acima do tile.
-func _draw_built(asset_id: String, origin: Vector2i, footprint: Vector2i, tint: Color, canvas: CanvasItem = self) -> void:
-	var texture := AssetCatalog.texture(asset_id)
+## Paredes escolhem o quadro pelos vizinhos (StructureArt); `extra` são células da prévia.
+func _draw_built(def: StructureDef, origin: Vector2i, tint: Color, canvas: CanvasItem = self, extra := {}) -> void:
+	var region := StructureArt.region(_state, def, origin, extra)
 	var tile := Balance.TILE_SIZE
-	var position := Vector2(origin * tile) + Vector2(0, footprint.y * tile - texture.get_height())
-	canvas.draw_texture(texture, position, tint)
+	var position := Vector2(origin * tile) + Vector2(0, def.footprint.y * tile - region.size.y)
+	canvas.draw_texture_rect_region(AssetCatalog.texture(def.asset), Rect2(position, region.size), region, tint)
 
 
 func _draw_preview() -> void:
 	if _preview_def == null:
 		return
+	var extra := {}
+	if _preview_def.joins_walls:
+		for origin in _preview_valid:
+			extra[origin] = true
 	for origin in _preview_valid:
-		_draw_built(_preview_def.asset, origin, _preview_def.footprint, _PREVIEW_TINT, _overlay)
+		_draw_built(_preview_def, origin, _PREVIEW_TINT, _overlay, extra)
 	var tile := Balance.TILE_SIZE
 	for origin in _preview_invalid:
 		_overlay.draw_rect(Rect2(Vector2(origin * tile), Vector2(_preview_def.footprint * tile)), _INVALID_FILL)

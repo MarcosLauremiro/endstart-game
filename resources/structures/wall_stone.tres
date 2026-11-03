@@ -20,3 +20,5 @@ hit_points = 450
 is_bed = false
 container_def = &""
 asset = "structures/wall_stone"
+wall_tiles = true
+joins_walls = true

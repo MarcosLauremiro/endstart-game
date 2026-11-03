@@ -47,6 +47,7 @@ var _world_view: WorldView
 var _objects_view: ObjectsView
 var _colonists_view: ColonistsView
 var _trees_view: TreesView
+var _structures_view: StructuresView
 var _camera: CameraController
 var _daylight: DaylightView
 var _hud: Hud
@@ -69,6 +70,8 @@ func _ready() -> void:
 	add_child(actors)
 	_trees_view = TreesView.new()
 	actors.add_child(_trees_view)
+	_structures_view = StructuresView.new()
+	actors.add_child(_structures_view)
 	_colonists_view = ColonistsView.new()
 	actors.add_child(_colonists_view)
 	_daylight = DaylightView.new()
@@ -121,6 +124,7 @@ func _start(new_simulation: Simulation) -> void:
 	_world_view.show_world(simulation.world)
 	_objects_view.bind(simulation.state)
 	_trees_view.clear()
+	_structures_view.clear()
 	_camera.set_map_bounds(simulation.world.size * Balance.TILE_SIZE)
 	_hud.bind(simulation)
 	_refresh_views()
@@ -147,6 +151,7 @@ func _refresh_views() -> void:
 	_prune_resources()
 	_objects_view.set_selected_area(selected_area, selected_resources)
 	_trees_view.sync(simulation.state)
+	_structures_view.sync(simulation.state)
 	_colonists_view.sync(simulation.state.colonists, _selected_ids(), simulation.clock.tick)
 	_hud.refresh(selected_colonist_id, selected_cell, has_selected_cell, _tool, _build_def != null, selected_group, selected_area, selected_resources)
 
@@ -163,6 +168,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	var cell := _mouse_cell()
+	if event.button_index == MOUSE_BUTTON_MIDDLE and event.pressed:
+		_copy_structure_at(cell)
+		return
 	if event.button_index == MOUSE_BUTTON_LEFT and _build_def:
 		if event.pressed:
 			_drag_start = cell
@@ -382,6 +390,21 @@ func _set_tool(tool: Designations.Tool) -> void:
 func _start_building(def: StructureDef) -> void:
 	_set_tool(Designations.Tool.NONE)
 	_build_def = def
+
+
+## Botão do meio numa construção: entra no modo de construir a mesma (mesmo tipo e material).
+func _copy_structure_at(cell: Vector2i) -> void:
+	if not simulation.world.contains(cell):
+		return
+	var def := Construction.def_at(simulation.state, cell)
+	if def == null:
+		return
+	var problem := Construction.availability_problem(simulation.state, def)
+	if not problem.is_empty():
+		_hud.post_message("%s: %s" % [def.display_name, problem])
+		return
+	_start_building(def)
+	_hud.post_message("Copiado: %s (clique para colocar, botão direito cancela)" % def.display_name)
 
 
 ## Origens das plantas para o arraste atual: um ponto, a área cheia ou o contorno.

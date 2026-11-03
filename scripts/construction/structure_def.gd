@@ -34,6 +34,10 @@ enum Placement { SINGLE, AREA, OUTLINE }
 @export var buildable: bool = true
 ## Id da arte no AssetCatalog.
 @export var asset: String
+## A arte tem 16 quadros, um por combinação de vizinhos que ligam (N=1, L=2, S=4, O=8): paredes.
+@export var wall_tiles: bool = false
+## Paredes vizinhas se ligam a esta (paredes, portas e as peças da ruína).
+@export var joins_walls: bool = false
 
 
 ## Tiles ocupados a partir da célula de origem (canto superior esquerdo).

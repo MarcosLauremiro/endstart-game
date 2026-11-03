@@ -6,11 +6,9 @@ extends RefCounted
 
 ## Motivo de não poder colocar a estrutura com origem na célula, ou "" se pode.
 static func placement_problem(state: WorldState, def: StructureDef, origin: Vector2i) -> String:
-	if not def.buildable:
-		return "não se constrói"
-	var research := state.research.missing_for_structure(def.id)
-	if research:
-		return "precisa da pesquisa %s" % research.display_name
+	var unavailable := availability_problem(state, def)
+	if not unavailable.is_empty():
+		return unavailable
 	for cell in def.cells_at(origin):
 		if not state.world.contains(cell):
 			return "fora do mapa"
@@ -25,6 +23,34 @@ static func placement_problem(state: WorldState, def: StructureDef, origin: Vect
 		elif state.buildings_by_cell.has(cell) or state.containers_by_cell.has(cell):
 			return "já há uma construção aqui"
 	return ""
+
+
+## Motivo de a estrutura não estar disponível para construir (ruína, pesquisa), ou "" se está.
+static func availability_problem(state: WorldState, def: StructureDef) -> String:
+	if not def.buildable:
+		return "não se constrói"
+	var research := state.research.missing_for_structure(def.id)
+	if research:
+		return "precisa da pesquisa %s" % research.display_name
+	return ""
+
+
+## Construção do tile para copiar (botão do meio): pronta ou em planta, a de cima antes do piso.
+## null se não há nenhuma.
+static func def_at(state: WorldState, cell: Vector2i) -> StructureDef:
+	var structure: Structure = state.buildings_by_cell.get(cell)
+	if structure:
+		return structure.def
+	var container: StorageContainer = state.containers_by_cell.get(cell)
+	if container:
+		return Defs.structure(container.def.id)
+	for layer in [StructureDef.Layer.BUILDING, StructureDef.Layer.FLOOR]:
+		var site := state.site_at(cell, layer)
+		if site:
+			return site.def
+		if layer == StructureDef.Layer.FLOOR and state.floors_by_cell.has(cell):
+			return state.floors_by_cell[cell].def
+	return null
 
 
 ## Coloca a planta e cria a tarefa de Construir. Árvores no local são marcadas para corte.

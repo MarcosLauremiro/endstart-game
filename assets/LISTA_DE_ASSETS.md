@@ -35,8 +35,8 @@ Gerado por `tools/generate_placeholder_assets.gd` a partir de `scripts/assets/as
 
 | Arquivo | Tamanho (px) | Quadros | Uso |
 | --- | --- | --- | --- |
-| `wall_wood.png` | 16×24 | — | Parede de madeira |
-| `wall_stone.png` | 16×24 | — | Parede de pedra |
+| `wall_wood.png` | 256×24 | 16 × 1 de 16×24 | Parede de madeira: 16 quadros de 16×24, um por vizinhos que ligam (quadro = N 1 + L 2 + S 4 + O 8); a face só aparece com o sul aberto |
+| `wall_stone.png` | 256×24 | 16 × 1 de 16×24 | Parede de pedra: 16 quadros de 16×24, um por vizinhos que ligam (quadro = N 1 + L 2 + S 4 + O 8); a face só aparece com o sul aberto |
 | `door_simple.png` | 16×24 | — | Porta simples |
 | `bed_rustic.png` | 16×32 | — | Cama rústica (1×2 tiles) |
 | `campfire.png` | 16×16 | — | Fogueira |

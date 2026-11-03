@@ -42,8 +42,10 @@ const ENTRIES := {
 	# --- Pisos ---
 	"tiles/floors/wood_floor": {"size": Vector2i(16, 16), "color": "9a6b3f", "use": "Piso de madeira", "draw": "speckle"},
 	# --- Estruturas (1 tile de base; paredes e portas sobem 8 px acima do tile) ---
-	"structures/wall_wood": {"size": Vector2i(16, 24), "color": "8a5a32", "use": "Parede de madeira"},
-	"structures/wall_stone": {"size": Vector2i(16, 24), "color": "8c8a85", "use": "Parede de pedra"},
+	"structures/wall_wood": {"size": Vector2i(256, 24), "frames": Vector2i(16, 1), "color": "8a5a32",
+		"use": "Parede de madeira: 16 quadros de 16×24, um por vizinhos que ligam (quadro = N 1 + L 2 + S 4 + O 8); a face só aparece com o sul aberto"},
+	"structures/wall_stone": {"size": Vector2i(256, 24), "frames": Vector2i(16, 1), "color": "8c8a85",
+		"use": "Parede de pedra: 16 quadros de 16×24, um por vizinhos que ligam (quadro = N 1 + L 2 + S 4 + O 8); a face só aparece com o sul aberto"},
 	"structures/door_simple": {"size": Vector2i(16, 24), "color": "a8763f", "use": "Porta simples"},
 	"structures/bed_rustic": {"size": Vector2i(16, 32), "color": "b0805a", "use": "Cama rústica (1×2 tiles)"},
 	"structures/campfire": {"size": Vector2i(16, 16), "color": "e0782f", "use": "Fogueira"},
